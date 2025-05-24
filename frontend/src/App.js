@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
@@ -17,19 +17,21 @@ function App() {
   }, []);
 
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route path="/" element={<Navigate to="/login" />} />
-    </Routes>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/" element={<Navigate to="/login" />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

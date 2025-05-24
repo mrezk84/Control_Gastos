@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Form, Button, Container, Alert } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import { login, setAuthToken } from '../services/api';
 
-const Login = () => {
+function Login() {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -58,6 +58,6 @@ const Login = () => {
       </p>
     </Container>
   );
-};
+}
 
 export default Login;

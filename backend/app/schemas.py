@@ -1,38 +1,41 @@
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import date
+from typing import Optional
 
-class UserBase(BaseModel):
+class UserCreate(BaseModel):
+    username: str
+    email: str
+    password: str
+
+class User(BaseModel):
+    id: int
     username: str
     email: str
 
-class UserCreate(UserBase):
-    password: str
-
-class User(UserBase):
-    id: int
-    
     class Config:
-        from_attributes = True  # Cambiado de orm_mode a from_attributes
+        from_attributes = True
 
 class Token(BaseModel):
     access_token: str
     token_type: str
 
 class TokenData(BaseModel):
-    username: str | None = None
+    username: Optional[str] = None
+    id: Optional[int] = None
 
-class ExpenseBase(BaseModel):
+class ExpenseCreate(BaseModel):
     description: str
     amount: float
     category: str
-    date: datetime
+    date: date
 
-class ExpenseCreate(ExpenseBase):
-    pass
-
-class Expense(ExpenseBase):
+class Expense(BaseModel):
     id: int
+    description: str
+    amount: float
+    category: str
+    date: date
     user_id: int
-    
+
     class Config:
-        from_attributes = True  # Cambiado de orm_mode a from_attributes
+        from_attributes = True

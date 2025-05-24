@@ -1,37 +1,26 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Form, Button, Container, Alert } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import { register } from '../services/api';
 
-const Register = () => {
-  const [userData, setUserData] = useState({ username: '', email: '', password: '' });
+function Register() {
+  const [user, setUser] = useState({ username: '', email: '', password: '' });
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
-    // Validaciones
-    if (!userData.username.trim()) {
-      setError('El usuario es obligatorio');
+    if (!user.username.trim() || !user.email.trim() || !user.password) {
+      setError('Todos los campos son obligatorios');
       return;
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(userData.email)) {
-      setError('Ingresa un email válido');
-      return;
-    }
-    if (userData.password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres');
-      return;
-    }
-
     try {
-      await register(userData);
+      console.log('User:', user); // Depurar datos enviados
+      await register(user);
       navigate('/login');
     } catch (err) {
-      setError('Error al registrarse. Verifica los datos.');
+      setError('Error al registrarse');
     }
   };
 
@@ -45,8 +34,8 @@ const Register = () => {
           <Form.Control
             type="text"
             placeholder="Ingresa tu usuario"
-            value={userData.username}
-            onChange={(e) => setUserData({ ...userData, username: e.target.value })}
+            value={user.username}
+            onChange={(e) => setUser({ ...user, username: e.target.value })}
           />
         </Form.Group>
         <Form.Group className="mb-3" controlId="email">
@@ -54,8 +43,8 @@ const Register = () => {
           <Form.Control
             type="email"
             placeholder="Ingresa tu email"
-            value={userData.email}
-            onChange={(e) => setUserData({ ...userData, email: e.target.value })}
+            value={user.email}
+            onChange={(e) => setUser({ ...user, email: e.target.value })}
           />
         </Form.Group>
         <Form.Group className="mb-3" controlId="password">
@@ -63,8 +52,8 @@ const Register = () => {
           <Form.Control
             type="password"
             placeholder="Ingresa tu contraseña"
-            value={userData.password}
-            onChange={(e) => setUserData({ ...userData, password: e.target.value })}
+            value={user.password}
+            onChange={(e) => setUser({ ...user, password: e.target.value })}
           />
         </Form.Group>
         <Button variant="primary" type="submit">
@@ -76,6 +65,6 @@ const Register = () => {
       </p>
     </Container>
   );
-};
+}
 
 export default Register;
