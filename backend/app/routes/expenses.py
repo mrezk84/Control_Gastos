@@ -1,22 +1,27 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from .. import crud, schemas
 from ..database import get_db
-from ..auth.utils import get_current_user
+from .. import schemas, models
+from ..auth import oauth2
 
-router = APIRouter(prefix="/expenses", tags=["expenses"])
+router = APIRouter(tags=["Expenses"])
 
 @router.post("/", response_model=schemas.Expense)
 def create_expense(
-    expense: schemas.ExpenseCreate, 
-    db: Session = Depends(get_db), 
-    current_user: schemas.User = Depends(get_current_user)
+    expense: schemas.ExpenseCreate,
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(oauth2.get_current_user)
 ):
-    return crud.create_expense(db, expense, current_user.id)
+    db_expense = models.Expense(**expense.dict(), user_id=current_user.id)
+    db.add(db_expense)
+    db.commit()
+    db.refresh(db_expense)
+    return db_expense
 
 @router.get("/", response_model=list[schemas.Expense])
 def get_expenses(
-    db: Session = Depends(get_db), 
-    current_user: schemas.User = Depends(get_current_user)
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(oauth2.get_current_user)
 ):
-    return crud.get_expenses(db, current_user.id)
+    expenses = db.query(models.Expense).filter(models.Expense.user_id == current_user.id).all()
+    return expenses

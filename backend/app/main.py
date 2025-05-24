@@ -5,14 +5,14 @@ from .database import Base, engine
 from dotenv import load_dotenv
 import os
 
-load_dotenv()  # Load environment variables
+load_dotenv()  # Cargar variables de entorno
 
-# Create database tables
+# Crear tablas de la base de datos
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-# CORS configuration
+# Configuración de CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -21,6 +21,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
-app.include_router(auth.router, prefix="/auth")
-app.include_router(expenses.router, prefix="/expenses")
+# Incluir enrutadores
+app.include_router(auth, prefix="/auth")
+app.include_router(expenses, prefix="/expenses")
