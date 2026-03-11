@@ -12,20 +12,37 @@ export const setAuthToken = (token) => {
   }
 };
 
+// Auth
 export const login = (credentials) => {
-  console.log('Sending login request:', credentials);
   return api.post('/auth/token', new URLSearchParams(credentials), {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   });
 };
 
 export const register = (user) => {
-  console.log('Sending register request:', user);
   return api.post('/auth/register', user);
 };
 
+export const getCurrentUser = () => {
+  return api.get('/auth/me');
+};
+
+// OAuth
+export const getOAuthUrl = (provider) => {
+  return api.get(`/auth/${provider}`);
+};
+
+// Password Reset
+export const requestPasswordReset = (email) => {
+  return api.post('/auth/forgot-password', { email });
+};
+
+export const resetPassword = (token, new_password) => {
+  return api.post('/auth/reset-password', { token, new_password });
+};
+
+// Expenses
 export const createExpense = (expense) => {
-  console.log('Sending expense request:', expense);
   return api.post('/expenses/', expense);
 };
 

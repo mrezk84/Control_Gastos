@@ -1,11 +1,35 @@
 import React, { useState } from 'react';
-import { Form, Button, Container, Alert } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
-import { register } from '../services/api';
+import { useNavigate, Link } from 'react-router-dom';
+import { register, getOAuthUrl } from '../services/api';
+
+const GoogleIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none">
+    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
+    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
+    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+  </svg>
+);
+
+const MicrosoftIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none">
+    <rect x="1" y="1" width="10" height="10" fill="#F25022" />
+    <rect x="13" y="1" width="10" height="10" fill="#7FBA00" />
+    <rect x="1" y="13" width="10" height="10" fill="#00A4EF" />
+    <rect x="13" y="13" width="10" height="10" fill="#FFB900" />
+  </svg>
+);
+
+const AppleIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor">
+    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+  </svg>
+);
 
 function Register() {
   const [user, setUser] = useState({ username: '', email: '', password: '' });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -15,55 +39,116 @@ function Register() {
       setError('Todos los campos son obligatorios');
       return;
     }
+    setLoading(true);
     try {
-      console.log('User:', user); // Depurar datos enviados
       await register(user);
       navigate('/login');
     } catch (err) {
-      setError('Error al registrarse');
+      setError('Error al registrarse. El usuario o email podría estar en uso.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const providerNames = { google: 'Google', microsoft: 'Microsoft', apple: 'Apple' };
+
+  const handleOAuth = async (provider) => {
+    const name = providerNames[provider] || provider;
+    try {
+      const response = await getOAuthUrl(provider);
+      window.location.href = response.data.auth_url;
+    } catch (err) {
+      const status = err?.response?.status;
+      if (status === 501) {
+        setError(`⚙️ ${name} Sign In aún no está configurado. Configurá las credenciales en el backend para habilitarlo.`);
+      } else if (!err?.response) {
+        setError(`🔌 No se pudo conectar al servidor. Asegurate de que el backend esté corriendo en el puerto 8000.`);
+      } else {
+        setError(`❌ Error al conectar con ${name}. Intentá de nuevo más tarde.`);
+      }
     }
   };
 
   return (
-    <Container className="mt-5">
-      <h2>Registrarse</h2>
-      {error && <Alert variant="danger">{error}</Alert>}
-      <Form onSubmit={handleSubmit}>
-        <Form.Group className="mb-3" controlId="username">
-          <Form.Label>Usuario</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Ingresa tu usuario"
-            value={user.username}
-            onChange={(e) => setUser({ ...user, username: e.target.value })}
-          />
-        </Form.Group>
-        <Form.Group className="mb-3" controlId="email">
-          <Form.Label>Email</Form.Label>
-          <Form.Control
-            type="email"
-            placeholder="Ingresa tu email"
-            value={user.email}
-            onChange={(e) => setUser({ ...user, email: e.target.value })}
-          />
-        </Form.Group>
-        <Form.Group className="mb-3" controlId="password">
-          <Form.Label>Contraseña</Form.Label>
-          <Form.Control
-            type="password"
-            placeholder="Ingresa tu contraseña"
-            value={user.password}
-            onChange={(e) => setUser({ ...user, password: e.target.value })}
-          />
-        </Form.Group>
-        <Button variant="primary" type="submit">
-          Registrarse
-        </Button>
-      </Form>
-      <p className="mt-3">
-        ¿Ya tienes cuenta? <a href="/login">Inicia sesión</a>
-      </p>
-    </Container>
+    <div className="auth-page">
+      <div className="animated-bg" />
+      <div className="auth-container">
+        <div className="auth-card">
+          <div className="auth-logo">
+            <div className="auth-logo-icon">🚀</div>
+          </div>
+          <h1 className="auth-title">Crear Cuenta</h1>
+          <p className="auth-subtitle">Unite y tomá el control de tus finanzas</p>
+
+          {error && <div className="auth-alert">{error}</div>}
+
+          <form onSubmit={handleSubmit}>
+            <div className="form-group-dark">
+              <label htmlFor="reg-username">Usuario</label>
+              <input
+                id="reg-username"
+                className="input-dark"
+                type="text"
+                placeholder="Elegí un nombre de usuario"
+                value={user.username}
+                onChange={(e) => setUser({ ...user, username: e.target.value })}
+                autoComplete="username"
+              />
+            </div>
+            <div className="form-group-dark">
+              <label htmlFor="reg-email">Email</label>
+              <input
+                id="reg-email"
+                className="input-dark"
+                type="email"
+                placeholder="tu@email.com"
+                value={user.email}
+                onChange={(e) => setUser({ ...user, email: e.target.value })}
+                autoComplete="email"
+              />
+            </div>
+            <div className="form-group-dark">
+              <label htmlFor="reg-password">Contraseña</label>
+              <input
+                id="reg-password"
+                className="input-dark"
+                type="password"
+                placeholder="Creá una contraseña segura"
+                value={user.password}
+                onChange={(e) => setUser({ ...user, password: e.target.value })}
+                autoComplete="new-password"
+              />
+            </div>
+            <button className="btn-gradient" type="submit" disabled={loading}>
+              {loading ? 'Creando cuenta...' : 'Crear Cuenta'}
+            </button>
+          </form>
+
+          <div className="auth-divider">
+            <span>o registrate con</span>
+          </div>
+
+          <div className="oauth-buttons">
+            <button className="oauth-btn google" type="button" onClick={() => handleOAuth('google')}>
+              <GoogleIcon />
+              Continuar con Google
+            </button>
+            <button className="oauth-btn microsoft" type="button" onClick={() => handleOAuth('microsoft')}>
+              <MicrosoftIcon />
+              Continuar con Microsoft
+            </button>
+            <button className="oauth-btn apple" type="button" onClick={() => handleOAuth('apple')}>
+              <AppleIcon />
+              Continuar con Apple
+            </button>
+          </div>
+
+          <p className="auth-link">
+            ¿Ya tenés cuenta? <Link to="/login">Iniciá sesión</Link>
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
 

@@ -1,20 +1,28 @@
-from sqlalchemy import Column, Integer, String, Float, Date
+from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey, Enum
+from sqlalchemy.orm import relationship
 from .database import Base
 
 class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
-    email = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
+    username = Column(String(150), unique=True, index=True)
+    email = Column(String(255), unique=True, index=True)
+    hashed_password = Column(String(255), nullable=True)  # Nullable for OAuth users
+    avatar_url = Column(String(500), nullable=True)
+    auth_provider = Column(String(50), default="local")  # local, google, microsoft, apple
+    provider_id = Column(String(255), nullable=True)
+
+    expenses = relationship("Expense", back_populates="owner")
 
 class Expense(Base):
     __tablename__ = "expenses"
 
     id = Column(Integer, primary_key=True, index=True)
-    description = Column(String)
+    description = Column(String(255))
     amount = Column(Float)
-    category = Column(String)
+    category = Column(String(100))
     date = Column(Date)
-    user_id = Column(Integer)
+    user_id = Column(Integer, ForeignKey("users.id"))
+
+    owner = relationship("User", back_populates="expenses")
