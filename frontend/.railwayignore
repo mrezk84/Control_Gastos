@@ -1,0 +1,6 @@
+node_modules/
+npm.log
+.npm/
+.DS_Store
+README.md
+nginx.conf

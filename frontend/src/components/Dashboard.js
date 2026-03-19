@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Chart as ChartJS,
@@ -17,6 +17,7 @@ import { Bar, Doughnut, Line } from 'react-chartjs-2';
 import ExpenseForm from './ExpenseForm';
 import ExpenseList from './ExpenseList';
 import { getExpenses, getCurrentUser } from '../services/api';
+import { formatCurrency, CATEGORIES, CHART_COLORS } from '../utils';
 
 ChartJS.register(
   CategoryScale,
@@ -31,19 +32,18 @@ ChartJS.register(
   Filler
 );
 
-// Premium chart colors
-const CHART_COLORS = [
-  '#8b5cf6', '#4facfe', '#f093fb', '#43e97b',
-  '#fbbf24', '#f5576c', '#00f2fe', '#667eea',
-];
-const CHART_COLORS_ALPHA = CHART_COLORS.map(c => c + '30');
+const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
 function Dashboard() {
   const [expenses, setExpenses] = useState([]);
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
       const [expRes, userRes] = await Promise.all([
         getExpenses(),
@@ -52,8 +52,14 @@ function Dashboard() {
       setExpenses(expRes.data);
       if (userRes) setUser(userRes.data);
     } catch (err) {
-      localStorage.removeItem('token');
-      navigate('/login');
+      const errorMsg = err.response?.data?.detail || 'Error al cargar los datos';
+      setError(errorMsg);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        navigate('/login');
+      }
+    } finally {
+      setLoading(false);
     }
   }, [navigate]);
 
@@ -61,31 +67,47 @@ function Dashboard() {
     fetchData();
   }, [fetchData]);
 
-  // -- KPI calculations --
-  const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
-  const avgExpense = expenses.length ? totalExpenses / expenses.length : 0;
+  // Memoized calculations to avoid unnecessary re-renders
+  const { totalExpenses, avgExpense, categoryMap, topCategory } = useMemo(() => {
+    const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const avg = expenses.length ? total / expenses.length : 0;
 
-  const categoryMap = {};
-  expenses.forEach((e) => {
-    categoryMap[e.category] = (categoryMap[e.category] || 0) + e.amount;
-  });
-  const categories = Object.keys(categoryMap);
-  const topCategory = categories.length
-    ? categories.reduce((a, b) => (categoryMap[a] > categoryMap[b] ? a : b))
-    : '—';
+    const catMap = {};
+    expenses.forEach((expense) => {
+      catMap[expense.category] = (catMap[expense.category] || 0) + expense.amount;
+    });
 
-  // -- Monthly trends --
-  const monthlyMap = {};
-  expenses.forEach((e) => {
-    const d = new Date(e.date);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    monthlyMap[key] = (monthlyMap[key] || 0) + e.amount;
-  });
-  const sortedMonths = Object.keys(monthlyMap).sort();
-  const last6Months = sortedMonths.slice(-6);
+    const categories = Object.keys(catMap);
+    const topCat = categories.length
+      ? categories.reduce((a, b) => (catMap[a] > catMap[b] ? a : b))
+      : null;
 
-  // -- Doughnut data --
-  const doughnutData = {
+    return {
+      totalExpenses: total,
+      avgExpense: avg,
+      categoryMap: catMap,
+      topCategory: topCat,
+    };
+  }, [expenses]);
+
+  const { monthlyMap, last6Months } = useMemo(() => {
+    const map = {};
+    expenses.forEach((expense) => {
+      const d = new Date(expense.date);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      map[key] = (map[key] || 0) + expense.amount;
+    });
+    const sorted = Object.keys(map).sort();
+    return {
+      monthlyMap: map,
+      last6Months: sorted.slice(-6),
+    };
+  }, [expenses]);
+
+  const categories = useMemo(() => Object.keys(categoryMap), [categoryMap]);
+
+  // Chart data
+  const doughnutData = useMemo(() => ({
     labels: categories,
     datasets: [
       {
@@ -96,26 +118,12 @@ function Dashboard() {
         hoverOffset: 8,
       },
     ],
-  };
+  }), [categories, categoryMap]);
 
-  const doughnutOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    cutout: '68%',
-    plugins: {
-      legend: {
-        position: 'bottom',
-        labels: { color: '#a0a0c0', font: { family: 'Inter', size: 12 }, padding: 16, usePointStyle: true, pointStyleWidth: 8 },
-      },
-    },
-  };
-
-  // -- Line chart data --
-  const lineData = {
+  const lineData = useMemo(() => ({
     labels: last6Months.map((m) => {
       const [y, mo] = m.split('-');
-      const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-      return `${monthNames[parseInt(mo) - 1]} ${y.slice(2)}`;
+      return `${MONTH_NAMES[parseInt(mo) - 1]} ${y.slice(2)}`;
     }),
     datasets: [
       {
@@ -132,59 +140,22 @@ function Dashboard() {
         pointHoverRadius: 8,
       },
     ],
-  };
+  }), [last6Months, monthlyMap]);
 
-  const lineOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-    },
-    scales: {
-      x: {
-        grid: { color: 'rgba(255,255,255,0.04)' },
-        ticks: { color: '#a0a0c0', font: { family: 'Inter', size: 11 } },
-      },
-      y: {
-        grid: { color: 'rgba(255,255,255,0.04)' },
-        ticks: { color: '#a0a0c0', font: { family: 'Inter', size: 11 }, callback: (v) => '$' + v.toLocaleString() },
-      },
-    },
-  };
-
-  // -- Bar chart data --
-  const barData = {
+  const barData = useMemo(() => ({
     labels: categories,
     datasets: [
       {
         label: 'Total por Categoría',
         data: categories.map((c) => categoryMap[c]),
-        backgroundColor: CHART_COLORS_ALPHA.slice(0, categories.length),
+        backgroundColor: CHART_COLORS.slice(0, categories.length).map(c => c + '30'),
         borderColor: CHART_COLORS.slice(0, categories.length),
         borderWidth: 1.5,
         borderRadius: 6,
         borderSkipped: false,
       },
     ],
-  };
-
-  const barOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-    },
-    scales: {
-      x: {
-        grid: { display: false },
-        ticks: { color: '#a0a0c0', font: { family: 'Inter', size: 11 } },
-      },
-      y: {
-        grid: { color: 'rgba(255,255,255,0.04)' },
-        ticks: { color: '#a0a0c0', font: { family: 'Inter', size: 11 }, callback: (v) => '$' + v.toLocaleString() },
-      },
-    },
-  };
+  }), [categories, categoryMap]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -193,12 +164,29 @@ function Dashboard() {
 
   const userInitial = user ? (user.username || user.email || '?')[0].toUpperCase() : '?';
 
-  const formatCurrency = (val) =>
-    new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(val);
+  if (loading) {
+    return (
+      <div className="dashboard-page">
+        <div className="animated-bg" />
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Cargando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-page">
       <div className="animated-bg" />
+
+      {/* Error Banner */}
+      {error && (
+        <div className="error-banner">
+          <span>⚠️ {error}</span>
+          <button onClick={fetchData} className="btn-retry">Reintentar</button>
+        </div>
+      )}
 
       {/* Navbar */}
       <nav className="dash-navbar">
@@ -243,7 +231,7 @@ function Dashboard() {
           <div className="kpi-card">
             <div className="kpi-icon green">🏆</div>
             <div className="kpi-label">Categoría Top</div>
-            <div className="kpi-value" style={{ fontSize: '1.3rem' }}>{topCategory}</div>
+            <div className="kpi-value" style={{ fontSize: '1.3rem' }}>{topCategory || '—'}</div>
           </div>
           <div className="kpi-card">
             <div className="kpi-icon orange">📋</div>
@@ -258,7 +246,23 @@ function Dashboard() {
             <div className="chart-card-title">📈 Distribución por Categoría</div>
             <div style={{ height: 280 }}>
               {categories.length > 0 ? (
-                <Doughnut data={doughnutData} options={doughnutOptions} />
+                <Doughnut data={doughnutData} options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  cutout: '68%',
+                  plugins: {
+                    legend: {
+                      position: 'bottom',
+                      labels: {
+                        color: '#a0a0c0',
+                        font: { family: 'Inter', size: 12 },
+                        padding: 16,
+                        usePointStyle: true,
+                        pointStyleWidth: 8
+                      },
+                    },
+                  },
+                }} />
               ) : (
                 <div className="empty-state">
                   <div className="empty-state-icon">📭</div>
@@ -271,7 +275,21 @@ function Dashboard() {
             <div className="chart-card-title">📉 Tendencia Mensual</div>
             <div style={{ height: 280 }}>
               {last6Months.length > 0 ? (
-                <Line data={lineData} options={lineOptions} />
+                <Line data={lineData} options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: { legend: { display: false } },
+                  scales: {
+                    x: {
+                      grid: { color: 'rgba(255,255,255,0.04)' },
+                      ticks: { color: '#a0a0c0', font: { family: 'Inter', size: 11 } },
+                    },
+                    y: {
+                      grid: { color: 'rgba(255,255,255,0.04)' },
+                      ticks: { color: '#a0a0c0', font: { family: 'Inter', size: 11 }, callback: (v) => '$' + v.toLocaleString() },
+                    },
+                  },
+                }} />
               ) : (
                 <div className="empty-state">
                   <div className="empty-state-icon">📭</div>
@@ -284,10 +302,24 @@ function Dashboard() {
 
         {/* Bar Chart */}
         {categories.length > 0 && (
-          <div className="chart-card" style={{ marginBottom: 32, animationDelay: '0.45s' }}>
+          <div className="chart-card" style={{ marginBottom: 32 }}>
             <div className="chart-card-title">📊 Total por Categoría</div>
             <div style={{ height: 260 }}>
-              <Bar data={barData} options={barOptions} />
+              <Bar data={barData} options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                  x: {
+                    grid: { display: false },
+                    ticks: { color: '#a0a0c0', font: { family: 'Inter', size: 11 } },
+                  },
+                  y: {
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                    ticks: { color: '#a0a0c0', font: { family: 'Inter', size: 11 }, callback: (v) => '$' + v.toLocaleString() },
+                  },
+                },
+              }} />
             </div>
           </div>
         )}

@@ -57,15 +57,25 @@ function Login() {
 
   const handleOAuth = async (provider) => {
     const name = providerNames[provider] || provider;
+    setError('');
     try {
       const response = await getOAuthUrl(provider);
-      window.location.href = response.data.auth_url;
+      const authUrl = response?.data?.auth_url;
+
+      if (!authUrl) {
+        console.error('Invalid response:', response);
+        setError(`❌ Respuesta inválida del servidor. Intentá de nuevo.`);
+        return;
+      }
+
+      window.location.href = authUrl;
     } catch (err) {
+      console.error('OAuth error:', err);
       const status = err?.response?.status;
       if (status === 501) {
         setError(`⚙️ ${name} Sign In aún no está configurado. Configurá las credenciales en el backend para habilitarlo.`);
       } else if (!err?.response) {
-        setError(`🔌 No se pudo conectar al servidor. Asegurate de que el backend esté corriendo en el puerto 8000.`);
+        setError(`🔌 No se pudo conectar al servidor. Verificá tu conexión a internet.`);
       } else {
         setError(`❌ Error al conectar con ${name}. Intentá de nuevo más tarde.`);
       }

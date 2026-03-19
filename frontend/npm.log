@@ -1,0 +1,1037 @@
+
+> finanzaflow-app@1.0.0 start
+> react-scripts start
+
+[32m✔[0m [33mConsole Ninja[0m extension is connected to [33mWebpack[0m, see [36mhttps://tinyurl.com/2vt8jxzw[0m
+Browserslist: browsers data (caniuse-lite) is 10 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+(node:2377) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:2377) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+Starting the development server...
+
+Compiled with warnings.
+
+[eslint] 
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Failed to compile.
+
+[eslint] 
+src/pages/Budgets.js
+  Line 69:25:   'getExpenses' is not defined  no-undef
+  Line 156:13:  'getExpenses' is not defined  no-undef
+
+Search for the keywords to learn more about each error.
+WARNING in [eslint] 
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 2:84:   'getAllExpenses' is defined but never used            no-unused-vars
+  Line 2:100:  'createExpense' is defined but never used             no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+ERROR in [eslint] 
+src/pages/Budgets.js
+  Line 69:25:   'getExpenses' is not defined  no-undef
+  Line 156:13:  'getExpenses' is not defined  no-undef
+
+Search for the keywords to learn more about each error.
+
+webpack compiled with 1 error and 1 warning
+Compiling...
+Failed to compile.
+
+[eslint] 
+src/pages/Budgets.js
+  Line 156:13:  'getExpenses' is not defined  no-undef
+
+Search for the keywords to learn more about each error.
+WARNING in [eslint] 
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 2:100:  'createExpense' is defined but never used             no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+ERROR in [eslint] 
+src/pages/Budgets.js
+  Line 156:13:  'getExpenses' is not defined  no-undef
+
+Search for the keywords to learn more about each error.
+
+webpack compiled with 1 error and 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used            no-unused-vars
+  Line 80:9:   'chartColors' is assigned a value but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used            no-unused-vars
+  Line 80:9:   'chartColors' is assigned a value but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/Layout/Sidebar.js
+  Line 52:11:  The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided  jsx-a11y/no-redundant-roles
+
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/Layout/Sidebar.js
+  Line 52:11:  The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided  jsx-a11y/no-redundant-roles
+
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/Layout/Sidebar.js
+  Line 52:11:  The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided  jsx-a11y/no-redundant-roles
+
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/Layout/Sidebar.js
+  Line 52:11:  The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided  jsx-a11y/no-redundant-roles
+
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/Layout/Sidebar.js
+  Line 52:11:  The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided  jsx-a11y/no-redundant-roles
+
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/Layout/Sidebar.js
+  Line 52:11:  The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided  jsx-a11y/no-redundant-roles
+
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/Layout/Sidebar.js
+  Line 52:11:  The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided  jsx-a11y/no-redundant-roles
+
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/Layout/Sidebar.js
+  Line 52:11:  The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided  jsx-a11y/no-redundant-roles
+
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/Layout/Sidebar.js
+  Line 52:11:  The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided  jsx-a11y/no-redundant-roles
+
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/Layout/Sidebar.js
+  Line 52:11:  The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided  jsx-a11y/no-redundant-roles
+
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/Layout/Sidebar.js
+  Line 52:11:  The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided  jsx-a11y/no-redundant-roles
+
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/Layout/Sidebar.js
+  Line 52:11:  The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided  jsx-a11y/no-redundant-roles
+
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/Layout/Sidebar.js
+  Line 52:11:  The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided  jsx-a11y/no-redundant-roles
+
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/Layout/Sidebar.js
+  Line 52:11:  The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided  jsx-a11y/no-redundant-roles
+
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/Layout/Sidebar.js
+  Line 52:11:  The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided  jsx-a11y/no-redundant-roles
+
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/Layout/Sidebar.js
+  Line 52:11:  The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided  jsx-a11y/no-redundant-roles
+
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/Layout/Sidebar.js
+  Line 52:11:  The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided  jsx-a11y/no-redundant-roles
+
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/Layout/Sidebar.js
+  Line 52:11:  The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided  jsx-a11y/no-redundant-roles
+
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/Layout/Sidebar.js
+  Line 52:11:  The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided  jsx-a11y/no-redundant-roles
+
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/Layout/Sidebar.js
+  Line 52:11:  The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided  jsx-a11y/no-redundant-roles
+
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/Layout/Sidebar.js
+  Line 52:11:  The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided  jsx-a11y/no-redundant-roles
+
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/Layout/Sidebar.js
+  Line 52:11:  The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided  jsx-a11y/no-redundant-roles
+
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/Layout/Sidebar.js
+  Line 52:11:  The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided  jsx-a11y/no-redundant-roles
+
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/Layout/Sidebar.js
+  Line 52:11:  The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided  jsx-a11y/no-redundant-roles
+
+src/pages/Analytics.js
+  Line 17:24:  'CATEGORIES' is defined but never used  no-unused-vars
+
+src/pages/Budgets.js
+  Line 2:10:   'getBudgets' is defined but never used                no-unused-vars
+  Line 5:8:    'Input' is defined but never used                     no-unused-vars
+  Line 6:8:    'Button' is defined but never used                    no-unused-vars
+  Line 33:24:  'setCurrentMonth' is assigned a value but never used  no-unused-vars
+  Line 34:23:  'setCurrentYear' is assigned a value but never used   no-unused-vars
+  Line 51:36:  'info' is assigned a value but never used             no-unused-vars
+
+src/utils/logger.js
+  Line 25:7:  'formatMessage' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning

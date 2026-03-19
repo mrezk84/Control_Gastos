@@ -1,21 +1,25 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from ..database import get_db
 from .. import schemas, models
 from ..auth.utils import hash_password, verify_password, create_access_token, get_current_user
+from ..rate_limiter import check_auth_rate_limit
+from ..config import get_settings
 from pydantic import BaseModel
 from jose import JWTError, jwt
 from datetime import datetime, timedelta, timezone
-import os
 
 router = APIRouter(tags=["Authentication"])
-
-SECRET_KEY = os.getenv("SECRET_KEY")
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+settings = get_settings()
 
 @router.post("/register", response_model=schemas.User)
-def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+def register_user(
+    request: Request,
+    user: schemas.UserCreate,
+    db: Session = Depends(get_db),
+    _rate_limit: None = Depends(check_auth_rate_limit)
+):
     # Verificar si el usuario ya existe
     existing_user = db.query(models.User).filter(
         (models.User.email == user.email) | (models.User.username == user.username)
@@ -39,7 +43,12 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return db_user
 
 @router.post("/token", response_model=schemas.Token)
-def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def login_for_access_token(
+    request: Request,
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db),
+    _rate_limit: None = Depends(check_auth_rate_limit)
+):
     user = db.query(models.User).filter(models.User.username == form_data.username).first()
     if not user or not user.hashed_password or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
@@ -65,7 +74,11 @@ class ResetPasswordRequest(BaseModel):
     new_password: str
 
 @router.post("/forgot-password")
-def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):
+def forgot_password(
+    request: ForgotPasswordRequest,
+    db: Session = Depends(get_db),
+    _rate_limit: None = Depends(check_auth_rate_limit)
+):
     user = db.query(models.User).filter(models.User.email == request.email).first()
     if not user:
         raise HTTPException(status_code=404, detail="No se encontró una cuenta con ese email")
@@ -78,17 +91,17 @@ def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db
     expire = datetime.now(timezone.utc) + timedelta(minutes=15)
     reset_token = jwt.encode(
         {"sub": user.username, "purpose": "reset", "exp": expire},
-        SECRET_KEY,
+        settings.secret_key,
         algorithm="HS256"
     )
-    reset_url = f"{FRONTEND_URL}/reset-password?token={reset_token}"
+    reset_url = f"{settings.frontend_url}/reset-password?token={reset_token}"
     # In production, you would send this URL via email
     return {"message": "Enlace de recuperación generado", "reset_url": reset_url}
 
 @router.post("/reset-password")
 def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db)):
     try:
-        payload = jwt.decode(request.token, SECRET_KEY, algorithms=["HS256"])
+        payload = jwt.decode(request.token, settings.secret_key, algorithms=["HS256"])
         username = payload.get("sub")
         purpose = payload.get("purpose")
         if not username or purpose != "reset":

@@ -1,6 +1,7 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "FinanzaFlow",
+  "name": "FinanzaFlow - Control de Gastos",
+  "description": "Controla tus gastos y administra tus presupuestos de manera elegante",
   "icons": [
     {
       "src": "favicon.ico",
@@ -20,6 +21,6 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#8b5cf6",
+  "background_color": "#0a0a1a"
 }

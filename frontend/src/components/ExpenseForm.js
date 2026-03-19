@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { createExpense } from '../services/api';
+import logger from '../utils/logger';
 
 const CATEGORIES = [
   'Alimentación',
@@ -30,7 +31,7 @@ function ExpenseForm({ setExpenses }) {
       setSuccess(true);
       setTimeout(() => setSuccess(false), 2000);
     } catch (err) {
-      console.error('Error al crear gasto');
+      logger.apiError('Error al crear gasto', err);
     } finally {
       setLoading(false);
     }

@@ -14,6 +14,7 @@ class User(Base):
     provider_id = Column(String(255), nullable=True)
 
     expenses = relationship("Expense", back_populates="owner")
+    budgets = relationship("Budget", back_populates="user")
 
 class Expense(Base):
     __tablename__ = "expenses"
@@ -26,3 +27,16 @@ class Expense(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
 
     owner = relationship("User", back_populates="expenses")
+
+class Budget(Base):
+    __tablename__ = "budgets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    category = Column(String(100), nullable=False)
+    amount = Column(Float, nullable=False)
+    month = Column(Integer, nullable=False)  # 1-12
+    year = Column(Integer, nullable=False)
+    is_recurring = Column(Integer, default=0)  # 0 = no, 1 = yes
+
+    user = relationship("User", back_populates="budgets")
