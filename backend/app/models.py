@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey, Enum
+from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey, Enum, DateTime
 from sqlalchemy.orm import relationship
+from datetime import datetime
 from .database import Base
 
 class User(Base):
@@ -14,7 +15,6 @@ class User(Base):
     provider_id = Column(String(255), nullable=True)
 
     expenses = relationship("Expense", back_populates="owner")
-    budgets = relationship("Budget", back_populates="user")
 
 class Expense(Base):
     __tablename__ = "expenses"
@@ -25,18 +25,23 @@ class Expense(Base):
     category = Column(String(100))
     date = Column(Date)
     user_id = Column(Integer, ForeignKey("users.id"))
+    receipt_url = Column(String(500), nullable=True)
+    receipt_confidence = Column(Float, nullable=True)  # Confidence score from OCR
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     owner = relationship("User", back_populates="expenses")
+    receipts = relationship("ReceiptImage", back_populates="expense", cascade="all, delete-orphan")
 
-class Budget(Base):
-    __tablename__ = "budgets"
+class ReceiptImage(Base):
+    __tablename__ = "receipt_images"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    category = Column(String(100), nullable=False)
-    amount = Column(Float, nullable=False)
-    month = Column(Integer, nullable=False)  # 1-12
-    year = Column(Integer, nullable=False)
-    is_recurring = Column(Integer, default=0)  # 0 = no, 1 = yes
+    expense_id = Column(Integer, ForeignKey("expenses.id"))
+    file_path = Column(String(500))
+    file_name = Column(String(255))
+    file_type = Column(String(50))  # 'image' or 'pdf'
+    extracted_data = Column(String(2000), nullable=True)  # JSON string of extracted data
+    uploaded_at = Column(DateTime, default=datetime.utcnow)
 
-    user = relationship("User", back_populates="budgets")
+    expense = relationship("Expense", back_populates="receipts")

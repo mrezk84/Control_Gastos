@@ -1,7 +1,6 @@
 fastapi
-uvicorn[standard]
+uvicorn
 sqlalchemy
-psycopg2-binary
 pymysql
 python-dotenv
 python-jose[cryptography]
@@ -9,5 +8,9 @@ passlib[bcrypt]
 python-multipart
 httpx
 email-validator
-pydantic-settings
-openpyxl
+Pillow
+pytesseract
+pdfplumber
+ocr-space
+aiofiles
+python-dateutil
