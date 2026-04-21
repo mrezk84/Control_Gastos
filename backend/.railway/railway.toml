@@ -1,0 +1,18 @@
+# Railway configuration for Control de Gastos Backend
+
+[build]
+# Usar el Dockerfile existente
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+# Comando de inicio
+startCommand = "uvicorn app.main:app --host 0.0.0.0 --port ${PORT}"
+
+# Health check
+healthcheckPath = "/"
+healthcheckTimeout = 300
+
+# Restart policy
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

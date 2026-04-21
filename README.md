@@ -129,3 +129,64 @@ OCR_SPACE_API_KEY=
 - Para usar Tesseract OCR local, instalar: `apt-get install tesseract-ocr tesseract-spa-eng`
 - Para usar OCR.space API, registrarse en https://ocr.space/ y obtener API key
 - Los archivos subidos se guardan en `backend/uploads/receipts/`
+
+---
+
+## 🌐 Deployment en Producción
+
+### Opción Recomendada: Vercel + Railway
+
+El proyecto está configurado para deployment híbrido:
+
+- **Frontend (Vercel)**: Hosting estático global, CDN gratis
+- **Backend + DB (Railway)**: API Python + PostgreSQL
+
+```
+┌─────────────┐         ┌─────────────┐
+│   Vercel    │         │   Railway   │
+│  Frontend   │◄───────►│  Backend    │
+│   (React)   │  API    │  (FastAPI)  │
+│             │         │   + PGSQL   │
+└─────────────┘         └─────────────┘
+```
+
+### Guía de Deployment Paso a Paso
+
+📖 **Ver guía completa**: [HYBRID_DEPLOY.md](./HYBRID_DEPLOY.md)
+
+#### Resumen Rápido:
+
+1. **Railway (Backend + DB)**
+   - Ve a railway.app → Login with GitHub
+   - Deploy from GitHub repo → Root: `backend`
+   - Agregar servicio PostgreSQL
+   - Configurar variables: `DATABASE_URL`, `SECRET_KEY`, `FRONTEND_URL`
+
+2. **Vercel (Frontend)**
+   - Ve a vercel.com → Login with GitHub
+   - Import repo → Root: `frontend`
+   - Configurar variable: `REACT_APP_API_URL` (URL del backend de Railway)
+
+3. **Configurar CORS**
+   - En Railway Backend → Variables → `FRONTEND_URL = https://tu-frontend.vercel.app`
+
+### URLs de Producción (Ejemplo)
+
+| Servicio | URL |
+|----------|-----|
+| Frontend | `https://control-gastos-frontend.vercel.app` |
+| Backend | `https://control-gastos-backend-production.up.railway.app` |
+
+### Costos
+
+- ✅ **Vercel**: Gratis (Hobby plan)
+- ✅ **Railway**: Gratis ($5 crédito/mes)
+
+---
+
+## 🔗 Links Útiles
+
+- [Guía de Deployment Híbrido](./HYBRID_DEPLOY.md)
+- [Deployment en Google Cloud](./DEPLOYMENT.md)
+- [Deployment en Railway](./RAILWAY_DEPLOY.md)
+- [Manual de Usuario](./MANUAL_USUARIO.md)
