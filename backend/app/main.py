@@ -2,10 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
-from .routes import expenses, auth
+from .routes import expenses, auth, budgets
 from .routes.oauth_routes import router as oauth
 from .routes import receipts
-from .routes import budgets
 from .database import Base, engine
 from dotenv import load_dotenv
 import os
