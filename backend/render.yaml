@@ -2,10 +2,10 @@
 # https://render.com/docs/yaml-spec
 
 services:
-  # FastAPI Backend Service
+  # FastAPI Backend Service (Docker)
   - type: pserv
     name: control-gastos-backend
-    env: python
+    env: docker
     region: oregon
     plan: free
     healthCheckPath: /
@@ -16,13 +16,9 @@ services:
 
     # Auto-deploy from main branch
     branch: main
-    buildCommand: ""
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
 
     # Environment Variables
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.11
       - key: PORT
         value: 8000
       # These will be linked to the database service
