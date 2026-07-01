@@ -12,7 +12,6 @@ email-validator
 Pillow
 pytesseract
 pdfplumber
-ocr-space
 aiofiles
 python-dateutil
 openpyxl
