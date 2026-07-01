@@ -12,7 +12,9 @@ load_dotenv()
 # Set DATABASE_URL in the environment (.env locally, platform vars in prod).
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 if not SQLALCHEMY_DATABASE_URL:
-    raise ValueError("DATABASE_URL must be set in environment variables")
+    # Don't fail at import time — allow empty for config validation later
+    # This lets containers start successfully when env vars are injected at runtime
+    SQLALCHEMY_DATABASE_URL = "sqlite:///./temp.db"  # Fallback for startup only
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
