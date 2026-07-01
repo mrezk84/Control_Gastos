@@ -1,0 +1,58 @@
+name: CI
+
+# Vercel (frontend) and Railway (backend) are connected directly to this
+# GitHub repo via their own git integration, so they auto-deploy on every
+# push to main — no deploy step is needed here. This workflow only runs
+# build/sanity checks so pushes fail fast before Vercel/Railway pick them up.
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  backend-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Import check (catches missing deps / syntax errors)
+        env:
+          DATABASE_URL: "sqlite:///./ci_check.db"
+          SECRET_KEY: "ci-only-not-a-real-secret"
+        run: python -c "from app.main import app; print('Backend imports OK')"
+
+  frontend-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        env:
+          CI: false
+        run: npm run build

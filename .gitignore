@@ -20,6 +20,7 @@ var/
 .installed.cfg
 *.egg
 .env
+backend/.env.production
 .venv
 venv/
 ENV/
@@ -46,3 +47,12 @@ frontend/.env.production.local
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Logs (nunca versionar)
+*.log
+backend/uvicorn.log
+backend/npm.log
+frontend/npm.log
+
+# Local tooling config (machine-specific, not part of the project)
+.claude/

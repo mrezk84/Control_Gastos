@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
-import './ThemeToggle.css';
+// Styles live in src/components/ui/app-shell.css, imported globally from index.css
+// (it also holds the light/dark theme variables, so it must load app-wide).
 
 /**
  * Theme Toggle Component

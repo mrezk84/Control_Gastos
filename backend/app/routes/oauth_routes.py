@@ -3,38 +3,28 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from .. import schemas, models
 from ..auth.utils import create_access_token, hash_password
-from ..config import get_settings
 import httpx
 import os
 import secrets
 
 router = APIRouter(tags=["OAuth"])
 
-# --- OAuth Config Helper ---
+# --- OAuth Config ---
 
-def _get_oauth_config():
-    """Get OAuth configuration dynamically to ensure env vars are loaded."""
-    settings = get_settings()
-    return {
-        "google": {
-            "client_id": settings.google_client_id or "",
-            "client_secret": settings.google_client_secret or "",
-            "redirect_uri": settings.google_redirect_uri,
-        },
-        "microsoft": {
-            "client_id": settings.microsoft_client_id or "",
-            "client_secret": settings.microsoft_client_secret or "",
-            "redirect_uri": settings.microsoft_redirect_uri,
-        },
-        "apple": {
-            "client_id": settings.apple_client_id or "",
-            "team_id": settings.apple_team_id or "",
-            "key_id": settings.apple_key_id or "",
-            "key_file": settings.apple_key_file or "",
-            "redirect_uri": settings.apple_redirect_uri,
-        },
-        "frontend_url": settings.frontend_url,
-    }
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
+GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/auth/google/callback")
+
+MICROSOFT_CLIENT_ID = os.getenv("MICROSOFT_CLIENT_ID", "")
+MICROSOFT_CLIENT_SECRET = os.getenv("MICROSOFT_CLIENT_SECRET", "")
+MICROSOFT_REDIRECT_URI = os.getenv("MICROSOFT_REDIRECT_URI", "http://localhost:8000/auth/microsoft/callback")
+
+APPLE_CLIENT_ID = os.getenv("APPLE_CLIENT_ID", "")
+APPLE_TEAM_ID = os.getenv("APPLE_TEAM_ID", "")
+APPLE_KEY_ID = os.getenv("APPLE_KEY_ID", "")
+APPLE_REDIRECT_URI = os.getenv("APPLE_REDIRECT_URI", "http://localhost:8000/auth/apple/callback")
+
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
 
 def _get_or_create_oauth_user(db: Session, email: str, name: str, provider: str, provider_id: str, avatar_url: str = None):
@@ -45,9 +35,8 @@ def _get_or_create_oauth_user(db: Session, email: str, name: str, provider: str,
         if not user.provider_id:
             user.auth_provider = provider
             user.provider_id = provider_id
-        # Always update avatar_url if provided and different
-        if avatar_url and user.avatar_url != avatar_url:
-            user.avatar_url = avatar_url
+            if avatar_url:
+                user.avatar_url = avatar_url
             db.commit()
             db.refresh(user)
         return user
@@ -79,19 +68,14 @@ def _get_or_create_oauth_user(db: Session, email: str, name: str, provider: str,
 @router.get("/google")
 def google_login():
     """Redirect to Google OAuth consent screen."""
-    config = _get_oauth_config()
-    google = config["google"]
-
-    if not google["client_id"]:
+    if not GOOGLE_CLIENT_ID:
         raise HTTPException(status_code=501, detail="Google OAuth not configured")
-
     params = {
-        "client_id": google["client_id"],
-        "redirect_uri": google["redirect_uri"],
+        "client_id": GOOGLE_CLIENT_ID,
+        "redirect_uri": GOOGLE_REDIRECT_URI,
         "response_type": "code",
         "scope": "openid email profile",
         "access_type": "offline",
-        "prompt": "select_account",
         "state": secrets.token_urlsafe(16),
     }
     url = "https://accounts.google.com/o/oauth2/v2/auth?" + "&".join(f"{k}={v}" for k, v in params.items())
@@ -101,24 +85,21 @@ def google_login():
 @router.get("/google/callback")
 async def google_callback(code: str, db: Session = Depends(get_db)):
     """Handle Google OAuth callback."""
-    config = _get_oauth_config()
-    google = config["google"]
-
     async with httpx.AsyncClient() as client:
         token_resp = await client.post(
             "https://oauth2.googleapis.com/token",
             data={
                 "code": code,
-                "client_id": google["client_id"],
-                "client_secret": google["client_secret"],
-                "redirect_uri": google["redirect_uri"],
+                "client_id": GOOGLE_CLIENT_ID,
+                "client_secret": GOOGLE_CLIENT_SECRET,
+                "redirect_uri": GOOGLE_REDIRECT_URI,
                 "grant_type": "authorization_code",
             },
         )
         if token_resp.status_code != 200:
             raise HTTPException(status_code=400, detail="Failed to exchange code for token")
         token_data = token_resp.json()
-
+        
         # Get user info
         userinfo_resp = await client.get(
             "https://www.googleapis.com/oauth2/v2/userinfo",
@@ -138,7 +119,7 @@ async def google_callback(code: str, db: Session = Depends(get_db)):
     )
     access_token = create_access_token(data={"sub": user.username})
     from fastapi.responses import RedirectResponse
-    return RedirectResponse(url=f"{config['frontend_url']}/oauth-callback?token={access_token}")
+    return RedirectResponse(url=f"{FRONTEND_URL}/oauth-callback?token={access_token}")
 
 
 # ===================== MICROSOFT =====================
@@ -146,15 +127,11 @@ async def google_callback(code: str, db: Session = Depends(get_db)):
 @router.get("/microsoft")
 def microsoft_login():
     """Redirect to Microsoft OAuth consent screen."""
-    config = _get_oauth_config()
-    microsoft = config["microsoft"]
-
-    if not microsoft["client_id"]:
+    if not MICROSOFT_CLIENT_ID:
         raise HTTPException(status_code=501, detail="Microsoft OAuth not configured")
-
     params = {
-        "client_id": microsoft["client_id"],
-        "redirect_uri": microsoft["redirect_uri"],
+        "client_id": MICROSOFT_CLIENT_ID,
+        "redirect_uri": MICROSOFT_REDIRECT_URI,
         "response_type": "code",
         "scope": "openid email profile User.Read",
         "state": secrets.token_urlsafe(16),
@@ -166,17 +143,14 @@ def microsoft_login():
 @router.get("/microsoft/callback")
 async def microsoft_callback(code: str, db: Session = Depends(get_db)):
     """Handle Microsoft OAuth callback."""
-    config = _get_oauth_config()
-    microsoft = config["microsoft"]
-
     async with httpx.AsyncClient() as client:
         token_resp = await client.post(
             "https://login.microsoftonline.com/common/oauth2/v2.0/token",
             data={
                 "code": code,
-                "client_id": microsoft["client_id"],
-                "client_secret": microsoft["client_secret"],
-                "redirect_uri": microsoft["redirect_uri"],
+                "client_id": MICROSOFT_CLIENT_ID,
+                "client_secret": MICROSOFT_CLIENT_SECRET,
+                "redirect_uri": MICROSOFT_REDIRECT_URI,
                 "grant_type": "authorization_code",
             },
         )
@@ -202,7 +176,7 @@ async def microsoft_callback(code: str, db: Session = Depends(get_db)):
     )
     access_token = create_access_token(data={"sub": user.username})
     from fastapi.responses import RedirectResponse
-    return RedirectResponse(url=f"{config['frontend_url']}/oauth-callback?token={access_token}")
+    return RedirectResponse(url=f"{FRONTEND_URL}/oauth-callback?token={access_token}")
 
 
 # ===================== APPLE =====================
@@ -210,15 +184,11 @@ async def microsoft_callback(code: str, db: Session = Depends(get_db)):
 @router.get("/apple")
 def apple_login():
     """Redirect to Apple Sign In consent screen."""
-    config = _get_oauth_config()
-    apple = config["apple"]
-
-    if not apple["client_id"]:
+    if not APPLE_CLIENT_ID:
         raise HTTPException(status_code=501, detail="Apple Sign In not configured")
-
     params = {
-        "client_id": apple["client_id"],
-        "redirect_uri": apple["redirect_uri"],
+        "client_id": APPLE_CLIENT_ID,
+        "redirect_uri": APPLE_REDIRECT_URI,
         "response_type": "code",
         "scope": "name email",
         "response_mode": "form_post",
@@ -231,9 +201,6 @@ def apple_login():
 @router.post("/apple/callback")
 async def apple_callback(request: Request, db: Session = Depends(get_db)):
     """Handle Apple Sign In callback (Apple uses POST with form_post)."""
-    config = _get_oauth_config()
-    apple = config["apple"]
-
     form = await request.form()
     code = form.get("code")
     if not code:
@@ -245,9 +212,9 @@ async def apple_callback(request: Request, db: Session = Depends(get_db)):
             "https://appleid.apple.com/auth/token",
             data={
                 "code": code,
-                "client_id": apple["client_id"],
-                "client_secret": _generate_apple_client_secret(apple),
-                "redirect_uri": apple["redirect_uri"],
+                "client_id": APPLE_CLIENT_ID,
+                "client_secret": _generate_apple_client_secret(),
+                "redirect_uri": APPLE_REDIRECT_URI,
                 "grant_type": "authorization_code",
             },
         )
@@ -287,16 +254,16 @@ async def apple_callback(request: Request, db: Session = Depends(get_db)):
     )
     access_token = create_access_token(data={"sub": user.username})
     from fastapi.responses import RedirectResponse
-    return RedirectResponse(url=f"{config['frontend_url']}/oauth-callback?token={access_token}", status_code=303)
+    return RedirectResponse(url=f"{FRONTEND_URL}/oauth-callback?token={access_token}", status_code=303)
 
 
-def _generate_apple_client_secret(apple_config):
+def _generate_apple_client_secret():
     """Generate a JWT client secret for Apple Sign In using ES256.
-    Requires apple_config with key_file pointing to the .p8 private key file."""
+    Requires APPLE_KEY_FILE env var pointing to the .p8 private key file."""
     import time
     import jwt as pyjwt
 
-    key_file = apple_config.get("key_file")
+    key_file = os.getenv("APPLE_KEY_FILE", "")
     if not key_file or not os.path.exists(key_file):
         raise HTTPException(status_code=501, detail="Apple Sign In key file not configured")
 
@@ -305,14 +272,14 @@ def _generate_apple_client_secret(apple_config):
 
     now = int(time.time())
     payload = {
-        "iss": apple_config.get("team_id"),
+        "iss": APPLE_TEAM_ID,
         "iat": now,
         "exp": now + 86400 * 180,  # 6 months
         "aud": "https://appleid.apple.com",
-        "sub": apple_config.get("client_id"),
+        "sub": APPLE_CLIENT_ID,
     }
     headers = {
-        "kid": apple_config.get("key_id"),
+        "kid": APPLE_KEY_ID,
         "alg": "ES256",
     }
     return pyjwt.encode(payload, private_key, algorithm="ES256", headers=headers)

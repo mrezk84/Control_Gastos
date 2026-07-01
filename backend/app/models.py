@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey, Enum, DateTime
+from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey, Enum, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from .database import Base
@@ -32,6 +32,18 @@ class Expense(Base):
 
     owner = relationship("User", back_populates="expenses")
     receipts = relationship("ReceiptImage", back_populates="expense", cascade="all, delete-orphan")
+
+class Budget(Base):
+    __tablename__ = "budgets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True)
+    category = Column(String(100))
+    amount = Column(Float)
+    month = Column(Integer)  # 1-12
+    year = Column(Integer)
+    is_recurring = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 class ReceiptImage(Base):
     __tablename__ = "receipt_images"

@@ -19,10 +19,10 @@ export const CATEGORY_COLORS = {
   'Entretenimiento': 'pink',
   'Salud': 'green',
   'Servicios': 'red',
-  'Educación': 'purple',
+  'Educación': 'green',
   'Vivienda': 'cyan',
   'Ropa': 'yellow',
-  'Tecnología': 'indigo',
+  'Tecnología': 'blue',
   'Otros': 'gray',
 };
 
@@ -30,16 +30,16 @@ export const CATEGORIES = Object.keys(CATEGORY_EMOJIS);
 
 // Colores para gráficos
 export const CHART_COLORS = [
-  '#8b5cf6', // purple
-  '#f97316', // orange
-  '#3b82f6', // blue
-  '#ec4899', // pink
-  '#22c55e', // green
-  '#ef4444', // red
-  '#06b6d4', // cyan
-  '#eab308', // yellow
-  '#6366f1', // indigo
-  '#6b7280', // gray
+  '#10b981', // emerald
+  '#f59e0b', // amber
+  '#38bdf8', // sky
+  '#f472b6', // pink
+  '#34d399', // mint
+  '#f43f5e', // rose
+  '#22d3ee', // cyan
+  '#d8b878', // champagne
+  '#2dd4bf', // teal
+  '#94a3b8', // slate
 ];
 
 // Configuración de moneda

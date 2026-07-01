@@ -2,7 +2,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
-from .routes import expenses, auth, oauth, receipts
+from .routes import expenses, auth
+from .routes.oauth_routes import router as oauth
+from .routes import receipts
+from .routes import budgets
 from .database import Base, engine
 from dotenv import load_dotenv
 import os
@@ -42,6 +45,7 @@ app.include_router(auth, prefix="/auth")
 app.include_router(oauth, prefix="/auth")
 app.include_router(expenses, prefix="/expenses")
 app.include_router(receipts, prefix="/receipts")
+app.include_router(budgets.router, prefix="/budgets")
 
 @app.get("/")
 def root():

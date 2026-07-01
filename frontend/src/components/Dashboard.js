@@ -33,8 +33,8 @@ ChartJS.register(
 
 // Premium chart colors
 const CHART_COLORS = [
-  '#8b5cf6', '#4facfe', '#f093fb', '#43e97b',
-  '#fbbf24', '#f5576c', '#00f2fe', '#667eea',
+  '#10b981', '#22d3ee', '#d8b878', '#34d399',
+  '#f59e0b', '#f43f5e', '#38bdf8', '#2dd4bf',
 ];
 const CHART_COLORS_ALPHA = CHART_COLORS.map(c => c + '30');
 
@@ -122,12 +122,12 @@ function Dashboard() {
       {
         label: 'Gastos Mensuales',
         data: last6Months.map((m) => monthlyMap[m] || 0),
-        borderColor: '#4facfe',
+        borderColor: '#22d3ee',
         backgroundColor: 'rgba(79, 172, 254, 0.08)',
         fill: true,
         tension: 0.4,
         pointRadius: 5,
-        pointBackgroundColor: '#4facfe',
+        pointBackgroundColor: '#22d3ee',
         pointBorderColor: 'rgba(79, 172, 254, 0.3)',
         pointBorderWidth: 3,
         pointHoverRadius: 8,

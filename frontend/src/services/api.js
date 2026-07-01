@@ -12,6 +12,29 @@ export const setAuthToken = (token) => {
   }
 };
 
+// Initialize the auth header synchronously at module load, before any component
+// renders. This avoids a race on hard refresh / direct navigation where a child
+// effect (e.g. SidebarLayout -> getCurrentUser) fires before App's effect sets it.
+setAuthToken(localStorage.getItem('token'));
+
+// Global 401 handler: if the token is missing/expired, clear it and send the
+// user back to login instead of failing silently on every request.
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error.response?.status;
+    const isAuthEndpoint = error.config?.url?.includes('/auth/');
+    if (status === 401 && !isAuthEndpoint) {
+      localStorage.removeItem('token');
+      setAuthToken(null);
+      if (window.location.pathname !== '/login') {
+        window.location.assign('/login');
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Auth
 export const login = (credentials) => {
   return api.post('/auth/token', new URLSearchParams(credentials), {
@@ -46,8 +69,17 @@ export const createExpense = (expense) => {
   return api.post('/expenses/', expense);
 };
 
-export const getExpenses = () => {
-  return api.get('/expenses/');
+export const getExpenses = (params = {}) => {
+  return api.get('/expenses/', { params });
+};
+
+// Alias used by pages that pass optional { startDate, endDate, category } filters
+export const getAllExpenses = (params = {}) => {
+  return api.get('/expenses/', { params });
+};
+
+export const getExpensesSummary = () => {
+  return api.get('/expenses/summary');
 };
 
 export const updateExpense = (id, expense) => {
@@ -56,6 +88,43 @@ export const updateExpense = (id, expense) => {
 
 export const deleteExpense = (id) => {
   return api.delete(`/expenses/${id}`);
+};
+
+export const exportExpensesCSV = (params = {}) => {
+  return api.get('/expenses/export/csv', { params, responseType: 'blob' });
+};
+
+export const exportExpensesExcel = (params = {}) => {
+  return api.get('/expenses/export/excel', { params, responseType: 'blob' });
+};
+
+export const importExpensesCSV = (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return api.post('/expenses/import/csv', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};
+
+// Budgets
+export const getBudgets = (params = {}) => {
+  return api.get('/budgets/', { params });
+};
+
+export const getBudgetsProgress = (month, year) => {
+  return api.get('/budgets/progress/current', { params: { month, year } });
+};
+
+export const createBudget = (budget) => {
+  return api.post('/budgets/', budget);
+};
+
+export const updateBudget = (id, budget) => {
+  return api.put(`/budgets/${id}`, budget);
+};
+
+export const deleteBudget = (id) => {
+  return api.delete(`/budgets/${id}`);
 };
 
 // Receipts

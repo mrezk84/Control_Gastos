@@ -71,6 +71,45 @@ class Expense(BaseModel):
     class Config:
         from_attributes = True
 
+# --- Budget Schemas ---
+
+class BudgetCreate(BaseModel):
+    category: str
+    amount: float
+    month: int
+    year: int
+    is_recurring: bool = False
+
+class BudgetUpdate(BaseModel):
+    category: Optional[str] = None
+    amount: Optional[float] = None
+    month: Optional[int] = None
+    year: Optional[int] = None
+    is_recurring: Optional[bool] = None
+
+class Budget(BaseModel):
+    id: int
+    user_id: int
+    category: str
+    amount: float
+    month: int
+    year: int
+    is_recurring: bool = False
+
+    class Config:
+        from_attributes = True
+
+class BudgetProgress(BaseModel):
+    budget_id: int
+    category: str
+    budget_amount: float
+    spent_amount: float
+    remaining_amount: float
+    percentage: float
+
+class BudgetList(BaseModel):
+    budgets: List[BudgetProgress]
+
 # --- Receipt Schemas ---
 
 class ReceiptImageCreate(BaseModel):

@@ -1,140 +1,180 @@
 """
-CRUD operations for database models.
-
-This module provides a centralized layer for database operations,
-promoting code reuse and consistency across the application.
+CRUD operations module.
+Handles database operations for users and expenses.
 """
 
-from datetime import date
 from sqlalchemy.orm import Session
 from sqlalchemy import func, extract
-from typing import List, Optional, Type, TypeVar, Generic
-from fastapi import HTTPException, status
+from typing import List, Optional
+from datetime import date
+import logging
 
 from app import models, schemas
 
-ModelType = TypeVar("ModelType", bound=models.Base)
-CreateSchemaType = TypeVar("CreateSchemaType", bound=schemas.BaseModel)
-UpdateSchemaType = TypeVar("UpdateSchemaType", bound=schemas.BaseModel)
+logger = logging.getLogger(__name__)
 
 
-# ============== USER OPERATIONS ==============
+def create_user(db: Session, user: schemas.UserCreate, hashed_password: str) -> Optional[models.User]:
+    """
+    Create a new user in the database.
 
-def get_user_by_email(db: Session, email: str) -> Optional[models.User]:
-    """Get user by email address."""
-    return db.query(models.User).filter(models.User.email == email).first()
+    Args:
+        db: Database session
+        user: User creation schema
+        hashed_password: The hashed password for the user
 
+    Returns:
+        User: The created user object
 
-def get_user_by_id(db: Session, user_id: int) -> Optional[models.User]:
-    """Get user by ID."""
-    return db.query(models.User).filter(models.User.id == user_id).first()
+    Raises:
+        Exception: If database operation fails
+    """
+    try:
+        db_user = models.User(
+            username=user.username,
+            email=user.email,
+            hashed_password=hashed_password
+        )
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+        logger.info(f"Created new user: {user.username}")
+        return db_user
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error creating user '{user.username}': {e}")
+        raise
 
 
 def get_user_by_username(db: Session, username: str) -> Optional[models.User]:
-    """Get user by username."""
-    return db.query(models.User).filter(models.User.username == username).first()
+    """
+    Get a user by username.
+
+    Args:
+        db: Database session
+        username: The username to search for
+
+    Returns:
+        User object if found, None otherwise
+    """
+    try:
+        return db.query(models.User).filter(models.User.username == username).first()
+    except Exception as e:
+        logger.error(f"Error fetching user '{username}': {e}")
+        return None
 
 
-def create_user(db: Session, user: schemas.UserCreate, hashed_password: str) -> models.User:
-    """Create a new user."""
-    db_user = models.User(
-        username=user.username,
-        email=user.email,
-        hashed_password=hashed_password
-    )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+def get_user_by_email(db: Session, email: str) -> Optional[models.User]:
+    """
+    Get a user by email.
+
+    Args:
+        db: Database session
+        email: The email to search for
+
+    Returns:
+        User object if found, None otherwise
+    """
+    try:
+        return db.query(models.User).filter(models.User.email == email).first()
+    except Exception as e:
+        logger.error(f"Error fetching user by email '{email}': {e}")
+        return None
 
 
-def create_oauth_user(db: Session, user: schemas.OAuthUser) -> models.User:
-    """Create a new user via OAuth."""
-    db_user = models.User(
-        username=user.email.split('@')[0],  # Use email prefix as username
-        email=user.email,
-        avatar_url=user.avatar_url,
-        auth_provider=user.provider,
-        oauth_id=user.provider_id
-    )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+def create_expense(
+    db: Session,
+    expense: schemas.ExpenseCreate,
+    user_id: int
+) -> Optional[models.Expense]:
+    """
+    Create a new expense for a user.
 
+    Args:
+        db: Database session
+        expense: Expense creation schema
+        user_id: The ID of the user creating the expense
 
-# ============== EXPENSE OPERATIONS ==============
+    Returns:
+        Expense: The created expense object
+
+    Raises:
+        Exception: If database operation fails
+    """
+    try:
+        db_expense = models.Expense(**expense.model_dump(), user_id=user_id)
+        db.add(db_expense)
+        db.commit()
+        db.refresh(db_expense)
+        logger.info(f"Created expense for user_id {user_id}: {expense.amount}")
+        return db_expense
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error creating expense for user_id {user_id}: {e}")
+        raise
+
 
 def get_expenses(
     db: Session,
     user_id: int,
-    skip: int = 0,
-    limit: int = 100,
-    category: Optional[str] = None,
     start_date: Optional[date] = None,
-    end_date: Optional[date] = None
+    end_date: Optional[date] = None,
+    category: Optional[str] = None,
+    limit: Optional[int] = None,
 ) -> List[models.Expense]:
-    """Get expenses with optional filters."""
-    query = db.query(models.Expense).filter(models.Expense.user_id == user_id)
-
-    if category:
-        query = query.filter(models.Expense.category == category)
-    if start_date:
-        query = query.filter(models.Expense.date >= start_date)
-    if end_date:
-        query = query.filter(models.Expense.date <= end_date)
-
-    return query.order_by(models.Expense.date.desc()).offset(skip).limit(limit).all()
-
-
-def get_expenses_paginated(
-    db: Session,
-    user_id: int,
-    skip: int = 0,
-    limit: int = 20,
-    category: Optional[str] = None,
-    start_date: Optional[date] = None,
-    end_date: Optional[date] = None
-) -> tuple[List[models.Expense], int]:
     """
-    Get expenses with optional filters and total count for pagination.
+    Get expenses for a user, newest first, with optional date/category filters.
+
+    Args:
+        db: Database session
+        user_id: The ID of the user
+        start_date: Only expenses on/after this date
+        end_date: Only expenses on/before this date
+        category: Only expenses in this category
+        limit: Optional limit on number of results
 
     Returns:
-        Tuple of (expenses list, total count)
+        List of Expense objects ordered by date descending
     """
-    query = db.query(models.Expense).filter(models.Expense.user_id == user_id)
-
-    if category:
-        query = query.filter(models.Expense.category == category)
-    if start_date:
-        query = query.filter(models.Expense.date >= start_date)
-    if end_date:
-        query = query.filter(models.Expense.date <= end_date)
-
-    # Get total count before pagination
-    total = query.count()
-
-    # Get paginated results
-    expenses = query.order_by(models.Expense.date.desc()).offset(skip).limit(limit).all()
-
-    return expenses, total
+    try:
+        query = db.query(models.Expense).filter(models.Expense.user_id == user_id)
+        if start_date:
+            query = query.filter(models.Expense.date >= start_date)
+        if end_date:
+            query = query.filter(models.Expense.date <= end_date)
+        if category:
+            query = query.filter(models.Expense.category == category)
+        query = query.order_by(models.Expense.date.desc())
+        if limit:
+            query = query.limit(limit)
+        expenses = query.all()
+        logger.debug(f"Fetched {len(expenses)} expenses for user_id {user_id}")
+        return expenses
+    except Exception as e:
+        logger.error(f"Error fetching expenses for user_id {user_id}: {e}")
+        return []
 
 
 def get_expense_by_id(db: Session, expense_id: int, user_id: int) -> Optional[models.Expense]:
-    """Get a single expense by ID."""
-    return db.query(models.Expense).filter(
-        models.Expense.id == expense_id,
-        models.Expense.user_id == user_id
-    ).first()
+    """
+    Get a specific expense by ID for a user.
 
+    Args:
+        db: Database session
+        expense_id: The ID of the expense
+        user_id: The ID of the user (for authorization)
 
-def create_expense(db: Session, expense: schemas.ExpenseCreate, user_id: int) -> models.Expense:
-    """Create a new expense."""
-    db_expense = models.Expense(**expense.model_dump(), user_id=user_id)
-    db.add(db_expense)
-    db.commit()
-    db.refresh(db_expense)
-    return db_expense
+    Returns:
+        Expense object if found and belongs to user, None otherwise
+    """
+    try:
+        return db.query(models.Expense).filter(
+            models.Expense.id == expense_id,
+            models.Expense.user_id == user_id
+        ).first()
+    except Exception as e:
+        logger.error(f"Error fetching expense {expense_id} for user_id {user_id}: {e}")
+        return None
 
 
 def update_expense(
@@ -143,211 +183,185 @@ def update_expense(
     user_id: int,
     expense_update: schemas.ExpenseUpdate
 ) -> Optional[models.Expense]:
-    """Update an existing expense."""
-    db_expense = get_expense_by_id(db, expense_id, user_id)
-    if not db_expense:
-        return None
+    """
+    Update an existing expense (partial: only provided fields are changed).
 
-    update_data = expense_update.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(db_expense, field, value)
+    Args:
+        db: Database session
+        expense_id: The ID of the expense to update
+        user_id: The ID of the user (for authorization)
+        expense_update: The fields to update
 
-    db.commit()
-    db.refresh(db_expense)
-    return db_expense
+    Returns:
+        Updated Expense object if found, None otherwise
+
+    Raises:
+        Exception: If database operation fails
+    """
+    try:
+        db_expense = get_expense_by_id(db, expense_id, user_id)
+        if not db_expense:
+            return None
+
+        for key, value in expense_update.model_dump(exclude_unset=True).items():
+            setattr(db_expense, key, value)
+
+        db.commit()
+        db.refresh(db_expense)
+        logger.info(f"Updated expense {expense_id} for user_id {user_id}")
+        return db_expense
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error updating expense {expense_id} for user_id {user_id}: {e}")
+        raise
 
 
 def delete_expense(db: Session, expense_id: int, user_id: int) -> bool:
-    """Delete an expense. Returns True if deleted, False if not found."""
-    db_expense = get_expense_by_id(db, expense_id, user_id)
-    if not db_expense:
+    """
+    Delete an expense.
+
+    Args:
+        db: Database session
+        expense_id: The ID of the expense to delete
+        user_id: The ID of the user (for authorization)
+
+    Returns:
+        bool: True if deleted, False if not found
+    """
+    try:
+        db_expense = get_expense_by_id(db, expense_id, user_id)
+        if not db_expense:
+            return False
+
+        db.delete(db_expense)
+        db.commit()
+        logger.info(f"Deleted expense {expense_id} for user_id {user_id}")
+        return True
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error deleting expense {expense_id} for user_id {user_id}: {e}")
         return False
 
-    db.delete(db_expense)
-    db.commit()
-    return True
 
+# --- Budget CRUD ---
 
-def get_expense_summary(db: Session, user_id: int) -> schemas.ExpenseSummary:
-    """Get expense summary with category breakdown and monthly trends."""
-    expenses = get_expenses(db, user_id, limit=10000)  # Get all for summary
+def create_budget(db: Session, budget: schemas.BudgetCreate, user_id: int) -> models.Budget:
+    """Create a new budget for a user."""
+    try:
+        db_budget = models.Budget(**budget.model_dump(), user_id=user_id)
+        db.add(db_budget)
+        db.commit()
+        db.refresh(db_budget)
+        logger.info(f"Created budget for user_id {user_id}: {budget.category}")
+        return db_budget
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error creating budget for user_id {user_id}: {e}")
+        raise
 
-    if not expenses:
-        return schemas.ExpenseSummary(
-            total_expenses=0,
-            average_expense=0,
-            top_category=None,
-            expense_count=0,
-            categories=[],
-            monthly_trends=[]
-        )
-
-    total = sum(e.amount for e in expenses)
-    avg = total / len(expenses)
-
-    # Category breakdown
-    cat_data = {}
-    for e in expenses:
-        if e.category not in cat_data:
-            cat_data[e.category] = {"total": 0, "count": 0}
-        cat_data[e.category]["total"] += e.amount
-        cat_data[e.category]["count"] += 1
-
-    categories = [
-        schemas.CategorySummary(category=cat, total=data["total"], count=data["count"])
-        for cat, data in sorted(cat_data.items(), key=lambda x: x[1]["total"], reverse=True)
-    ]
-    top_category = categories[0].category if categories else None
-
-    # Monthly trends (last 12 months)
-    monthly_data = {}
-    for e in expenses:
-        month_key = e.date.strftime("%Y-%m")
-        monthly_data[month_key] = monthly_data.get(month_key, 0) + e.amount
-
-    monthly_trends = [
-        schemas.MonthlyTrend(month=month, total=total)
-        for month, total in sorted(monthly_data.items())
-    ][-12:]
-
-    return schemas.ExpenseSummary(
-        total_expenses=total,
-        average_expense=round(avg, 2),
-        top_category=top_category,
-        expense_count=len(expenses),
-        categories=categories,
-        monthly_trends=monthly_trends,
-    )
-
-
-# ============== BUDGET OPERATIONS ==============
 
 def get_budgets(
     db: Session,
     user_id: int,
     month: Optional[int] = None,
-    year: Optional[int] = None
+    year: Optional[int] = None,
 ) -> List[models.Budget]:
-    """Get budgets with optional filters."""
+    """Get all budgets for a user, optionally filtered by month/year."""
     query = db.query(models.Budget).filter(models.Budget.user_id == user_id)
-
     if month is not None:
         query = query.filter(models.Budget.month == month)
     if year is not None:
         query = query.filter(models.Budget.year == year)
-
-    return query.order_by(models.Budget.year.desc(), models.Budget.month.desc()).all()
+    return query.all()
 
 
 def get_budget_by_id(db: Session, budget_id: int, user_id: int) -> Optional[models.Budget]:
-    """Get a single budget by ID."""
+    """Get a specific budget by ID for a user."""
     return db.query(models.Budget).filter(
         models.Budget.id == budget_id,
-        models.Budget.user_id == user_id
-    ).first()
-
-
-def create_budget(db: Session, budget: schemas.BudgetCreate, user_id: int) -> models.Budget:
-    """Create a new budget."""
-    # Check for duplicate
-    existing = db.query(models.Budget).filter(
         models.Budget.user_id == user_id,
-        models.Budget.category == budget.category,
-        models.Budget.month == budget.month,
-        models.Budget.year == budget.year
     ).first()
-
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Ya existe un presupuesto para esta categoría en el período seleccionado"
-        )
-
-    db_budget = models.Budget(**budget.model_dump(), user_id=user_id)
-    db.add(db_budget)
-    db.commit()
-    db.refresh(db_budget)
-    return db_budget
 
 
 def update_budget(
     db: Session,
     budget_id: int,
     user_id: int,
-    budget_update: schemas.BudgetUpdate
+    budget_update: schemas.BudgetUpdate,
 ) -> Optional[models.Budget]:
     """Update an existing budget."""
-    db_budget = get_budget_by_id(db, budget_id, user_id)
-    if not db_budget:
-        return None
-
-    update_data = budget_update.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(db_budget, field, value)
-
-    db.commit()
-    db.refresh(db_budget)
-    return db_budget
+    try:
+        db_budget = get_budget_by_id(db, budget_id, user_id)
+        if not db_budget:
+            return None
+        for key, value in budget_update.model_dump(exclude_unset=True).items():
+            setattr(db_budget, key, value)
+        db.commit()
+        db.refresh(db_budget)
+        logger.info(f"Updated budget {budget_id} for user_id {user_id}")
+        return db_budget
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error updating budget {budget_id} for user_id {user_id}: {e}")
+        raise
 
 
 def delete_budget(db: Session, budget_id: int, user_id: int) -> bool:
-    """Delete a budget. Returns True if deleted, False if not found."""
-    db_budget = get_budget_by_id(db, budget_id, user_id)
-    if not db_budget:
+    """Delete a budget."""
+    try:
+        db_budget = get_budget_by_id(db, budget_id, user_id)
+        if not db_budget:
+            return False
+        db.delete(db_budget)
+        db.commit()
+        logger.info(f"Deleted budget {budget_id} for user_id {user_id}")
+        return True
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error deleting budget {budget_id} for user_id {user_id}: {e}")
         return False
-
-    db.delete(db_budget)
-    db.commit()
-    return True
 
 
 def get_budgets_progress(
     db: Session,
     user_id: int,
     month: int,
-    year: int
+    year: int,
 ) -> List[schemas.BudgetProgress]:
     """
-    Get budget progress with spent amounts using a single optimized query.
-    This fixes the N+1 query problem.
+    Get budgets with spent/remaining/percentage for a given month/year.
+
+    Uses a single aggregate query over expenses to avoid N+1.
     """
-    # Single query with JOIN to get spent amounts
-    results = db.query(
-        models.Budget.id.label('budget_id'),
-        models.Budget.category,
-        models.Budget.amount.label('budget_amount'),
-        func.coalesce(func.sum(models.Expense.amount), 0).label('spent_amount')
-    ).outerjoin(
-        models.Expense,
-        (models.Expense.user_id == models.Budget.user_id) &
-        (models.Expense.category == models.Budget.category) &
-        (extract('month', models.Expense.date) == month) &
-        (extract('year', models.Expense.date) == year)
-    ).filter(
+    budgets = db.query(models.Budget).filter(
         models.Budget.user_id == user_id,
         models.Budget.month == month,
-        models.Budget.year == year
-    ).group_by(
-        models.Budget.id,
-        models.Budget.category,
-        models.Budget.amount
+        models.Budget.year == year,
     ).all()
 
-    progress_list = []
-    for row in results:
-        spent = float(row.spent_amount)
-        remaining = row.budget_amount - spent
-        percentage = (spent / row.budget_amount * 100) if row.budget_amount > 0 else 0
+    # Aggregate spending by category for the period in one query.
+    spent_rows = db.query(
+        models.Expense.category,
+        func.coalesce(func.sum(models.Expense.amount), 0),
+    ).filter(
+        models.Expense.user_id == user_id,
+        extract("month", models.Expense.date) == month,
+        extract("year", models.Expense.date) == year,
+    ).group_by(models.Expense.category).all()
 
-        progress_list.append(schemas.BudgetProgress(
-            budget_id=row.budget_id,
-            category=row.category,
-            budget_amount=row.budget_amount,
-            spent_amount=round(spent, 2),
-            remaining_amount=round(remaining, 2),
-            percentage=round(percentage, 1),
-            month=month,
-            year=year
+    spent_map = {category: float(total) for category, total in spent_rows}
+
+    progress = []
+    for b in budgets:
+        spent = spent_map.get(b.category, 0.0)
+        remaining = b.amount - spent
+        percentage = (spent / b.amount * 100) if b.amount > 0 else 0.0
+        progress.append(schemas.BudgetProgress(
+            budget_id=b.id,
+            category=b.category,
+            budget_amount=b.amount,
+            spent_amount=spent,
+            remaining_amount=remaining,
+            percentage=percentage,
         ))
-
-    return progress_list
+    return progress

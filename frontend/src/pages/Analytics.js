@@ -246,12 +246,12 @@ function Analytics() {
     datasets: [{
       label: 'Gastos mensuales',
       data: analytics.sortedMonths.map(m => analytics.monthlyMap[m]),
-      borderColor: '#4facfe',
+      borderColor: '#22d3ee',
       backgroundColor: 'rgba(79, 172, 254, 0.1)',
       fill: true,
       tension: 0.4,
       pointRadius: 5,
-      pointBackgroundColor: '#4facfe',
+      pointBackgroundColor: '#22d3ee',
     }],
   }), [analytics.monthlyMap, analytics.sortedMonths]);
 
