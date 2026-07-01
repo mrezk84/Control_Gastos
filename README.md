@@ -134,16 +134,16 @@ OCR_SPACE_API_KEY=
 
 ## 🌐 Deployment en Producción
 
-### Opción Recomendada: Vercel + Railway
+### Opción Recomendada: Render (Gratis)
 
-El proyecto está configurado para deployment híbrido:
+**Railway ya no ofrece plan gratuito**. La mejor alternativa actual es **Render**.
 
-- **Frontend (Vercel)**: Hosting estático global, CDN gratis
-- **Backend + DB (Railway)**: API Python + PostgreSQL
+- **Frontend**: Render Static Site (o Vercel)
+- **Backend + DB**: Render Web Service + PostgreSQL
 
 ```
 ┌─────────────┐         ┌─────────────┐
-│   Vercel    │         │   Railway   │
+│   Render    │         │   Render    │
 │  Frontend   │◄───────►│  Backend    │
 │   (React)   │  API    │  (FastAPI)  │
 │             │         │   + PGSQL   │
@@ -152,41 +152,44 @@ El proyecto está configurado para deployment híbrido:
 
 ### Guía de Deployment Paso a Paso
 
-📖 **Ver guía completa**: [HYBRID_DEPLOY.md](./HYBRID_DEPLOY.md)
+📖 **Ver guía completa**: [RENDER_DEPLOY.md](./RENDER_DEPLOY.md)
 
-#### Resumen Rápido:
+#### Resumen Rápido - Render:
 
-1. **Railway (Backend + DB)**
-   - Ve a railway.app → Login with GitHub
-   - Deploy from GitHub repo → Root: `backend`
-   - Agregar servicio PostgreSQL
-   - Configurar variables: `DATABASE_URL`, `SECRET_KEY`, `FRONTEND_URL`
+1. **Crear cuenta en [render.com](https://render.com)** con GitHub
 
-2. **Vercel (Frontend)**
-   - Ve a vercel.com → Login with GitHub
-   - Import repo → Root: `frontend`
-   - Configurar variable: `REACT_APP_API_URL` (URL del backend de Railway)
+2. **Backend (Render)**
+   - New → Web Service → Conectar repo `Control_Gastos`
+   - Root: `backend`, Runtime: Docker, Plan: Free
+   - Variables: `DATABASE_URL` (conectar a DB), `SECRET_KEY`, `FRONTEND_URL`
 
-3. **Configurar CORS**
-   - En Railway Backend → Variables → `FRONTEND_URL = https://tu-frontend.vercel.app`
+3. **Base de Datos (Render)**
+   - New → PostgreSQL → Plan: Free
+   - Conectar al servicio backend
+
+4. **Frontend (Render o Vercel)**
+   - Render: New → Static Site → Root: `frontend`
+   - Variable: `REACT_APP_API_URL` (URL del backend)
 
 ### URLs de Producción (Ejemplo)
 
 | Servicio | URL |
 |----------|-----|
-| Frontend | `https://control-gastos-frontend.vercel.app` |
-| Backend | `https://control-gastos-backend-production.up.railway.app` |
+| Frontend | `https://control-gastos-frontend.onrender.com` |
+| Backend | `https://control-gastos-backend.onrender.com` |
 
 ### Costos
 
-- ✅ **Vercel**: Gratis (Hobby plan)
-- ✅ **Railway**: Gratis ($5 crédito/mes)
+- ✅ **Render Backend**: Gratis (plan Free)
+- ✅ **Render PostgreSQL**: Gratis (90 días, luego $7/mes)
+- ✅ **Vercel Frontend**: Gratis (opcional)
 
 ---
 
 ## 🔗 Links Útiles
 
-- [Guía de Deployment Híbrido](./HYBRID_DEPLOY.md)
+- [Deployment en Render (Recomendado)](./RENDER_DEPLOY.md)
+- [Deployment Híbrido Vercel + Railway](./HYBRID_DEPLOY.md) ⚠️ Railway ya no es gratis
 - [Deployment en Google Cloud](./DEPLOYMENT.md)
 - [Deployment en Railway](./RAILWAY_DEPLOY.md)
 - [Manual de Usuario](./MANUAL_USUARIO.md)
