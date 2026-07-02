@@ -18,13 +18,5 @@
       "src": "/.*",
       "dest": "/index.html"
     }
-  ],
-  "env": {
-    "REACT_APP_API_URL": "@backend-api-url"
-  },
-  "build": {
-    "env": {
-      "REACT_APP_API_URL": "@backend-api-url"
-    }
-  }
+  ]
 }

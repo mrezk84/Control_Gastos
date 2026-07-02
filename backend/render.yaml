@@ -29,7 +29,7 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: FRONTEND_URL
-        value: https://control-gastos-frontend.onrender.com
+        value: https://control-gastos-frontend.vercel.app
 
 databases:
   # PostgreSQL Database
