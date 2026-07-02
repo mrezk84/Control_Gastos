@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { getExpenses, createExpense, updateExpense, deleteExpense, exportExpensesCSV, exportExpensesExcel, importExpensesCSV } from '../services/api';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { getExpenses, deleteExpense, exportExpensesCSV, exportExpensesExcel, importExpensesCSV } from '../services/api';
 import ExpenseFilters from '../components/Filters/ExpenseFilters';
 import EmptyState from '../components/ui/EmptyState';
 import ConfirmDialog from '../components/ui/ConfirmDialog';

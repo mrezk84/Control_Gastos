@@ -22,15 +22,6 @@ const currentLevel =
 
 const isLevelEnabled = (level) => level >= currentLevel;
 
-const formatMessage = (message, ...args) => {
-  if (args.length === 0) return message;
-  try {
-    return `${message} ${JSON.stringify(args, null, 2)}`;
-  } catch {
-    return `${message} ${args}`;
-  }
-};
-
 const logger = {
   debug: (message, ...args) => {
     if (isLevelEnabled(LogLevel.DEBUG)) {

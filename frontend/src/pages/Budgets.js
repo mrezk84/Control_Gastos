@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getBudgets, getBudgetsProgress, createBudget, updateBudget, deleteBudget, getAllExpenses, createExpense } from '../services/api';
+import { getBudgetsProgress, createBudget, updateBudget, deleteBudget, getAllExpenses, createExpense } from '../services/api';
 import EmptyState from '../components/ui/EmptyState';
 import Modal from '../components/ui/Modal';
-import Input from '../components/ui/Input';
-import Button from '../components/ui/Button';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import logger from '../utils/logger';
 import { useToast } from '../components/ui/ToastContainer';
@@ -30,8 +28,8 @@ function Budgets() {
   const [budgets, setBudgets] = useState([]);
   const [todayExpenses, setTodayExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [currentMonth] = useState(new Date().getMonth() + 1);
+  const [currentYear] = useState(new Date().getFullYear());
   const [showModal, setShowModal] = useState(false);
   const [showQuickExpenseModal, setShowQuickExpenseModal] = useState(false);
   const [editingBudget, setEditingBudget] = useState(null);
@@ -48,7 +46,7 @@ function Budgets() {
   });
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [budgetToDelete, setBudgetToDelete] = useState(null);
-  const { success, error, warning, info } = useToast();
+  const { success, error, warning } = useToast();
 
   // Fetch budgets with progress
   const fetchBudgets = useCallback(async () => {
