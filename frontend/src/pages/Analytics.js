@@ -14,7 +14,7 @@ import {
 } from 'chart.js';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 import { getAllExpenses, getExpensesSummary } from '../services/api';
-import { CHART_COLORS, CATEGORIES, formatCurrency } from '../utils';
+import { CHART_COLORS, formatCurrency } from '../utils';
 import logger from '../utils/logger';
 
 ChartJS.register(

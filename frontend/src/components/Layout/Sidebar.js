@@ -49,7 +49,7 @@ function Sidebar({ user, onLogout, collapsed = false, onToggle }) {
 
         {/* Navigation */}
         <nav className="sidebar-nav" aria-label="Menú de navegación">
-          <ul className="sidebar-nav-list" role="list">
+          <ul className="sidebar-nav-list">
             {navItems.map((item) => (
               <li key={item.path} role="none">
                 <NavLink
