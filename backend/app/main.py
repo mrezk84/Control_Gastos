@@ -44,7 +44,7 @@ app.include_router(auth, prefix="/auth")
 app.include_router(oauth, prefix="/auth")
 app.include_router(expenses, prefix="/expenses")
 app.include_router(receipts, prefix="/receipts")
-app.include_router(budgets.router, prefix="/budgets")
+app.include_router(budgets, prefix="/budgets")
 
 @app.get("/")
 def root():
