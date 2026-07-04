@@ -127,11 +127,7 @@ function QuickActionsFAB({ actions = [] }) {
  * BudgetAlertFAB - FAB para alertas de presupuesto
  */
 function BudgetAlertFAB({ onClick, overBudget = false }) {
-  const [isShaking, setIsShaking] = useState(false);
-
   const handleClick = () => {
-    setIsShaking(true);
-    setTimeout(() => setIsShaking(false), 500);
     if (onClick) onClick();
   };
 
