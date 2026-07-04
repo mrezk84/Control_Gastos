@@ -6,6 +6,106 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { CATEGORY_EMOJIS, CATEGORY_COLORS, formatCurrency, formatDate } from '../utils';
 import logger from '../utils/logger';
 import { useToast } from '../components/ui/ToastContainer';
+import { EXPENSE_CREATED_EVENT } from '../components/Layout/SidebarLayout';
+
+const PAGE_SIZE = 25;
+
+/**
+ * Expense table with client-side infinite scroll: renders `PAGE_SIZE` rows
+ * at a time and reveals more as a sentinel row scrolls into view, instead of
+ * rendering the whole (potentially long) list up front.
+ */
+function ExpensesTable({ expenses, sortBy, sortOrder, onSort, onDeleteClick }) {
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef(null);
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [expenses]);
+
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, expenses.length));
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [expenses.length]);
+
+  const visibleExpenses = expenses.slice(0, visibleCount);
+  const hasMore = visibleCount < expenses.length;
+
+  return (
+    <div className="expenses-table-wrapper">
+      <table className="expenses-table">
+        <thead>
+          <tr>
+            <th
+              className={`sortable ${sortBy === 'description' ? `sorted-${sortOrder}` : ''}`}
+              onClick={() => onSort('description')}
+            >
+              Descripción {sortBy === 'description' && (sortOrder === 'asc' ? '↑' : '↓')}
+            </th>
+            <th
+              className={`sortable ${sortBy === 'category' ? `sorted-${sortOrder}` : ''}`}
+              onClick={() => onSort('category')}
+            >
+              Categoría {sortBy === 'category' && (sortOrder === 'asc' ? '↑' : '↓')}
+            </th>
+            <th
+              className={`sortable ${sortBy === 'amount' ? `sorted-${sortOrder}` : ''}`}
+              onClick={() => onSort('amount')}
+            >
+              Monto {sortBy === 'amount' && (sortOrder === 'asc' ? '↑' : '↓')}
+            </th>
+            <th
+              className={`sortable ${sortBy === 'date' ? `sorted-${sortOrder}` : ''}`}
+              onClick={() => onSort('date')}
+            >
+              Fecha {sortBy === 'date' && (sortOrder === 'asc' ? '↑' : '↓')}
+            </th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {visibleExpenses.map((expense, index) => (
+            <tr key={expense.id} style={{ animationDelay: `${Math.min(index, 20) * 0.03}s` }}>
+              <td className="expenses-description">{expense.description}</td>
+              <td>
+                <span className={`category-badge category-${CATEGORY_COLORS[expense.category] || 'default'}`}>
+                  {CATEGORY_EMOJIS[expense.category] || '📦'} {expense.category}
+                </span>
+              </td>
+              <td className="expenses-amount">{formatCurrency(expense.amount)}</td>
+              <td className="expenses-date">{formatDate(expense.date)}</td>
+              <td className="expenses-actions">
+                <button
+                  className="expenses-action-btn expenses-action-delete"
+                  onClick={() => onDeleteClick(expense)}
+                  title="Eliminar"
+                >
+                  🗑️
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {hasMore && (
+        <div ref={sentinelRef} className="expenses-load-more">
+          <span className="spinner-mini" aria-hidden="true" />
+          Cargando más gastos...
+        </div>
+      )}
+    </div>
+  );
+}
 
 function Expenses() {
   const [allExpenses, setAllExpenses] = useState([]);
@@ -31,6 +131,12 @@ function Expenses() {
 
   useEffect(() => {
     fetchExpenses();
+  }, []);
+
+  // Refresh when an expense is created anywhere in the app (FAB / Cmd+N).
+  useEffect(() => {
+    window.addEventListener(EXPENSE_CREATED_EVENT, fetchExpenses);
+    return () => window.removeEventListener(EXPENSE_CREATED_EVENT, fetchExpenses);
   }, []);
 
   const fetchExpenses = async () => {
@@ -136,16 +242,20 @@ function Expenses() {
 
   const handleDeleteConfirmed = async () => {
     if (!expenseToDelete) return;
+    const toDelete = expenseToDelete;
+    setExpenseToDelete(null);
+
+    // Optimistic UI: remove immediately and roll back if the request fails,
+    // instead of waiting for the server before the row disappears.
+    setAllExpenses((prev) => prev.filter((e) => e.id !== toDelete.id));
+    success('✅ Gasto eliminado correctamente');
 
     try {
-      await deleteExpense(expenseToDelete.id);
-      setAllExpenses(allExpenses.filter(e => e.id !== expenseToDelete.id));
-      success('✅ Gasto eliminado correctamente');
+      await deleteExpense(toDelete.id);
     } catch (err) {
       logger.apiError('Error deleting expense', err);
-      error('❌ Error al eliminar el gasto');
-    } finally {
-      setExpenseToDelete(null);
+      setAllExpenses((prev) => [...prev, toDelete]);
+      error('❌ No se pudo eliminar el gasto, se restauró');
     }
   };
 
@@ -347,62 +457,13 @@ function Expenses() {
                 )}
               />
             ) : (
-              <div className="expenses-table-wrapper">
-                <table className="expenses-table">
-                  <thead>
-                    <tr>
-                      <th
-                        className={`sortable ${sortBy === 'description' ? `sorted-${sortOrder}` : ''}`}
-                        onClick={() => handleSort('description')}
-                      >
-                        Descripción {sortBy === 'description' && (sortOrder === 'asc' ? '↑' : '↓')}
-                      </th>
-                      <th
-                        className={`sortable ${sortBy === 'category' ? `sorted-${sortOrder}` : ''}`}
-                        onClick={() => handleSort('category')}
-                      >
-                        Categoría {sortBy === 'category' && (sortOrder === 'asc' ? '↑' : '↓')}
-                      </th>
-                      <th
-                        className={`sortable ${sortBy === 'amount' ? `sorted-${sortOrder}` : ''}`}
-                        onClick={() => handleSort('amount')}
-                      >
-                        Monto {sortBy === 'amount' && (sortOrder === 'asc' ? '↑' : '↓')}
-                      </th>
-                      <th
-                        className={`sortable ${sortBy === 'date' ? `sorted-${sortOrder}` : ''}`}
-                        onClick={() => handleSort('date')}
-                      >
-                        Fecha {sortBy === 'date' && (sortOrder === 'asc' ? '↑' : '↓')}
-                      </th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sortedExpenses.map((expense, index) => (
-                      <tr key={expense.id} style={{ animationDelay: `${index * 0.03}s` }}>
-                        <td className="expenses-description">{expense.description}</td>
-                        <td>
-                          <span className={`category-badge category-${CATEGORY_COLORS[expense.category] || 'default'}`}>
-                            {CATEGORY_EMOJIS[expense.category] || '📦'} {expense.category}
-                          </span>
-                        </td>
-                        <td className="expenses-amount">{formatCurrency(expense.amount)}</td>
-                        <td className="expenses-date">{formatDate(expense.date)}</td>
-                        <td className="expenses-actions">
-                          <button
-                            className="expenses-action-btn expenses-action-delete"
-                            onClick={() => handleDeleteClick(expense)}
-                            title="Eliminar"
-                          >
-                            🗑️
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <ExpensesTable
+                expenses={sortedExpenses}
+                sortBy={sortBy}
+                sortOrder={sortOrder}
+                onSort={handleSort}
+                onDeleteClick={handleDeleteClick}
+              />
             )}
           </main>
         </div>
@@ -473,62 +534,13 @@ function Expenses() {
               )}
             />
           ) : (
-            <div className="expenses-table-wrapper">
-              <table className="expenses-table">
-                <thead>
-                  <tr>
-                    <th
-                      className={`sortable ${sortBy === 'description' ? `sorted-${sortOrder}` : ''}`}
-                      onClick={() => handleSort('description')}
-                    >
-                      Descripción {sortBy === 'description' && (sortOrder === 'asc' ? '↑' : '↓')}
-                    </th>
-                    <th
-                      className={`sortable ${sortBy === 'category' ? `sorted-${sortOrder}` : ''}`}
-                      onClick={() => handleSort('category')}
-                    >
-                      Categoría {sortBy === 'category' && (sortOrder === 'asc' ? '↑' : '↓')}
-                    </th>
-                    <th
-                      className={`sortable ${sortBy === 'amount' ? `sorted-${sortOrder}` : ''}`}
-                      onClick={() => handleSort('amount')}
-                    >
-                      Monto {sortBy === 'amount' && (sortOrder === 'asc' ? '↑' : '↓')}
-                    </th>
-                    <th
-                      className={`sortable ${sortBy === 'date' ? `sorted-${sortOrder}` : ''}`}
-                      onClick={() => handleSort('date')}
-                    >
-                      Fecha {sortBy === 'date' && (sortOrder === 'asc' ? '↑' : '↓')}
-                    </th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedExpenses.map((expense, index) => (
-                    <tr key={expense.id} style={{ animationDelay: `${index * 0.03}s` }}>
-                      <td className="expenses-description">{expense.description}</td>
-                      <td>
-                        <span className={`category-badge category-${CATEGORY_COLORS[expense.category] || 'default'}`}>
-                          {CATEGORY_EMOJIS[expense.category] || '📦'} {expense.category}
-                        </span>
-                      </td>
-                      <td className="expenses-amount">{formatCurrency(expense.amount)}</td>
-                      <td className="expenses-date">{formatDate(expense.date)}</td>
-                      <td className="expenses-actions">
-                        <button
-                          className="expenses-action-btn expenses-action-delete"
-                          onClick={() => handleDeleteClick(expense)}
-                          title="Eliminar"
-                        >
-                          🗑️
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <ExpensesTable
+              expenses={sortedExpenses}
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              onSort={handleSort}
+              onDeleteClick={handleDeleteClick}
+            />
           )}
         </div>
       )}

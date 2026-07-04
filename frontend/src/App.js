@@ -10,6 +10,7 @@ import OAuthCallback from './components/OAuthCallback';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 import SidebarLayout from './components/Layout/SidebarLayout';
+import { PageTransition } from './components/ui/PageTransition';
 import { ToastProvider } from './components/ui/ToastContainer';
 import { setAuthToken } from './services/api';
 
@@ -32,6 +33,7 @@ function App() {
   return (
     <ToastProvider>
       <BrowserRouter>
+      <PageTransition>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -72,6 +74,7 @@ function App() {
         />
         <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>
+      </PageTransition>
       </BrowserRouter>
     </ToastProvider>
   );

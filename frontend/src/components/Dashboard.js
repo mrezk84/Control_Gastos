@@ -33,7 +33,7 @@ ChartJS.register(
 
 // Premium chart colors
 const CHART_COLORS = [
-  '#10b981', '#22d3ee', '#d8b878', '#34d399',
+  '#10b981', '#43e97b', '#d8b878', '#34d399',
   '#f59e0b', '#f43f5e', '#38bdf8', '#2dd4bf',
 ];
 const CHART_COLORS_ALPHA = CHART_COLORS.map(c => c + '30');
@@ -106,7 +106,7 @@ function Dashboard() {
     plugins: {
       legend: {
         position: 'bottom',
-        labels: { color: '#a0a0c0', font: { family: 'Inter', size: 12 }, padding: 16, usePointStyle: true, pointStyleWidth: 8 },
+        labels: { color: '#a0a0c0', font: { family: 'DM Sans', size: 12 }, padding: 16, usePointStyle: true, pointStyleWidth: 8 },
       },
     },
   };
@@ -122,12 +122,12 @@ function Dashboard() {
       {
         label: 'Gastos Mensuales',
         data: last6Months.map((m) => monthlyMap[m] || 0),
-        borderColor: '#22d3ee',
+        borderColor: '#43e97b',
         backgroundColor: 'rgba(79, 172, 254, 0.08)',
         fill: true,
         tension: 0.4,
         pointRadius: 5,
-        pointBackgroundColor: '#22d3ee',
+        pointBackgroundColor: '#43e97b',
         pointBorderColor: 'rgba(79, 172, 254, 0.3)',
         pointBorderWidth: 3,
         pointHoverRadius: 8,
@@ -144,11 +144,11 @@ function Dashboard() {
     scales: {
       x: {
         grid: { color: 'rgba(255,255,255,0.04)' },
-        ticks: { color: '#a0a0c0', font: { family: 'Inter', size: 11 } },
+        ticks: { color: '#a0a0c0', font: { family: 'DM Sans', size: 11 } },
       },
       y: {
         grid: { color: 'rgba(255,255,255,0.04)' },
-        ticks: { color: '#a0a0c0', font: { family: 'Inter', size: 11 }, callback: (v) => '$' + v.toLocaleString() },
+        ticks: { color: '#a0a0c0', font: { family: 'DM Sans', size: 11 }, callback: (v) => '$' + v.toLocaleString() },
       },
     },
   };
@@ -178,11 +178,11 @@ function Dashboard() {
     scales: {
       x: {
         grid: { display: false },
-        ticks: { color: '#a0a0c0', font: { family: 'Inter', size: 11 } },
+        ticks: { color: '#a0a0c0', font: { family: 'DM Sans', size: 11 } },
       },
       y: {
         grid: { color: 'rgba(255,255,255,0.04)' },
-        ticks: { color: '#a0a0c0', font: { family: 'Inter', size: 11 }, callback: (v) => '$' + v.toLocaleString() },
+        ticks: { color: '#a0a0c0', font: { family: 'DM Sans', size: 11 }, callback: (v) => '$' + v.toLocaleString() },
       },
     },
   };

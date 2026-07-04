@@ -16,6 +16,8 @@ import { Bar, Doughnut, Line } from 'react-chartjs-2';
 import { getAllExpenses, getExpensesSummary } from '../services/api';
 import { CHART_COLORS, formatCurrency } from '../utils';
 import logger from '../utils/logger';
+import { useCountUp } from '../hooks/useCountUp';
+import { EXPENSE_CREATED_EVENT } from '../components/Layout/SidebarLayout';
 
 ChartJS.register(
   CategoryScale,
@@ -98,6 +100,12 @@ function Analytics() {
     fetchData();
   }, [fetchData]);
 
+  // Refresh when an expense is created anywhere in the app (FAB / Cmd+N).
+  useEffect(() => {
+    window.addEventListener(EXPENSE_CREATED_EVENT, fetchData);
+    return () => window.removeEventListener(EXPENSE_CREATED_EVENT, fetchData);
+  }, [fetchData]);
+
   // Filter expenses by period
   const filteredExpenses = useMemo(() => {
     const now = new Date();
@@ -171,6 +179,103 @@ function Analytics() {
       sortedMonths,
     };
   }, [filteredExpenses]);
+
+  // Comparison against the equivalent previous period (skipped for "Todo",
+  // where there's no well-defined previous window). Uses the raw, unfiltered
+  // `expenses` list so both windows are computed the same way regardless of
+  // the currently selected period.
+  const periodComparison = useMemo(() => {
+    if (period === 'all') return null;
+
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+
+    const sumInRange = (start, end) =>
+      expenses
+        .filter((e) => {
+          const d = new Date(e.date);
+          return d >= start && d < end;
+        })
+        .reduce((sum, e) => sum + e.amount, 0);
+
+    let currentStart, currentEnd, previousStart, previousEnd, label;
+
+    switch (period) {
+      case 'month':
+        currentStart = new Date(y, m, 1);
+        currentEnd = new Date(y, m + 1, 1);
+        previousStart = new Date(y, m - 1, 1);
+        previousEnd = new Date(y, m, 1);
+        label = 'el mes anterior';
+        break;
+      case 'lastMonth':
+        currentStart = new Date(y, m - 1, 1);
+        currentEnd = new Date(y, m, 1);
+        previousStart = new Date(y, m - 2, 1);
+        previousEnd = new Date(y, m - 1, 1);
+        label = 'el mes previo a ese';
+        break;
+      case '3months':
+        currentStart = new Date(y, m - 3, 1);
+        currentEnd = new Date(y, m + 1, 1);
+        previousStart = new Date(y, m - 6, 1);
+        previousEnd = new Date(y, m - 3, 1);
+        label = 'los 3 meses anteriores';
+        break;
+      case '6months':
+        currentStart = new Date(y, m - 6, 1);
+        currentEnd = new Date(y, m + 1, 1);
+        previousStart = new Date(y, m - 12, 1);
+        previousEnd = new Date(y, m - 6, 1);
+        label = 'los 6 meses anteriores';
+        break;
+      case 'year':
+        currentStart = new Date(y, 0, 1);
+        currentEnd = new Date(y + 1, 0, 1);
+        previousStart = new Date(y - 1, 0, 1);
+        previousEnd = new Date(y, 0, 1);
+        label = 'el año anterior';
+        break;
+      default:
+        return null;
+    }
+
+    const currentTotal = sumInRange(currentStart, currentEnd);
+    const previousTotal = sumInRange(previousStart, previousEnd);
+    const diff = currentTotal - previousTotal;
+    const percentage = previousTotal > 0
+      ? (diff / previousTotal) * 100
+      : (currentTotal > 0 ? 100 : 0);
+
+    return { currentTotal, previousTotal, diff, percentage, label };
+  }, [expenses, period]);
+
+  // Simple linear projection for the current calendar month: not ML, just
+  // (spent so far / days elapsed) * days in month.
+  const monthlyProjection = useMemo(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    const dayOfMonth = now.getDate();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const monthStart = new Date(y, m, 1);
+    const monthEnd = new Date(y, m + 1, 1);
+
+    const totalSoFar = expenses
+      .filter((e) => {
+        const d = new Date(e.date);
+        return d >= monthStart && d < monthEnd;
+      })
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    if (totalSoFar === 0) return null;
+
+    const dailyAvg = totalSoFar / dayOfMonth;
+    const projected = dailyAvg * daysInMonth;
+
+    return { totalSoFar, dailyAvg, projected, daysInMonth, dayOfMonth };
+  }, [expenses]);
 
   // Generate insights
   const insights = useMemo(() => {
@@ -246,14 +351,21 @@ function Analytics() {
     datasets: [{
       label: 'Gastos mensuales',
       data: analytics.sortedMonths.map(m => analytics.monthlyMap[m]),
-      borderColor: '#22d3ee',
-      backgroundColor: 'rgba(79, 172, 254, 0.1)',
+      borderColor: '#43e97b',
+      backgroundColor: 'rgba(67, 233, 123, 0.1)',
       fill: true,
       tension: 0.4,
       pointRadius: 5,
-      pointBackgroundColor: '#22d3ee',
+      pointBackgroundColor: '#43e97b',
     }],
   }), [analytics.monthlyMap, analytics.sortedMonths]);
+
+  // Animated KPI counters
+  const animatedTotal = useCountUp(analytics.total);
+  const animatedAvg = useCountUp(analytics.avg);
+  const animatedMax = useCountUp(analytics.maxExpense);
+  const animatedMin = useCountUp(analytics.minExpense);
+  const animatedCount = useCountUp(analytics.count);
 
   if (loading) {
     return (
@@ -287,29 +399,58 @@ function Analytics() {
         <div className="analytics-kpi-card">
           <div className="analytics-kpi-icon purple">💸</div>
           <div className="analytics-kpi-label">Total Gastos</div>
-          <div className="analytics-kpi-value">{formatCurrency(analytics.total)}</div>
+          <div className="analytics-kpi-value">{formatCurrency(animatedTotal)}</div>
         </div>
         <div className="analytics-kpi-card">
           <div className="analytics-kpi-icon blue">📊</div>
           <div className="analytics-kpi-label">Promedio</div>
-          <div className="analytics-kpi-value">{formatCurrency(analytics.avg)}</div>
+          <div className="analytics-kpi-value">{formatCurrency(animatedAvg)}</div>
         </div>
         <div className="analytics-kpi-card">
           <div className="analytics-kpi-icon green">📈</div>
           <div className="analytics-kpi-label">Gasto Mayor</div>
-          <div className="analytics-kpi-value">{formatCurrency(analytics.maxExpense)}</div>
+          <div className="analytics-kpi-value">{formatCurrency(animatedMax)}</div>
         </div>
         <div className="analytics-kpi-card">
           <div className="analytics-kpi-icon orange">📉</div>
           <div className="analytics-kpi-label">Gasto Menor</div>
-          <div className="analytics-kpi-value">{formatCurrency(analytics.minExpense)}</div>
+          <div className="analytics-kpi-value">{formatCurrency(animatedMin)}</div>
         </div>
         <div className="analytics-kpi-card">
           <div className="analytics-kpi-icon pink">📋</div>
           <div className="analytics-kpi-label">Transacciones</div>
-          <div className="analytics-kpi-value">{analytics.count}</div>
+          <div className="analytics-kpi-value">{Math.round(animatedCount)}</div>
         </div>
       </div>
+
+      {/* Comparativa vs período anterior + Proyección mensual */}
+      {(periodComparison || monthlyProjection) && (
+        <div className="comparison-grid">
+          {periodComparison && (
+            <div className="comparison-card">
+              <div className="comparison-card-label">Vs. {periodComparison.label}</div>
+              <div className={`comparison-card-value ${periodComparison.diff >= 0 ? 'up' : 'down'}`}>
+                <span aria-hidden="true">{periodComparison.diff >= 0 ? '▲' : '▼'}</span>
+                {' '}{Math.abs(periodComparison.percentage).toFixed(1)}%
+              </div>
+              <div className="comparison-card-detail">
+                {formatCurrency(periodComparison.currentTotal)} vs {formatCurrency(periodComparison.previousTotal)}
+              </div>
+            </div>
+          )}
+          {monthlyProjection && (
+            <div className="comparison-card">
+              <div className="comparison-card-label">Proyección de este mes</div>
+              <div className="comparison-card-value projection">
+                {formatCurrency(monthlyProjection.projected)}
+              </div>
+              <div className="comparison-card-detail">
+                {formatCurrency(monthlyProjection.totalSoFar)} en {monthlyProjection.dayOfMonth} de {monthlyProjection.daysInMonth} días
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Insights */}
       {insights.length > 0 && (

@@ -1,0 +1,339 @@
+/* ============================================
+   LOADING SCREEN STYLES
+   Professional loading states with animations
+   ============================================ */
+
+/* --- Main Loading Screen --- */
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease;
+}
+
+.loading-screen-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  padding: 40px;
+}
+
+/* Logo Animation */
+.loading-logo-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-logo {
+  animation: logoFloat 3s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.05);
+  }
+}
+
+.loading-logo-glow {
+  position: absolute;
+  inset: -20px;
+  background: radial-gradient(
+    circle,
+    rgba(16, 185, 129, 0.3) 0%,
+    rgba(6, 182, 212, 0.1) 50%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  animation: glowPulse 3s ease-in-out infinite;
+  filter: blur(20px);
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+/* Loading Message */
+.loading-message {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin: 0;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* Progress Bar */
+.loading-progress-container {
+  width: 200px;
+  height: 4px;
+  background: var(--bg-input);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.loading-progress-bar {
+  height: 100%;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-full);
+  transition: width 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.loading-progress-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+/* Spinner */
+.loading-spinner {
+  position: relative;
+  width: 48px;
+  height: 48px;
+}
+
+.loading-spinner-ring {
+  position: absolute;
+  inset: 0;
+  border: 3px solid transparent;
+  border-top-color: var(--accent-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-spinner-ring.inner {
+  inset: 6px;
+  border: 2px solid transparent;
+  border-top-color: var(--accent-cyan);
+  animation: spin 1.5s linear infinite reverse;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --- Inline Loading --- */
+.inline-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+}
+
+.inline-loading-small {
+  gap: 8px;
+  padding: 4px 8px;
+}
+
+.inline-loading-small .inline-loading-spinner {
+  width: 20px;
+  height: 20px;
+}
+
+.inline-loading-large {
+  gap: 16px;
+  padding: 12px 24px;
+}
+
+.inline-loading-large .inline-loading-spinner {
+  width: 32px;
+  height: 32px;
+}
+
+.inline-loading-spinner {
+  position: relative;
+  width: 24px;
+  height: 24px;
+}
+
+.inline-loading-ring {
+  position: absolute;
+  inset: 0;
+  border: 2px solid transparent;
+  border-top-color: var(--accent-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.inline-loading-ring.middle {
+  inset: 4px;
+  border: 2px solid transparent;
+  border-top-color: var(--accent-cyan);
+  animation: spin 1.2s linear infinite;
+}
+
+.inline-loading-ring.inner {
+  inset: 8px;
+  border: 2px solid transparent;
+  border-top-color: var(--accent-purple-light);
+  animation: spin 1.6s linear infinite;
+}
+
+.inline-loading-text {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* --- Button Loading --- */
+.button-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.button-loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.button-loading-text {
+  font-size: 0.9rem;
+}
+
+/* --- Page Loading --- */
+.page-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 40px;
+}
+
+.page-loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.page-loading-dots {
+  display: flex;
+  gap: 8px;
+}
+
+.page-loading-dots span {
+  width: 12px;
+  height: 12px;
+  background: var(--accent-primary);
+  border-radius: 50%;
+  animation: dotBounce 1.4s ease-in-out infinite;
+}
+
+.page-loading-dots span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.page-loading-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.page-loading-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes dotBounce {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+.page-loading-message {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* --- Light Theme Overrides --- */
+[data-theme='light'] .loading-screen {
+  background: #f8fafc;
+}
+
+[data-theme='light'] .loading-logo-glow {
+  background: radial-gradient(
+    circle,
+    rgba(59, 130, 246, 0.2) 0%,
+    rgba(16, 185, 129, 0.1) 50%,
+    transparent 70%
+  );
+}
+
+[data-theme='light'] .page-loading-dots span {
+  background: #3b82f6;
+}
+
+/* --- Reduced Motion --- */
+@media (prefers-reduced-motion: reduce) {
+  .loading-logo,
+  .loading-logo-glow,
+  .loading-spinner-ring,
+  .inline-loading-ring,
+  .button-loading-spinner,
+  .page-loading-dots span {
+    animation: none;
+  }
+
+  .loading-progress-bar::after {
+    animation: none;
+  }
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  .loading-screen-content {
+    padding: 24px;
+    gap: 24px;
+  }
+
+  .loading-logo-wrapper {
+    transform: scale(0.8);
+  }
+
+  .loading-message {
+    font-size: 0.9rem;
+  }
+
+  .page-loading {
+    min-height: 300px;
+    padding: 24px;
+  }
+}

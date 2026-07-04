@@ -5,6 +5,7 @@ import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import logger from '../utils/logger';
 import { useToast } from '../components/ui/ToastContainer';
+import { EXPENSE_CREATED_EVENT } from '../components/Layout/SidebarLayout';
 
 const CATEGORIES = [
   'Alimentación',
@@ -74,6 +75,16 @@ function Budgets() {
   useEffect(() => {
     fetchBudgets();
     fetchTodayExpenses();
+  }, [fetchBudgets, fetchTodayExpenses]);
+
+  // Refresh when an expense is created elsewhere in the app (FAB / Cmd+N).
+  useEffect(() => {
+    const handler = () => {
+      fetchBudgets();
+      fetchTodayExpenses();
+    };
+    window.addEventListener(EXPENSE_CREATED_EVENT, handler);
+    return () => window.removeEventListener(EXPENSE_CREATED_EVENT, handler);
   }, [fetchBudgets, fetchTodayExpenses]);
 
   const handleSave = async (e) => {
@@ -150,21 +161,45 @@ function Budgets() {
       return;
     }
 
-    try {
-      await createExpense({
-        description: expenseData.description,
-        amount: amount,
-        category: expenseData.category,
-        date: expenseData.date,
-      });
+    const payload = {
+      description: expenseData.description,
+      amount,
+      category: expenseData.category,
+      date: expenseData.date,
+    };
 
-      closeQuickExpenseModal();
-      await fetchTodayExpenses();
-      await fetchBudgets();
-      success('💸 Gasto agregado correctamente');
+    const today = new Date().toISOString().split('T')[0];
+    const isToday = payload.date === today;
+    const tempId = `temp-${Date.now()}`;
+
+    // Optimistic UI: show the expense (and its budget impact) immediately,
+    // roll back if the request fails, instead of waiting on the server.
+    if (isToday) {
+      setTodayExpenses((prev) => [{ id: tempId, ...payload }, ...prev]);
+    }
+    setBudgets((prev) => prev.map((b) => {
+      if (b.category !== payload.category) return b;
+      const spent_amount = b.spent_amount + amount;
+      const remaining_amount = b.budget_amount - spent_amount;
+      const percentage = b.budget_amount > 0 ? (spent_amount / b.budget_amount) * 100 : 0;
+      return { ...b, spent_amount, remaining_amount, percentage };
+    }));
+
+    closeQuickExpenseModal();
+    success('💸 Gasto agregado correctamente');
+
+    try {
+      await createExpense(payload);
+      // Reconcile with the server in the background (real id, exact totals).
+      fetchTodayExpenses();
+      fetchBudgets();
     } catch (err) {
       logger.apiError('Error adding expense', err);
-      error('⚠️ Error al agregar el gasto');
+      if (isToday) {
+        setTodayExpenses((prev) => prev.filter((e) => e.id !== tempId));
+      }
+      await fetchBudgets();
+      error('❌ No se pudo agregar el gasto, se deshizo el cambio');
     }
   };
 

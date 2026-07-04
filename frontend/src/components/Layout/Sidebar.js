@@ -1,12 +1,13 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import ThemeToggle from '../ui/ThemeToggle';
+import Logo from '../ui/Logo';
 
 const navItems = [
-  { path: '/dashboard', icon: '📊', label: 'Dashboard' },
-  { path: '/expenses', icon: '💸', label: 'Gastos' },
-  { path: '/budgets', icon: '🎯', label: 'Presupuestos' },
-  { path: '/analytics', icon: '📈', label: 'Analíticas' },
+  { path: '/dashboard', icon: '📊', label: 'Dashboard', badge: null },
+  { path: '/expenses', icon: '💸', label: 'Gastos', badge: null },
+  { path: '/budgets', icon: '🎯', label: 'Presupuestos', badge: null },
+  { path: '/analytics', icon: '📈', label: 'Analíticas', badge: null },
 ];
 
 function Sidebar({ user, onLogout, collapsed = false, onToggle }) {
@@ -20,12 +21,22 @@ function Sidebar({ user, onLogout, collapsed = false, onToggle }) {
   return (
     <>
       <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''}`} role="navigation" aria-label="Navegación principal">
-        {/* Header */}
-        <div className="sidebar-header">
-          <div className="sidebar-logo" role="img" aria-label="Logo de Control Gastos" aria-hidden="true">💰</div>
-          <span className="sidebar-title">Control Gastos</span>
+        {/* Enhanced Header with Logo */}
+        <div className="sidebar-header-enhanced">
+          <div className="sidebar-brand">
+            <div className="sidebar-logo-wrapper">
+              <Logo width={44} height={44} variant="default" />
+              <div className="sidebar-logo-glow"></div>
+            </div>
+            {!collapsed && (
+              <div className="sidebar-brand-text">
+                <h2 className="sidebar-brand-title">Control Gastos</h2>
+                <p className="sidebar-brand-tagline">Finanzas personales</p>
+              </div>
+            )}
+          </div>
           <button
-            className="sidebar-toggle"
+            className="sidebar-toggle-enhanced"
             onClick={onToggle}
             aria-label={collapsed ? 'Expandir menú lateral' : 'Colapsar menú lateral'}
             aria-expanded={!collapsed}
@@ -33,12 +44,10 @@ function Sidebar({ user, onLogout, collapsed = false, onToggle }) {
           >
             <span className="sidebar-toggle-icon" aria-hidden="true">
               {collapsed ? (
-                // Chevron derecho (abrir)
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="9 18 15 12 9 6"></polyline>
                 </svg>
               ) : (
-                // Chevron izquierdo (cerrar)
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="15 18 9 12 15 6"></polyline>
                 </svg>
@@ -47,34 +56,39 @@ function Sidebar({ user, onLogout, collapsed = false, onToggle }) {
           </button>
         </div>
 
-        {/* Navigation */}
-        <nav className="sidebar-nav" aria-label="Menú de navegación">
-          <ul className="sidebar-nav-list">
-            {navItems.map((item) => (
-              <li key={item.path} role="none">
+        {/* Enhanced Navigation */}
+        <nav className="sidebar-nav-enhanced" aria-label="Menú de navegación">
+          <ul className="sidebar-nav-list-enhanced">
+            {navItems.map((item, index) => (
+              <li key={item.path} role="none" style={{ animation: `navItemFadeIn 0.3s ease ${index * 0.05}s backwards` }}>
                 <NavLink
                   to={item.path}
                   className={({ isActive }) =>
-                    `sidebar-nav-item ${isActive ? 'active' : ''}`
+                    `sidebar-nav-item-enhanced ${isActive ? 'active' : ''}`
                   }
                   end={item.path === '/dashboard'}
                   aria-label={`Ir a ${item.label}`}
                   aria-current={item.path === '/dashboard' ? undefined : ({ isActive }) => isActive ? 'page' : undefined}
                 >
-                  <span className="sidebar-nav-icon" aria-hidden="true">{item.icon}</span>
-                  <span className="sidebar-nav-label">{item.label}</span>
+                  <span className="sidebar-nav-icon-enhanced" aria-hidden="true">
+                    <span className="nav-icon-bg"></span>
+                    {item.icon}
+                  </span>
+                  {!collapsed && (
+                    <span className="sidebar-nav-label-enhanced">{item.label}</span>
+                  )}
                 </NavLink>
               </li>
             ))}
           </ul>
         </nav>
 
-        {/* Footer */}
-        <div className="sidebar-footer">
-          {/* Avatar del usuario */}
+        {/* Enhanced Footer */}
+        <div className="sidebar-footer-enhanced">
+          {/* User Profile */}
           {user && (
-            <div className="sidebar-user" role="group" aria-label={`Información de usuario: ${user.username || 'Usuario'}`}>
-              <div className="sidebar-user-avatar">
+            <div className="sidebar-user-enhanced" role="group" aria-label={`Información de usuario: ${user.username || 'Usuario'}`}>
+              <div className="sidebar-user-avatar-enhanced">
                 {user.avatar_url ? (
                   <img
                     src={user.avatar_url}
@@ -85,32 +99,41 @@ function Sidebar({ user, onLogout, collapsed = false, onToggle }) {
                     }}
                   />
                 ) : null}
-                <span className="sidebar-user-initial" style={{ display: user.avatar_url ? 'none' : 'flex' }} aria-hidden="true">
+                <span className="sidebar-user-initial-enhanced" style={{ display: user.avatar_url ? 'none' : 'flex' }} aria-hidden="true">
                   {(user.username || user.email || '?')[0].toUpperCase()}
                 </span>
+                <div className="sidebar-user-status"></div>
               </div>
               {!collapsed && (
-                <div className="sidebar-user-info">
-                  <span className="sidebar-user-name">
+                <div className="sidebar-user-info-enhanced">
+                  <span className="sidebar-user-name-enhanced">
                     {user.username || 'Usuario'}
                   </span>
-                  <span className="sidebar-user-email">
+                  <span className="sidebar-user-email-enhanced">
                     {user.email || ''}
                   </span>
                 </div>
               )}
             </div>
           )}
-          <div className="sidebar-actions">
+
+          {/* Actions */}
+          <div className="sidebar-actions-enhanced">
             <ThemeToggle />
             <button
-              className="sidebar-logout-btn"
+              className="sidebar-logout-btn-enhanced"
               onClick={handleLogout}
               title={collapsed ? "Cerrar sesión" : "Salir de la aplicación"}
               aria-label="Cerrar sesión"
             >
-              <span aria-hidden="true">🚪</span>
-              {!collapsed && <span className="sidebar-logout-text">Salir</span>}
+              <span className="logout-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+              </span>
+              {!collapsed && <span className="sidebar-logout-text">Cerrar sesión</span>}
             </button>
           </div>
         </div>

@@ -1,0 +1,338 @@
+/* ============================================
+   SKELETON LOADING STYLES
+   Professional loading states with shimmer effect
+   ============================================ */
+
+/* --- Base Skeleton Styles --- */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-input) 0%,
+    var(--bg-hover) 50%,
+    var(--bg-input) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes skeletonShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* --- Skeleton Variants --- */
+.skeleton-text {
+  height: 16px;
+  border-radius: var(--radius-xs);
+}
+
+.skeleton-circle {
+  border-radius: 50%;
+}
+
+.skeleton-rect {
+  border-radius: var(--radius-md);
+}
+
+/* --- Dashboard Skeleton --- */
+.dashboard-skeleton {
+  padding: 32px 28px;
+  animation: fadeIn 0.3s ease;
+}
+
+.dashboard-header-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 36px;
+}
+
+.kpi-grid-skeleton {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.kpi-card-skeleton {
+  background: var(--glass-surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  padding: 28px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.kpi-icon-skeleton {
+  flex-shrink: 0;
+}
+
+.kpi-content-skeleton {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.charts-grid-skeleton {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 28px;
+}
+
+.chart-card-skeleton {
+  background: var(--glass-surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.chart-placeholder-skeleton {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+/* --- Expenses Skeleton --- */
+.expenses-skeleton {
+  padding: 28px;
+  animation: fadeIn 0.3s ease;
+}
+
+.expenses-header-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.expenses-table-skeleton {
+  background: var(--glass-surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+.expenses-table-header-skeleton {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.expenses-table-row-skeleton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--glass-border);
+  gap: 16px;
+}
+
+.expenses-table-row-skeleton:last-child {
+  border-bottom: none;
+}
+
+.badge-skeleton {
+  border-radius: var(--radius-full);
+}
+
+/* --- Analytics Skeleton --- */
+.analytics-skeleton {
+  padding: 28px;
+  animation: fadeIn 0.3s ease;
+}
+
+.analytics-header-skeleton {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.analytics-kpi-skeleton {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 18px;
+  margin-bottom: 32px;
+}
+
+.analytics-kpi-card-skeleton {
+  background: var(--glass-surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.analytics-charts-skeleton {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 22px;
+}
+
+.chart-large-skeleton,
+.chart-small-skeleton {
+  background: var(--glass-surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* --- Budgets Skeleton --- */
+.budgets-skeleton {
+  padding: 28px;
+  animation: fadeIn 0.3s ease;
+}
+
+.budgets-header-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.budgets-summary-skeleton {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.budget-summary-card-skeleton {
+  background: var(--glass-surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.budgets-list-skeleton {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
+}
+
+.budget-card-skeleton {
+  background: var(--glass-surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.budget-header-skeleton {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.progress-skeleton {
+  border-radius: var(--radius-full);
+}
+
+.budget-details-skeleton {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* --- Responsive Design --- */
+@media (max-width: 768px) {
+  .dashboard-skeleton,
+  .expenses-skeleton,
+  .analytics-skeleton,
+  .budgets-skeleton {
+    padding: 24px 20px;
+  }
+
+  .kpi-grid-skeleton {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .kpi-card-skeleton {
+    padding: 20px;
+  }
+
+  .charts-grid-skeleton {
+    grid-template-columns: 1fr;
+  }
+
+  .expenses-table-skeleton {
+    overflow-x: auto;
+  }
+
+  .expenses-table-row-skeleton {
+    min-width: 600px;
+  }
+
+  .analytics-kpi-skeleton {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .analytics-charts-skeleton {
+    grid-template-columns: 1fr;
+  }
+
+  .budgets-list-skeleton {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .kpi-grid-skeleton {
+    grid-template-columns: 1fr;
+  }
+
+  .analytics-kpi-skeleton {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Light Theme Overrides --- */
+[data-theme='light'] .skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.04) 0%,
+    rgba(0, 0, 0, 0.08) 50%,
+    rgba(0, 0, 0, 0.04) 100%
+  );
+  background-size: 200% 100%;
+}
+
+[data-theme='light'] .kpi-card-skeleton,
+[data-theme='light'] .chart-card-skeleton,
+[data-theme='light'] .analytics-kpi-card-skeleton,
+[data-theme='light'] .budget-card-skeleton,
+[data-theme='light'] .budget-summary-card-skeleton,
+[data-theme='light'] .expenses-table-skeleton {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* --- Reduced Motion Support --- */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}

@@ -30,16 +30,16 @@ export const CATEGORIES = Object.keys(CATEGORY_EMOJIS);
 
 // Colores para gráficos
 export const CHART_COLORS = [
-  '#10b981', // emerald
-  '#f59e0b', // amber
+  '#43e97b', // green
+  '#38f9d7', // teal
+  '#2fe8a0', // mint
+  '#7dffb0', // light green
+  '#fbbf24', // amber
+  '#f5576c', // rose
   '#38bdf8', // sky
-  '#f472b6', // pink
-  '#34d399', // mint
-  '#f43f5e', // rose
-  '#22d3ee', // cyan
-  '#d8b878', // champagne
-  '#2dd4bf', // teal
-  '#94a3b8', // slate
+  '#a0a0c0', // gray
+  '#c9ff5c', // lime
+  '#f0f0ff', // white
 ];
 
 // Configuración de moneda

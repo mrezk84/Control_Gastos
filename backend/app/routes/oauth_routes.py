@@ -97,9 +97,9 @@ async def google_callback(code: str, db: Session = Depends(get_db)):
             },
         )
         if token_resp.status_code != 200:
-            raise HTTPException(status_code=400, detail="Failed to exchange code for token")
+            raise HTTPException(status_code=400, detail=f"Failed to exchange code for token: {token_resp.text}")
         token_data = token_resp.json()
-        
+
         # Get user info
         userinfo_resp = await client.get(
             "https://www.googleapis.com/oauth2/v2/userinfo",

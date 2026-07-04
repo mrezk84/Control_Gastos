@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { login, setAuthToken, getOAuthUrl } from '../services/api';
 import { GoogleIcon, MicrosoftIcon, AppleIcon, UserIcon, LockIcon } from './ui/icons';
+import Logo from './ui/Logo';
 
 function Login() {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
@@ -66,20 +67,35 @@ function Login() {
     <div className="auth-page">
       <div className="animated-bg" />
 
+      {/* Background Elements */}
+      <div className="auth-bg-elements">
+        <div className="auth-bg-circle auth-bg-circle-1"></div>
+        <div className="auth-bg-circle auth-bg-circle-2"></div>
+        <div className="auth-bg-circle auth-bg-circle-3"></div>
+      </div>
+
       <div className="auth-container">
         <div className="auth-card">
-          {/* Logo */}
+          {/* Enhanced Logo Section */}
           <div className="auth-logo">
-            <div className="auth-logo-icon">💰</div>
+            <div className="auth-logo-wrapper">
+              <Logo width={72} height={72} variant="default" />
+              <div className="auth-logo-glow"></div>
+            </div>
+            <div className="auth-logo-text">
+              <h1 className="auth-logo-title">Control Gastos</h1>
+              <p className="auth-logo-tagline">Tu finanzas bajo control</p>
+            </div>
           </div>
 
           {/* Header */}
-          <h1 className="auth-title">Control de Gastos</h1>
-          <p className="auth-subtitle">Iniciá sesión para gestionar tus finanzas</p>
+          <h2 className="auth-title">Iniciar Sesión</h2>
+          <p className="auth-subtitle">Bienvenido de nuevo. Iniciá sesión para continuar.</p>
 
           {/* Error Alert */}
           {error && (
             <div className="auth-alert" role="alert">
+              <span className="auth-alert-icon">⚠️</span>
               {error}
             </div>
           )}
@@ -87,7 +103,10 @@ function Login() {
           {/* Login Form */}
           <form onSubmit={handleSubmit} noValidate>
             <div className="form-group-dark">
-              <label htmlFor="login-username">Usuario</label>
+              <label htmlFor="login-username">
+                <span className="form-label-icon">👤</span>
+                Usuario
+              </label>
               <div className="input-with-icon">
                 <input
                   id="login-username"
@@ -104,7 +123,10 @@ function Login() {
             </div>
 
             <div className="form-group-dark">
-              <label htmlFor="login-password">Contraseña</label>
+              <label htmlFor="login-password">
+                <span className="form-label-icon">🔒</span>
+                Contraseña
+              </label>
               <div className="input-with-icon">
                 <input
                   id="login-password"
@@ -121,11 +143,23 @@ function Login() {
             </div>
 
             <button
-              className="btn-gradient"
+              className="btn-gradient btn-gradient-enhanced"
               type="submit"
               disabled={loading}
             >
-              {loading ? 'Ingresando...' : 'Iniciar Sesión'}
+              <span className="btn-content">
+                {loading ? (
+                  <>
+                    <span className="btn-spinner"></span>
+                    Ingresando...
+                  </>
+                ) : (
+                  <>
+                    <span className="btn-icon">→</span>
+                    Iniciar Sesión
+                  </>
+                )}
+              </span>
             </button>
           </form>
 
@@ -139,42 +173,49 @@ function Login() {
             <span>o continuá con</span>
           </div>
 
-          {/* OAuth Buttons */}
+          {/* Enhanced OAuth Buttons */}
           <div className="oauth-buttons">
             <button
-              className="oauth-btn google"
+              className="oauth-btn google enhanced"
               type="button"
               onClick={() => handleOAuth('google')}
               disabled={loading}
             >
               <GoogleIcon />
-              Continuar con Google
+              <span>Google</span>
             </button>
 
             <button
-              className="oauth-btn microsoft"
+              className="oauth-btn microsoft enhanced"
               type="button"
               onClick={() => handleOAuth('microsoft')}
               disabled={loading}
             >
               <MicrosoftIcon />
-              Continuar con Microsoft
+              <span>Microsoft</span>
             </button>
 
             <button
-              className="oauth-btn apple"
+              className="oauth-btn apple enhanced"
               type="button"
               onClick={() => handleOAuth('apple')}
               disabled={loading}
             >
               <AppleIcon />
-              Continuar con Apple
+              <span>Apple</span>
             </button>
           </div>
 
           {/* Register Link */}
           <p className="auth-link">
-            ¿No tenés cuenta? <Link to="/register">Registrate</Link>
+            ¿No tenés cuenta? <Link to="/register" className="auth-link-highlight">Registrate</Link>
+          </p>
+        </div>
+
+        {/* Footer */}
+        <div className="auth-footer">
+          <p className="auth-footer-text">
+            💰 Control Gastos · Gestión financiera inteligente
           </p>
         </div>
       </div>

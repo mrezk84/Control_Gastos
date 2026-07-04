@@ -1,7 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { getCurrentUser } from '../../services/api';
+import { FloatingActionButton } from '../ui/FloatingActionButton';
+import QuickAddExpense from '../QuickAddExpense';
+
+/** Broadcast so any page listening for 'expense:created' can refresh its data. */
+export const EXPENSE_CREATED_EVENT = 'expense:created';
 
 const bottomNavItems = [
   { path: '/dashboard', icon: '📊', label: 'Dashboard' },
@@ -14,6 +19,7 @@ function SidebarLayout({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,6 +42,24 @@ function SidebarLayout({ children }) {
 
     fetchUser();
   }, [navigate]);
+
+  // Keyboard shortcut: Cmd/Ctrl+N opens the quick-add expense modal from
+  // anywhere in the app.
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const isTypingTarget = ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName);
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'n' && !isTypingTarget) {
+        e.preventDefault();
+        setShowQuickAdd(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const handleExpenseCreated = useCallback((expense) => {
+    window.dispatchEvent(new CustomEvent(EXPENSE_CREATED_EVENT, { detail: expense }));
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -111,6 +135,19 @@ function SidebarLayout({ children }) {
           </NavLink>
         ))}
       </nav>
+
+      <FloatingActionButton
+        onClick={() => setShowQuickAdd(true)}
+        icon="💸"
+        label="Gasto"
+        position="bottom-right"
+      />
+
+      <QuickAddExpense
+        isOpen={showQuickAdd}
+        onClose={() => setShowQuickAdd(false)}
+        onCreated={handleExpenseCreated}
+      />
     </div>
   );
 }

@@ -15,6 +15,9 @@ import {
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 import { getExpenses } from '../services/api';
 import logger from '../utils/logger';
+import { useCountUp } from '../hooks/useCountUp';
+import GamificationPanel from '../components/ui/GamificationPanel';
+import { EXPENSE_CREATED_EVENT } from '../components/Layout/SidebarLayout';
 
 ChartJS.register(
   CategoryScale,
@@ -29,10 +32,10 @@ ChartJS.register(
   Filler
 );
 
-// Refined palette - emerald, teal & champagne on graphite
+// Brutalist palette — electric green forward
 const CHART_COLORS = [
-  '#10b981', '#22d3ee', '#d8b878', '#34d399',
-  '#f59e0b', '#f43f5e', '#38bdf8', '#2dd4bf',
+  '#43e97b', '#38f9d7', '#2fe8a0', '#7dffb0',
+  '#fbbf24', '#f5576c', '#38bdf8', '#a0a0c0',
 ];
 const CHART_COLORS_ALPHA = CHART_COLORS.map(c => c + '25');
 
@@ -53,6 +56,12 @@ function Dashboard() {
 
   useEffect(() => {
     fetchData();
+  }, [fetchData]);
+
+  // Refresh when an expense is created anywhere in the app (FAB / Cmd+N).
+  useEffect(() => {
+    window.addEventListener(EXPENSE_CREATED_EVENT, fetchData);
+    return () => window.removeEventListener(EXPENSE_CREATED_EVENT, fetchData);
   }, [fetchData]);
 
   // -- KPI calculations with useMemo --
@@ -117,7 +126,7 @@ function Dashboard() {
         position: 'bottom',
         labels: {
           color: '#a0a0c0',
-          font: { family: 'Plus Jakarta Sans', size: 13, weight: '500' },
+          font: { family: 'DM Sans', size: 13, weight: '500' },
           padding: 20,
           usePointStyle: true,
           pointStyle: 'circle',
@@ -136,13 +145,13 @@ function Dashboard() {
     datasets: [{
       label: 'Gastos Mensuales',
       data: monthlyData.last6Months.map(month => monthlyData.monthlyMap[month] || 0),
-      borderColor: '#06b6d4',
-      backgroundColor: 'rgba(6, 182, 212, 0.1)',
+      borderColor: '#43e97b',
+      backgroundColor: 'rgba(67, 233, 123, 0.1)',
       fill: true,
       tension: 0.4,
       pointRadius: 6,
-      pointBackgroundColor: '#06b6d4',
-      pointBorderColor: 'rgba(6, 182, 212, 0.3)',
+      pointBackgroundColor: '#43e97b',
+      pointBorderColor: 'rgba(67, 233, 123, 0.3)',
       pointBorderWidth: 3,
       pointHoverRadius: 10,
     }],
@@ -154,10 +163,10 @@ function Dashboard() {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: 'rgba(18, 23, 30, 0.9)',
+        backgroundColor: 'rgba(18, 18, 42, 0.9)',
         titleColor: '#f8f9ff',
         bodyColor: '#a0a0c0',
-        borderColor: 'rgba(16, 185, 129, 0.3)',
+        borderColor: 'rgba(67, 233, 123, 0.4)',
         borderWidth: 1,
         cornerRadius: 8,
         padding: 12,
@@ -168,14 +177,14 @@ function Dashboard() {
         grid: { color: 'rgba(255, 255, 255, 0.04)' },
         ticks: {
           color: '#a0a0c0',
-          font: { family: 'Plus Jakarta Sans', size: 12, weight: '500' }
+          font: { family: 'DM Sans', size: 12, weight: '500' }
         },
       },
       y: {
         grid: { color: 'rgba(255, 255, 255, 0.04)' },
         ticks: {
           color: '#a0a0c0',
-          font: { family: 'Plus Jakarta Sans', size: 12, weight: '500' },
+          font: { family: 'DM Sans', size: 12, weight: '500' },
           callback: value => '$' + value.toLocaleString('es-AR')
         },
       },
@@ -202,10 +211,10 @@ function Dashboard() {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: 'rgba(18, 23, 30, 0.9)',
+        backgroundColor: 'rgba(18, 18, 42, 0.9)',
         titleColor: '#f8f9ff',
         bodyColor: '#a0a0c0',
-        borderColor: 'rgba(16, 185, 129, 0.3)',
+        borderColor: 'rgba(67, 233, 123, 0.4)',
         borderWidth: 1,
         cornerRadius: 8,
         padding: 12,
@@ -216,14 +225,14 @@ function Dashboard() {
         grid: { display: false },
         ticks: {
           color: '#a0a0c0',
-          font: { family: 'Plus Jakarta Sans', size: 12, weight: '500' }
+          font: { family: 'DM Sans', size: 12, weight: '500' }
         },
       },
       y: {
         grid: { color: 'rgba(255, 255, 255, 0.04)' },
         ticks: {
           color: '#a0a0c0',
-          font: { family: 'Plus Jakarta Sans', size: 12, weight: '500' },
+          font: { family: 'DM Sans', size: 12, weight: '500' },
           callback: value => '$' + value.toLocaleString('es-AR')
         },
       },
@@ -236,6 +245,11 @@ function Dashboard() {
       currency: 'ARS',
       maximumFractionDigits: 0
     }).format(value);
+
+  // Animated KPI counters
+  const animatedTotal = useCountUp(kpiData.totalExpenses);
+  const animatedAvg = useCountUp(kpiData.avgExpense);
+  const animatedCount = useCountUp(expenses.length);
 
   if (loading) {
     return (
@@ -266,13 +280,13 @@ function Dashboard() {
           <div className="kpi-card">
             <div className="kpi-icon purple">💸</div>
             <div className="kpi-label">Total Gastos</div>
-            <div className="kpi-value">{formatCurrency(kpiData.totalExpenses)}</div>
+            <div className="kpi-value">{formatCurrency(animatedTotal)}</div>
           </div>
 
           <div className="kpi-card">
             <div className="kpi-icon blue">📊</div>
             <div className="kpi-label">Promedio</div>
-            <div className="kpi-value">{formatCurrency(kpiData.avgExpense)}</div>
+            <div className="kpi-value">{formatCurrency(animatedAvg)}</div>
           </div>
 
           <div className="kpi-card">
@@ -286,9 +300,12 @@ function Dashboard() {
           <div className="kpi-card">
             <div className="kpi-icon orange">📋</div>
             <div className="kpi-label">Transacciones</div>
-            <div className="kpi-value">{expenses.length}</div>
+            <div className="kpi-value">{Math.round(animatedCount)}</div>
           </div>
         </div>
+
+        {/* Gamification */}
+        <GamificationPanel expenses={expenses} />
 
         {/* Charts Grid */}
         <div className="charts-grid">
