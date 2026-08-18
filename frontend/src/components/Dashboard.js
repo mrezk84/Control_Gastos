@@ -106,7 +106,7 @@ function Dashboard() {
     plugins: {
       legend: {
         position: 'bottom',
-        labels: { color: '#a0a0c0', font: { family: 'DM Sans', size: 12 }, padding: 16, usePointStyle: true, pointStyleWidth: 8 },
+        labels: { color: '#8d9089', font: { family: 'Outfit', size: 12 }, padding: 16, usePointStyle: true, pointStyleWidth: 8 },
       },
     },
   };
@@ -144,11 +144,11 @@ function Dashboard() {
     scales: {
       x: {
         grid: { color: 'rgba(255,255,255,0.04)' },
-        ticks: { color: '#a0a0c0', font: { family: 'DM Sans', size: 11 } },
+        ticks: { color: '#8d9089', font: { family: 'Outfit', size: 11 } },
       },
       y: {
         grid: { color: 'rgba(255,255,255,0.04)' },
-        ticks: { color: '#a0a0c0', font: { family: 'DM Sans', size: 11 }, callback: (v) => '$' + v.toLocaleString() },
+        ticks: { color: '#8d9089', font: { family: 'Outfit', size: 11 }, callback: (v) => '$' + v.toLocaleString() },
       },
     },
   };
@@ -178,11 +178,11 @@ function Dashboard() {
     scales: {
       x: {
         grid: { display: false },
-        ticks: { color: '#a0a0c0', font: { family: 'DM Sans', size: 11 } },
+        ticks: { color: '#8d9089', font: { family: 'Outfit', size: 11 } },
       },
       y: {
         grid: { color: 'rgba(255,255,255,0.04)' },
-        ticks: { color: '#a0a0c0', font: { family: 'DM Sans', size: 11 }, callback: (v) => '$' + v.toLocaleString() },
+        ticks: { color: '#8d9089', font: { family: 'Outfit', size: 11 }, callback: (v) => '$' + v.toLocaleString() },
       },
     },
   };

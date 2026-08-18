@@ -1,82 +1,86 @@
 /* ============================================
-   CONTROL DE GASTOS — NEO-FINANCIAL BRUTALIST (GREEN)
-   Electric green · hard shadows · Bebas Neue
+   CONTROL DE GASTOS — MODERN EMERALD FINTECH
+   Warm graphite glass · soft depth · Fraunces + Outfit
    ============================================ */
 
 /* --- Typography Imports --- */
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Outfit:wght@400;500;600;700;800&display=swap');
 
-/* --- CSS Variables (names kept; values re-skinned to brutalist green) --- */
+/* --- CSS Variables --- */
 :root {
-  /* Colors — deep navy-black */
-  --bg-primary: #0a0a1a;
-  --bg-secondary: #12122a;
-  --bg-tertiary: #161632;
-  --bg-card: rgba(22, 22, 50, 0.65);
-  --bg-card-solid: #161632;
-  --bg-input: #0a0a1a;
-  --bg-hover: rgba(67, 233, 123, 0.06);
+  /* Colors — warm graphite (not navy-black, not pure gray) */
+  --bg-primary: #0b0e13;
+  --bg-secondary: #10141b;
+  --bg-tertiary: #161b24;
+  --bg-card: rgba(22, 27, 36, 0.6);
+  --bg-card-solid: #141922;
+  --bg-input: #0d1119;
+  --bg-hover: rgba(52, 211, 153, 0.07);
 
-  /* Structural borders — brutalist (visible, thick feel) */
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-border-strong: #43e97b;
-  --glass-blur: blur(0px);            /* no glassmorphism in brutalism */
-  --glass-surface: rgba(22, 22, 50, 0.65);
+  /* Structural borders — soft glass */
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-strong: rgba(52, 211, 153, 0.4);
+  --glass-blur: blur(20px);
+  --glass-surface: rgba(22, 27, 36, 0.55);
 
-  /* Gradients — electric green (kept as gradients so gradient-text stays green) */
-  --gradient-primary: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-  --gradient-secondary: linear-gradient(135deg, #38f9d7 0%, #2fe8a0 100%);
-  --gradient-accent: linear-gradient(135deg, #43e97b 0%, #2fe8a0 100%);
-  --gradient-success: linear-gradient(135deg, #43e97b 0%, #2fe8a0 100%);
+  /* Gradients — emerald forward, gold as a warm counterpoint */
+  --gradient-primary: linear-gradient(135deg, #34d399 0%, #0d9488 100%);
+  --gradient-secondary: linear-gradient(135deg, #22d3ee 0%, #34d399 100%);
+  --gradient-accent: linear-gradient(135deg, #f2c185 0%, #e8a63f 100%);
+  --gradient-success: linear-gradient(135deg, #34d399 0%, #10b981 100%);
   --gradient-warning: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-  --gradient-danger: linear-gradient(135deg, #f5576c 0%, #e11d48 100%);
-  --gradient-bg: linear-gradient(155deg, #0a0a1a 0%, #12122a 50%, #0a0a1a 100%);
-  --gradient-glow: radial-gradient(ellipse at center, rgba(67, 233, 123, 0.10) 0%, transparent 70%);
-  --gradient-glow-cyan: radial-gradient(ellipse at center, rgba(56, 249, 215, 0.08) 0%, transparent 70%);
-  --gradient-shine: linear-gradient(135deg, transparent 0%, rgba(67, 233, 123, 0.05) 50%, transparent 100%);
+  --gradient-danger: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
+  --gradient-bg:
+    radial-gradient(ellipse 70% 55% at 18% -8%, rgba(52, 211, 153, 0.16) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 45% at 92% 8%, rgba(34, 211, 238, 0.10) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at 50% 105%, rgba(242, 193, 133, 0.07) 0%, transparent 60%),
+    linear-gradient(180deg, #0b0e13 0%, #0e121a 100%);
+  --gradient-glow: radial-gradient(ellipse at center, rgba(52, 211, 153, 0.12) 0%, transparent 70%);
+  --gradient-glow-cyan: radial-gradient(ellipse at center, rgba(34, 211, 238, 0.10) 0%, transparent 70%);
+  --gradient-shine: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.06) 50%, transparent 100%);
 
-  /* Accents — electric green (--accent-purple kept as alias for legacy refs) */
-  --accent-primary: #43e97b;
-  --accent-primary-light: #38f9d7;
-  --accent-gold: #fbbf24;
-  --accent-purple: #43e97b;
-  --accent-purple-light: #38f9d7;
-  --accent-blue: #38f9d7;
-  --accent-cyan: #38f9d7;
-  --accent-pink: #f5576c;
-  --accent-green: #43e97b;
-  --accent-orange: #fbbf24;
-  --accent-red: #f5576c;
+  /* Accents (--accent-purple kept as alias for legacy refs) */
+  --accent-primary: #34d399;
+  --accent-primary-light: #6ee7b7;
+  --accent-gold: #f2c185;
+  --accent-purple: #34d399;
+  --accent-purple-light: #6ee7b7;
+  --accent-blue: #22d3ee;
+  --accent-cyan: #22d3ee;
+  --accent-pink: #f472b6;
+  --accent-green: #34d399;
+  --accent-orange: #fb923c;
+  --accent-red: #fb7185;
 
-  /* Text — stark white & cool grays */
-  --text-primary: #f0f0ff;
-  --text-secondary: rgba(240, 240, 255, 0.6);
-  --text-muted: rgba(240, 240, 255, 0.35);
-  --text-dim: rgba(240, 240, 255, 0.22);
+  /* Text — warm off-white & soft grays */
+  --text-primary: #f5f4ef;
+  --text-secondary: rgba(245, 244, 239, 0.64);
+  --text-muted: rgba(245, 244, 239, 0.4);
+  --text-dim: rgba(245, 244, 239, 0.22);
 
-  /* Shadows — HARD offset shadows (no blur), the brutalist signature */
-  --shadow-soft: 4px 4px 0 rgba(0, 0, 0, 0.4);
-  --shadow-medium: 8px 8px 0 rgba(67, 233, 123, 0.18);
-  --shadow-glow-purple: 6px 6px 0 rgba(67, 233, 123, 0.2);
-  --shadow-glow-cyan: 6px 6px 0 rgba(56, 249, 215, 0.18);
-  --shadow-glow-card: 4px 4px 0 rgba(0, 0, 0, 0.35);
-  --shadow-hover: 8px 8px 0 rgba(67, 233, 123, 0.28);
-  --shadow-inner: inset 0 2px 6px rgba(0, 0, 0, 0.35);
+  /* Shadows — soft, blurred, layered depth */
+  --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.24);
+  --shadow-medium: 0 16px 40px rgba(0, 0, 0, 0.32);
+  --shadow-glow-purple: 0 10px 32px rgba(52, 211, 153, 0.16);
+  --shadow-glow-cyan: 0 10px 32px rgba(34, 211, 238, 0.14);
+  --shadow-glow-card: 0 4px 24px rgba(0, 0, 0, 0.28);
+  --shadow-hover: 0 20px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(52, 211, 153, 0.16);
+  --shadow-inner: inset 0 2px 6px rgba(0, 0, 0, 0.3);
 
-  /* Border Radius — minimal (brutalist edge) */
-  --radius-xs: 0px;
-  --radius-sm: 2px;
-  --radius-md: 4px;
-  --radius-lg: 4px;
-  --radius-xl: 6px;
-  --radius-2xl: 8px;
+  /* Border Radius — generous, friendly */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
   --radius-full: 9999px;
 
-  /* Transitions — snappy */
-  --transition-fast: 0.15s ease-out;
-  --transition-base: 0.2s ease-out;
-  --transition-smooth: 0.28s ease-out;
-  --transition-bounce: 0.35s ease-out;
+  /* Transitions — smooth, premium easing */
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-bounce: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* --- Base Styles --- */
@@ -93,42 +97,42 @@ html {
 body {
   margin: 0;
   padding: 0;
-  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: var(--bg-primary);
   color: var(--text-primary);
-  line-height: 1.55;
+  line-height: 1.6;
   overflow-x: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Bebas Neue', 'Impact', sans-serif;
-  font-weight: 400;
-  line-height: 1;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  text-transform: none;
 }
 
 button {
   font-family: inherit;
 }
 
-/* --- Brutalist Background — geometric grid --- */
+/* --- Atmospheric Background — mesh gradient + film grain --- */
 .animated-bg {
   position: fixed;
   inset: 0;
-  background: var(--bg-primary);
+  background: var(--gradient-bg);
   z-index: -2;
+  overflow: hidden;
 }
 
 .animated-bg::before {
   content: '';
   position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-  background-size: 60px 60px;
-  opacity: 0.5;
+  inset: -10%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  pointer-events: none;
 }
 
 .animated-bg::after {
@@ -137,9 +141,8 @@ button {
   top: 0;
   left: 0;
   right: 0;
-  height: 2px;
-  background: var(--accent-primary);
-  opacity: 0.5;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(52, 211, 153, 0.4), transparent);
 }
 
 @keyframes gradientShift {
@@ -316,15 +319,12 @@ button {
 }
 
 .auth-title {
-  font-family: 'Bebas Neue', 'Impact', sans-serif;
-  font-size: 2.15rem;
-  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
   text-align: center;
   margin-bottom: 8px;
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
 }
 
@@ -627,15 +627,16 @@ button {
 
 .page-header-content h1,
 .page-title {
-  font-family: 'Bebas Neue', 'Impact', sans-serif;
-  font-size: 2.35rem;
+  font-family: 'Fraunces', 'Georgia', serif;
+  font-optical-sizing: auto;
+  font-size: 2.25rem;
   font-weight: 600;
   margin: 0 0 8px 0;
   background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.01em;
 }
 
 .page-subtitle {
@@ -1021,9 +1022,9 @@ button {
 }
 
 .sidebar-title {
-  font-family: 'Bebas Neue', 'Impact', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 1.2rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
@@ -2582,48 +2583,25 @@ button {
 }
 
 /* ============================================
-   BRUTALIST OVERRIDES — applied last so they win
-   Thick borders · hard shadows · display font
+   PREMIUM POLISH — small refinements layered last
    ============================================ */
 
-/* Cards & surfaces → 2px brutalist borders, no glass blur */
-.glass-card,
-.kpi-card,
-.chart-card,
-.chart-card-large,
-.chart-card-full,
-.auth-card,
-.sidebar,
-.budget-card,
-.budget-summary-card,
-.today-summary-card,
-.analytics-kpi-card,
-.comparison-card,
-.insight-card,
-.filters-container,
-.expenses-table-wrapper,
-.gamification-panel,
-.modal-container,
-.export-menu,
-.today-expense-item {
-  border-width: 2px !important;
-  border-style: solid;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+/* Big numbers → confident, tightly tracked, tabular */
+.kpi-value,
+.analytics-kpi-value,
+.budget-summary-value,
+.expenses-amount,
+.today-summary-value,
+.comparison-card-value,
+.gamification-stat-value,
+.budget-percentage {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
 }
 
-/* Card hover → hard offset shadow + nudge (brutalist signature) */
-.kpi-card:hover,
-.chart-card:hover,
-.budget-card:hover,
-.analytics-kpi-card:hover,
-.glass-card:hover {
-  transform: translate(-3px, -3px) !important;
-  box-shadow: var(--shadow-hover) !important;
-  border-color: var(--accent-primary) !important;
-}
-
-/* Buttons → uppercase display font, sharp, hard-shadow press */
+/* Buttons → confident weight, no shouting caps */
 .btn,
 .btn-primary,
 .btn-secondary,
@@ -2633,77 +2611,12 @@ button {
 .filter-preset,
 .filter-category-chip,
 .sidebar-logout-btn {
-  font-family: 'Bebas Neue', 'Impact', sans-serif;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-weight: 400;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .btn-primary,
 .btn-gradient,
 .filter-search-btn {
-  background: var(--accent-primary);
-  color: var(--bg-primary);
-  border: 2px solid var(--accent-primary);
-}
-
-.btn-primary:hover,
-.btn-gradient:hover,
-.filter-search-btn:hover {
-  background: var(--accent-primary-light);
-  border-color: var(--accent-primary-light);
-  transform: translate(-2px, -2px);
-  box-shadow: var(--shadow-hover);
-}
-
-.btn-secondary,
-.btn-ghost {
-  border: 2px solid var(--glass-border) !important;
-}
-
-.btn-secondary:hover {
-  border-color: var(--accent-primary) !important;
-  color: var(--accent-primary) !important;
-}
-
-/* Big numbers → stark display font (the brutalist "kpi-number" look) */
-.kpi-value,
-.analytics-kpi-value,
-.budget-summary-value,
-.expenses-amount,
-.today-summary-value,
-.comparison-card-value,
-.gamification-stat-value,
-.budget-percentage {
-  font-family: 'Bebas Neue', 'Impact', sans-serif;
-  font-weight: 400;
-  letter-spacing: 0.02em;
-}
-
-/* Nav / labels → keep the display font on the sidebar brand & active item accent */
-.sidebar-nav-item.active {
-  border-left: 3px solid var(--accent-primary);
-}
-
-/* Category & achievement pills → square-ish brutalist chips */
-.category-badge,
-.achievement-badge,
-.filter-preset,
-.filter-category-chip {
-  border-radius: var(--radius-sm);
-}
-
-/* Inputs → sharp, hard focus shadow */
-.input-dark:focus,
-.form-input:focus,
-.form-select:focus,
-.filter-input:focus,
-.period-select:focus {
-  box-shadow: 4px 4px 0 rgba(67, 233, 123, 0.15) !important;
-}
-
-/* Sidebar logo & FAB stay green-forward */
-.sidebar-logo,
-.fab {
-  border-radius: var(--radius-md);
+  color: #06231a;
 }

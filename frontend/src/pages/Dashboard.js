@@ -32,10 +32,10 @@ ChartJS.register(
   Filler
 );
 
-// Brutalist palette — electric green forward
+// Emerald-forward palette with a warm gold counterpoint
 const CHART_COLORS = [
-  '#43e97b', '#38f9d7', '#2fe8a0', '#7dffb0',
-  '#fbbf24', '#f5576c', '#38bdf8', '#a0a0c0',
+  '#34d399', '#22d3ee', '#f2c185', '#a78bfa',
+  '#fb923c', '#fb7185', '#38bdf8', '#8d9089',
 ];
 const CHART_COLORS_ALPHA = CHART_COLORS.map(c => c + '25');
 
@@ -125,8 +125,8 @@ function Dashboard() {
       legend: {
         position: 'bottom',
         labels: {
-          color: '#a0a0c0',
-          font: { family: 'DM Sans', size: 13, weight: '500' },
+          color: '#8d9089',
+          font: { family: 'Outfit', size: 13, weight: '500' },
           padding: 20,
           usePointStyle: true,
           pointStyle: 'circle',
@@ -145,13 +145,13 @@ function Dashboard() {
     datasets: [{
       label: 'Gastos Mensuales',
       data: monthlyData.last6Months.map(month => monthlyData.monthlyMap[month] || 0),
-      borderColor: '#43e97b',
-      backgroundColor: 'rgba(67, 233, 123, 0.1)',
+      borderColor: '#34d399',
+      backgroundColor: 'rgba(52, 211, 153, 0.12)',
       fill: true,
       tension: 0.4,
       pointRadius: 6,
-      pointBackgroundColor: '#43e97b',
-      pointBorderColor: 'rgba(67, 233, 123, 0.3)',
+      pointBackgroundColor: '#34d399',
+      pointBorderColor: 'rgba(52, 211, 153, 0.3)',
       pointBorderWidth: 3,
       pointHoverRadius: 10,
     }],
@@ -163,10 +163,10 @@ function Dashboard() {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: 'rgba(18, 18, 42, 0.9)',
-        titleColor: '#f8f9ff',
-        bodyColor: '#a0a0c0',
-        borderColor: 'rgba(67, 233, 123, 0.4)',
+        backgroundColor: 'rgba(20, 25, 34, 0.92)',
+        titleColor: '#f5f4ef',
+        bodyColor: '#8d9089',
+        borderColor: 'rgba(52, 211, 153, 0.35)',
         borderWidth: 1,
         cornerRadius: 8,
         padding: 12,
@@ -176,15 +176,15 @@ function Dashboard() {
       x: {
         grid: { color: 'rgba(255, 255, 255, 0.04)' },
         ticks: {
-          color: '#a0a0c0',
-          font: { family: 'DM Sans', size: 12, weight: '500' }
+          color: '#8d9089',
+          font: { family: 'Outfit', size: 12, weight: '500' }
         },
       },
       y: {
         grid: { color: 'rgba(255, 255, 255, 0.04)' },
         ticks: {
-          color: '#a0a0c0',
-          font: { family: 'DM Sans', size: 12, weight: '500' },
+          color: '#8d9089',
+          font: { family: 'Outfit', size: 12, weight: '500' },
           callback: value => '$' + value.toLocaleString('es-AR')
         },
       },
@@ -211,10 +211,10 @@ function Dashboard() {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: 'rgba(18, 18, 42, 0.9)',
-        titleColor: '#f8f9ff',
-        bodyColor: '#a0a0c0',
-        borderColor: 'rgba(67, 233, 123, 0.4)',
+        backgroundColor: 'rgba(20, 25, 34, 0.92)',
+        titleColor: '#f5f4ef',
+        bodyColor: '#8d9089',
+        borderColor: 'rgba(52, 211, 153, 0.35)',
         borderWidth: 1,
         cornerRadius: 8,
         padding: 12,
@@ -224,15 +224,15 @@ function Dashboard() {
       x: {
         grid: { display: false },
         ticks: {
-          color: '#a0a0c0',
-          font: { family: 'DM Sans', size: 12, weight: '500' }
+          color: '#8d9089',
+          font: { family: 'Outfit', size: 12, weight: '500' }
         },
       },
       y: {
         grid: { color: 'rgba(255, 255, 255, 0.04)' },
         ticks: {
-          color: '#a0a0c0',
-          font: { family: 'DM Sans', size: 12, weight: '500' },
+          color: '#8d9089',
+          font: { family: 'Outfit', size: 12, weight: '500' },
           callback: value => '$' + value.toLocaleString('es-AR')
         },
       },
