@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { login, setAuthToken, getOAuthUrl } from '../services/api';
-import { GoogleIcon, MicrosoftIcon, AppleIcon, UserIcon, LockIcon } from './ui/icons';
+import { login, signInWithOAuth } from '../services/api';
+import { GoogleIcon, MicrosoftIcon, AppleIcon, MailIcon, LockIcon } from './ui/icons';
 import Logo from './ui/Logo';
 
 function Login() {
-  const [credentials, setCredentials] = useState({ username: '', password: '' });
+  const [credentials, setCredentials] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -14,20 +14,21 @@ function Login() {
     e.preventDefault();
     setError('');
 
-    if (!credentials.username.trim() || !credentials.password) {
-      setError('Usuario y contraseña son obligatorios');
+    if (!credentials.email.trim() || !credentials.password) {
+      setError('Email y contraseña son obligatorios');
       return;
     }
 
     setLoading(true);
     try {
-      const response = await login(credentials);
-      const token = response.data.access_token;
-      setAuthToken(token);
-      localStorage.setItem('token', token);
+      await login({ email: credentials.email.trim(), password: credentials.password });
       navigate('/dashboard');
     } catch (err) {
-      setError('Credenciales incorrectas. Por favor, verificá tus datos.');
+      if (err?.code === 'email_not_confirmed') {
+        setError('Tenés que confirmar tu email antes de ingresar. Revisá tu bandeja de entrada.');
+      } else {
+        setError('Credenciales incorrectas. Por favor, verificá tus datos.');
+      }
     } finally {
       setLoading(false);
     }
@@ -43,15 +44,11 @@ function Login() {
     const name = providerNames[provider] || provider;
 
     try {
-      const response = await getOAuthUrl(provider);
-      window.location.href = response.data.auth_url;
+      // Supabase redirects the browser to the provider and back to /oauth-callback
+      await signInWithOAuth(provider);
     } catch (err) {
-      const status = err?.response?.status;
-
-      if (status === 501) {
-        setError(`${name} Sign In aún no está configurado. Configurá las credenciales OAuth en el backend.`);
-      } else if (!err?.response) {
-        setError('No se pudo conectar al servidor. Verificá que el backend esté corriendo en el puerto 8000.');
+      if (err?.code === 'validation_failed' || /not enabled/i.test(err?.message || '')) {
+        setError(`${name} Sign In aún no está habilitado. Activá el proveedor en Supabase (Authentication > Providers).`);
       } else {
         setError(`Error al conectar con ${name}. Intentá de nuevo más tarde.`);
       }
@@ -103,22 +100,22 @@ function Login() {
           {/* Login Form */}
           <form onSubmit={handleSubmit} noValidate>
             <div className="form-group-dark">
-              <label htmlFor="login-username">
-                <span className="form-label-icon">👤</span>
-                Usuario
+              <label htmlFor="login-email">
+                <span className="form-label-icon">📧</span>
+                Email
               </label>
               <div className="input-with-icon">
                 <input
-                  id="login-username"
+                  id="login-email"
                   className="input-dark"
-                  type="text"
-                  placeholder="Ingresá tu usuario"
-                  value={credentials.username}
-                  onChange={handleInputChange('username')}
-                  autoComplete="username"
+                  type="email"
+                  placeholder="tu@email.com"
+                  value={credentials.email}
+                  onChange={handleInputChange('email')}
+                  autoComplete="email"
                   disabled={loading}
                 />
-                <span className="input-icon"><UserIcon /></span>
+                <span className="input-icon"><MailIcon /></span>
               </div>
             </div>
 

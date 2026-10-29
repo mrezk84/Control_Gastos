@@ -14,31 +14,10 @@ class User(BaseModel):
     username: str
     email: str
     avatar_url: Optional[str] = None
-    auth_provider: str = "local"
+    auth_provider: Optional[str] = "email"
 
     class Config:
         from_attributes = True
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-class TokenData(BaseModel):
-    username: Optional[str] = None
-    id: Optional[int] = None
-
-# --- OAuth Schemas ---
-
-class OAuthCallback(BaseModel):
-    code: str
-    state: Optional[str] = None
-
-class OAuthUser(BaseModel):
-    email: str
-    name: str
-    avatar_url: Optional[str] = None
-    provider: str
-    provider_id: str
 
 # --- Expense Schemas ---
 

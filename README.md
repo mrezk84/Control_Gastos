@@ -33,11 +33,14 @@ pip install -r requirements.txt
 
 **Variables de entorno** (crear `.env`):
 ```env
-DATABASE_URL=mysql://usuario:password@localhost/control_gastos
-SECRET_KEY=tu_clave_secreta_aqui
+DATABASE_URL=postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres
+SUPABASE_URL=https://<ref>.supabase.co
+SUPABASE_JWT_SECRET=  # Solo si el proyecto usa el JWT secret legacy (HS256)
 FRONTEND_URL=http://localhost:3000
 OCR_SPACE_API_KEY=tu_api_key_opcional  # Opcional, usa Tesseract local por defecto
 ```
+
+> La base de datos y el login (email, Google, Microsoft) usan **Supabase**. Ver [SUPABASE_MIGRATION.md](./SUPABASE_MIGRATION.md).
 
 **Ejecutar**:
 ```bash
@@ -54,6 +57,8 @@ npm install
 **Variables de entorno** (crear `.env`):
 ```env
 REACT_APP_API_URL=http://localhost:8000
+REACT_APP_SUPABASE_URL=https://<ref>.supabase.co
+REACT_APP_SUPABASE_ANON_KEY=<anon-key>
 ```
 
 **Ejecutar**:
@@ -114,12 +119,6 @@ Proyecto_Control_Gastos/
 ## 🔒 Variables de Entorno Opcionales
 
 ```env
-# OAuth (opcional)
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-MICROSOFT_CLIENT_ID=
-MICROSOFT_CLIENT_SECRET=
-
 # OCR (opcional - usa Tesseract local si no se configura)
 OCR_SPACE_API_KEY=
 ```
@@ -161,15 +160,14 @@ OCR_SPACE_API_KEY=
 2. **Backend (Render)**
    - New → Web Service → Conectar repo `Control_Gastos`
    - Root: `backend`, Runtime: Docker, Plan: Free
-   - Variables: `DATABASE_URL` (conectar a DB), `SECRET_KEY`, `FRONTEND_URL`
+   - Variables: `DATABASE_URL` (Supabase), `SUPABASE_URL`, `SUPABASE_JWT_SECRET` (opcional), `FRONTEND_URL`
 
-3. **Base de Datos (Render)**
-   - New → PostgreSQL → Plan: Free
-   - Conectar al servicio backend
+3. **Base de Datos y Auth (Supabase)**
+   - Ver [SUPABASE_MIGRATION.md](./SUPABASE_MIGRATION.md)
 
 4. **Frontend (Render o Vercel)**
    - Render: New → Static Site → Root: `frontend`
-   - Variable: `REACT_APP_API_URL` (URL del backend)
+   - Variables: `REACT_APP_API_URL` (URL del backend), `REACT_APP_SUPABASE_URL`, `REACT_APP_SUPABASE_ANON_KEY`
 
 ### URLs de Producción (Ejemplo)
 

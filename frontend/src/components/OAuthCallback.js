@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { setAuthToken } from '../services/api';
+import { completeOAuthLogin } from '../services/api';
 
 function OAuthCallback() {
     const [searchParams] = useSearchParams();
@@ -8,15 +8,26 @@ function OAuthCallback() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const token = searchParams.get('token');
-        if (token) {
-            setAuthToken(token);
-            localStorage.setItem('token', token);
-            navigate('/dashboard', { replace: true });
-        } else {
-            setError('No se recibió un token válido. Intentá de nuevo.');
+        const fail = (message) => {
+            setError(message);
             setTimeout(() => navigate('/login', { replace: true }), 3000);
+        };
+
+        const providerError = searchParams.get('error_description') || searchParams.get('error');
+        if (providerError) {
+            fail(`No se pudo iniciar sesión: ${providerError}`);
+            return;
         }
+
+        completeOAuthLogin()
+            .then((session) => {
+                if (session) {
+                    navigate('/dashboard', { replace: true });
+                } else {
+                    fail('No se recibió una sesión válida. Intentá de nuevo.');
+                }
+            })
+            .catch(() => fail('No se recibió una sesión válida. Intentá de nuevo.'));
     }, [searchParams, navigate]);
 
     return (
