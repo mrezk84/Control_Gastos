@@ -9,9 +9,10 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(150), unique=True, index=True)
     email = Column(String(255), unique=True, index=True)
-    hashed_password = Column(String(255), nullable=True)  # Nullable for OAuth users
+    supabase_id = Column(String(36), unique=True, index=True, nullable=True)  # auth.users.id in Supabase
+    hashed_password = Column(String(255), nullable=True)  # Legacy: passwords now live in Supabase Auth
     avatar_url = Column(String(500), nullable=True)
-    auth_provider = Column(String(50), default="local")  # local, google, microsoft, apple
+    auth_provider = Column(String(50), default="email")  # email, google, azure (Microsoft), ...
     provider_id = Column(String(255), nullable=True)
 
     expenses = relationship("Expense", back_populates="owner")

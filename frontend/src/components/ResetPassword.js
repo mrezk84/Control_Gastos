@@ -1,16 +1,25 @@
-import React, { useState } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { resetPassword } from '../services/api';
+import { supabase } from '../services/supabase';
 
 function ResetPassword() {
-    const [searchParams] = useSearchParams();
-    const token = searchParams.get('token');
+    // The recovery link from the email signs the user in through Supabase
+    const [hasSession, setHasSession] = useState(null);
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        supabase.auth.getSession().then(({ data }) => setHasSession(!!data.session));
+        const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+            setHasSession(!!session);
+        });
+        return () => listener.subscription.unsubscribe();
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -24,22 +33,17 @@ function ResetPassword() {
             setError('Las contraseñas no coinciden');
             return;
         }
-        if (!token) {
-            setError('Token de recuperación inválido. Solicitá un nuevo enlace.');
-            return;
-        }
 
         setLoading(true);
         try {
-            await resetPassword(token, password);
+            await resetPassword(password);
             setSuccess(true);
-            setTimeout(() => navigate('/login'), 3000);
+            setTimeout(() => navigate('/dashboard'), 3000);
         } catch (err) {
-            const status = err?.response?.status;
-            if (status === 400 || status === 401) {
+            if (err?.code === 'same_password') {
+                setError('La nueva contraseña tiene que ser distinta de la anterior.');
+            } else if (err?.status === 401 || err?.status === 403) {
                 setError('El enlace de recuperación expiró o es inválido. Solicitá uno nuevo.');
-            } else if (!err?.response) {
-                setError('🔌 No se pudo conectar al servidor.');
             } else {
                 setError('Error al restablecer la contraseña. Intentá de nuevo.');
             }
@@ -48,7 +52,19 @@ function ResetPassword() {
         }
     };
 
-    if (!token) {
+    if (hasSession === null) {
+        return (
+            <div className="auth-page">
+                <div className="animated-bg" />
+                <div className="callback-loading">
+                    <div className="spinner" />
+                    <p>Verificando enlace...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!hasSession) {
         return (
             <div className="auth-page">
                 <div className="animated-bg" />
@@ -86,7 +102,7 @@ function ResetPassword() {
                             borderColor: 'rgba(67, 233, 123, 0.3)',
                             color: 'var(--accent-green)'
                         }}>
-                            ✅ ¡Contraseña actualizada! Redirigiendo al login...
+                            ✅ ¡Contraseña actualizada! Redirigiendo...
                         </div>
                     )}
 

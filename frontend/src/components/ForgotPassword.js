@@ -7,30 +7,22 @@ function ForgotPassword() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-    const [resetLink, setResetLink] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         setSuccess('');
-        setResetLink('');
         if (!email.trim()) {
             setError('Ingresá tu email para recuperar tu contraseña');
             return;
         }
         setLoading(true);
         try {
-            const response = await requestPasswordReset(email);
-            setSuccess('✅ Se generó un enlace para restablecer tu contraseña.');
-            if (response.data.reset_url) {
-                setResetLink(response.data.reset_url);
-            }
+            await requestPasswordReset(email.trim());
+            setSuccess('✅ Si existe una cuenta con ese email, te enviamos un enlace para restablecer tu contraseña.');
         } catch (err) {
-            const status = err?.response?.status;
-            if (status === 404) {
-                setError('No se encontró una cuenta con ese email.');
-            } else if (!err?.response) {
-                setError('🔌 No se pudo conectar al servidor. Asegurate de que el backend esté corriendo.');
+            if (err?.status === 429) {
+                setError('Demasiados intentos. Esperá unos minutos y volvé a probar.');
             } else {
                 setError('Error al procesar la solicitud. Intentá de nuevo.');
             }
@@ -48,7 +40,7 @@ function ForgotPassword() {
                         <div className="auth-logo-icon">🔑</div>
                     </div>
                     <h1 className="auth-title">Recuperar Contraseña</h1>
-                    <p className="auth-subtitle">Ingresá tu email y te generamos un enlace para restablecer tu contraseña</p>
+                    <p className="auth-subtitle">Ingresá tu email y te enviamos un enlace para restablecer tu contraseña</p>
 
                     {error && <div className="auth-alert">{error}</div>}
                     {success && (
@@ -78,27 +70,6 @@ function ForgotPassword() {
                             {loading ? 'Enviando...' : 'Recuperar Contraseña'}
                         </button>
                     </form>
-
-                    {resetLink && (
-                        <div style={{ marginTop: 20, textAlign: 'center' }}>
-                            <Link
-                                to={resetLink.replace(window.location.origin, '')}
-                                style={{
-                                    display: 'inline-block',
-                                    padding: '12px 24px',
-                                    background: 'var(--gradient-accent)',
-                                    borderRadius: 'var(--radius-md)',
-                                    color: '#0a0a1a',
-                                    fontWeight: 600,
-                                    fontSize: '0.9rem',
-                                    textDecoration: 'none',
-                                    transition: 'transform 0.2s, box-shadow 0.2s',
-                                }}
-                            >
-                                🔗 Ir a restablecer contraseña
-                            </Link>
-                        </div>
-                    )}
 
                     <p className="auth-link">
                         <Link to="/login">← Volver al login</Link>
