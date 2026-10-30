@@ -26,26 +26,32 @@ psql "$DATABASE_URL" -f datos.sql
 - Los recibos que estaban en el disco del servidor anterior no se pueden recuperar; los nuevos se guardan en la base.
 
 ## 2. Backend en Vercel
-1. *Add New → Project*, importa este repositorio y pon **Root Directory = `backend`**. Vercel detecta `api/index.py` y `requirements.txt`.
+> **Hazlo antes de publicar el frontend.** Los nombres `*.vercel.app` son de quien los registra primero: si el
+> frontend apunta a un backend que aún no existe, cualquiera podría crear ese nombre y recibir los inicios de sesión.
+
+1. *Add New → Project*, importa este repositorio, deja **Framework Preset = Other** y pon **Root Directory = `backend`**. Vercel detecta `api/index.py` y `requirements.txt`. Anota la URL que te asigne.
 2. Variables de entorno (ver `backend/.env.example`):
 
 | Variable | Valor |
 |---|---|
 | `DATABASE_URL` | cadena pooled de Neon |
-| `SECRET_KEY` | `openssl rand -hex 32` |
+| `SECRET_KEY` | genera una con `openssl rand -hex 32` en tu terminal y pégala (no la compartas ni la subas al repo) |
 | `FRONTEND_URL` | URL del frontend (varias separadas por coma) |
 | `BACKEND_URL` | URL de este proyecto, p. ej. `https://control-gastos-api.vercel.app` |
 | `RESEND_API_KEY`, `EMAIL_FROM` | correo de recuperación |
 | `OCR_SPACE_API_KEY` | escaneo de recibos |
 | `GOOGLE_CLIENT_ID/SECRET`, `MICROSOFT_CLIENT_ID/SECRET` | login social (opcional) |
 
-3. Comprueba `https://<backend>.vercel.app/docs`.
+3. Comprueba `https://<backend>.vercel.app/docs` y la raíz `https://<backend>.vercel.app/` (debe responder `{"message": "Control de Gastos API v2.1", ...}`).
+4. **Deployment Protection**: en *Settings → Deployment Protection* del proyecto, desactiva *Vercel Authentication* para Production. Si está activa, el navegador recibe una redirección al login de Vercel en lugar de la API.
 
 Límites de Vercel a tener en cuenta: cuerpo de petición de 4,5 MB (por eso los recibos admiten 4 MB), disco efímero (los recibos viven en la base) y arranque en frío de un par de segundos.
 
 ## 3. Frontend en Vercel
 1. Segundo proyecto con **Root Directory = `frontend`**.
-2. Variable `REACT_APP_API_URL` = URL del backend, sin barra final. Se aplica al compilar: redespliega tras cambiarla.
+2. En *Settings → Environment Variables* crea `REACT_APP_API_URL` = URL **real** del backend (sin barra final). No está en el repositorio a propósito. Se aplica al compilar: **redespliega** después de crearla o cambiarla.
+3. En el backend, `FRONTEND_URL` debe ser la URL pública del frontend (varias, separadas por coma): es el origen que acepta el CORS.
+4. Si el frontend también tiene *Vercel Authentication* activa, la app solo la verá quien tenga cuenta de Vercel en tu equipo: desactívala para Production, porque la app ya tiene su propio login.
 
 ## 4. Login social (opcional)
 Registra estas *redirect URI* en cada proveedor:
