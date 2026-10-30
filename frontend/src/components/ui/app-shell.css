@@ -523,7 +523,7 @@
 }
 
 [data-theme="light"] .btn-primary {
-  color: #ffffff !important;
+  color: var(--ink-on-acc) !important;
 }
 
 /* Table headers */
@@ -683,8 +683,8 @@
 }
 
 [data-theme="light"] .filter-search-btn {
-  background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%) !important;
-  color: white !important;
+  background: var(--acc) !important;
+  color: var(--ink-on-acc) !important;
 }
 
 [data-theme="light"] .filters-clear {

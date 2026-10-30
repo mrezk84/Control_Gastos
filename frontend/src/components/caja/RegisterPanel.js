@@ -10,12 +10,10 @@ const CATEGORIES = Object.keys(CATEGORY_ICON);
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '000', '0', '⌫'];
 const MAX_RECEIPT_BYTES = 4 * 1024 * 1024; // límite del backend (Vercel acepta hasta 4,5 MB)
 
-const money = new Intl.NumberFormat('es-AR', {
-  style: 'currency',
-  currency: 'ARS',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-});
+// "$3.000": sin espacio, como el resto del Dashboard; admite hasta 2 decimales (gastos editados)
+const money = {
+  format: (n) => `$${Number(n).toLocaleString('es-AR', { maximumFractionDigits: 2 })}`,
+};
 
 const todayLocal = () => {
   const d = new Date();
@@ -32,6 +30,7 @@ function RegisterPanel({ editing, onSaved, onCancelEdit }) {
   const [saving, setSaving] = useState(false);
   const [scanning, setScanning] = useState(false);
   const descRef = useRef(null);
+  const formRef = useRef(null);
   const attachRef = useRef(null);
   const scanRef = useRef(null);
   const { success, error, warning, info } = useToast();
@@ -64,6 +63,10 @@ function RegisterPanel({ editing, onSaved, onCancelEdit }) {
       if (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(t.tagName) || t.isContentEditable) return;
       if (/^[0-9]$/.test(e.key)) press(e.key);
       else if (e.key === 'Backspace') press('⌫');
+      else if (e.key === 'Enter') {
+        e.preventDefault();
+        formRef.current?.requestSubmit();
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -170,16 +173,19 @@ function RegisterPanel({ editing, onSaved, onCancelEdit }) {
     }
   };
 
-  const catLabel = (form.category || 'Sin categoría').toUpperCase();
+  // En el visor las categorías largas se recortan ("ENTRETE.") para que quepan junto al monto
+  const catLabel = form.category
+    ? (form.category.length > 9 ? `${form.category.slice(0, 7)}.` : form.category).toUpperCase()
+    : 'SIN CATEGORÍA';
 
   return (
-    <form className="cj-reg" onSubmit={handleSubmit} aria-label={editing ? 'Editar gasto' : 'Registrar gasto'}>
+    <form ref={formRef} className="cj-reg" onSubmit={handleSubmit} aria-label={editing ? 'Editar gasto' : 'Registrar gasto'}>
       <div className="cj-reg-head">
         <span className="cj-reg-title">
           <i className={`ph ph-${editing ? 'pencil-simple' : 'plus-circle'}`} aria-hidden="true" />
           {editing ? 'Editar gasto' : 'Registrar gasto'}
         </span>
-        <button type="button" className="cj-btn" onClick={() => scanRef.current?.click()} disabled={scanning}>
+        <button type="button" className="cj-btn cj-btn-key" onClick={() => scanRef.current?.click()} disabled={scanning}>
           <i className="ph ph-scan" aria-hidden="true" />{scanning ? 'Leyendo…' : 'Escanear'}
         </button>
         <input ref={scanRef} type="file" accept="image/*,application/pdf" onChange={handleScan} hidden />
@@ -188,7 +194,9 @@ function RegisterPanel({ editing, onSaved, onCancelEdit }) {
       <div className="cj-display" role="group" aria-label="Monto">
         <div className="cj-display-top">
           <span>MONTO</span>
-          <span><i className={categoryIconClass(form.category || 'Otros')} aria-hidden="true" /> {catLabel}</span>
+          <span className={form.category ? 'is-set' : ''}>
+            <i className={categoryIconClass(form.category || 'Otros')} aria-hidden="true" /> {catLabel}
+          </span>
         </div>
         <div className="cj-display-amt" aria-live="polite">{money.format(Number(form.amount || 0))}</div>
       </div>
@@ -201,25 +209,28 @@ function RegisterPanel({ editing, onSaved, onCancelEdit }) {
         ))}
       </div>
 
-      <input
-        ref={descRef}
-        className="cj-field"
-        placeholder="¿En qué gastaste?"
-        aria-label="Descripción"
-        value={form.description}
-        onChange={(e) => setDescription(e.target.value)}
-        maxLength={255}
-      />
+      <label className="cj-label">
+        <span>¿En qué gastaste?</span>
+        <input
+          ref={descRef}
+          className="cj-field"
+          placeholder="Supermercado, Uber, farmacia…"
+          value={form.description}
+          onChange={(e) => setDescription(e.target.value)}
+          maxLength={255}
+        />
+      </label>
 
-      <div className="cj-cats" role="group" aria-label="Categoría">
+      <div className="cj-cats" role="radiogroup" aria-label="Categoría">
         {CATEGORIES.map((name) => (
           <button
             key={name}
             type="button"
             className="cj-cat"
+            role="radio"
             title={name}
             aria-label={name}
-            aria-pressed={form.category === name}
+            aria-checked={form.category === name}
             onClick={() => pickCategory(name)}
           >
             <i className={categoryIconClass(name)} aria-hidden="true" />
@@ -230,25 +241,27 @@ function RegisterPanel({ editing, onSaved, onCancelEdit }) {
       <div className="cj-two">
         <input
           type="date"
-          className="cj-field"
+          className="cj-field cj-date"
           aria-label="Fecha"
           value={form.date}
           onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
           required
         />
-        <button type="button" className="cj-attach" onClick={() => attachRef.current?.click()}>
+        <button type="button" className={`cj-attach${receipt ? ' has-file' : ''}`} onClick={() => attachRef.current?.click()}>
           <i className="ph ph-paperclip" aria-hidden="true" />
           <span>{receipt ? receipt.name : 'Recibo'}</span>
         </button>
         <input ref={attachRef} type="file" accept="image/*,application/pdf" onChange={pickReceipt} hidden />
       </div>
 
-      <button type="submit" className="cj-submit" disabled={saving}>
-        {saving ? 'Guardando…' : editing ? 'Guardar cambios' : 'Registrar gasto'}
-      </button>
-      {editing && (
-        <button type="button" className="cj-cancel" onClick={onCancelEdit}>Cancelar edición</button>
-      )}
+      <div className="cj-actions-row">
+        {editing && (
+          <button type="button" className="cj-btn-secondary" onClick={onCancelEdit}>Cancelar</button>
+        )}
+        <button type="submit" className="cj-submit" disabled={saving}>
+          {saving ? 'Guardando…' : editing ? 'Guardar' : 'Registrar gasto'}
+        </button>
+      </div>
     </form>
   );
 }

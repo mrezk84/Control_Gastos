@@ -78,3 +78,15 @@ export const truncateText = (text, maxLength = 50) => {
   if (text.length <= maxLength) return text;
   return text.substring(0, maxLength) + '...';
 };
+
+/** "$58.000": peso sin decimales y sin espacio, como en el Dashboard. */
+export const formatPesos = (value) => `$${Math.round(Number(value) || 0).toLocaleString('es-AR')}`;
+
+/** "$58k" para cifras de mil en adelante; por debajo, el monto entero. */
+export const formatK = (value) => {
+  const n = Number(value) || 0;
+  return n >= 1000 ? `$${Math.round(n / 1000)}k` : `$${Math.round(n)}`;
+};
+
+/** "84,9 %": porcentaje (0-100) con una decimal y coma. */
+export const formatShare = (share) => `${(Number(share) || 0).toFixed(1).replace('.', ',')} %`;

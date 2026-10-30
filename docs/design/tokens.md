@@ -20,6 +20,7 @@ Implementación: `frontend/src/styles/caja.css`. El tema se aplica con `data-the
 | `--paper` | `#e9e8e1` | `#f7f6ef` | Recibo de papel |
 | `--ink-on-acc` | `#0e0f11` | igual | Texto sobre `--acc` |
 | `--display-bg` | `#0b0c0d` | igual | Visor del monto (siempre oscuro) |
+| `--display-line` / `--display-mu` | `#1a1c1e` / `#8f918f` | igual | Borde del visor y etiquetas apagadas dentro de él |
 | `--paper-tx` / `--paper-mu` | `#1b1c1a` / `#5f615c` | igual | Texto del recibo |
 
 ### Contrastes medidos (WCAG 2.x)
@@ -50,8 +51,8 @@ Implementación: `frontend/src/styles/caja.css`. El tema se aplica con `data-the
 - Relieve de tecla: `box-shadow: 0 3px 0 var(--key)`; al presionar `translateY(2px)` y `0 1px 0`.
 - Relieve del acento: `0 3px/4px 0 var(--acc-edge)`.
 - Visor: `inset 0 2px 8px rgba(0,0,0,.5)` y brillo `text-shadow: 0 0 18px oklch(0.88 0.18 128 / .35)`.
-- Recibo: borde inferior dentado con `mask` (círculos de 5 px cada 12 px).
-- Barras punteadas: `repeating-linear-gradient(to top, <color> 0 7px, transparent 7px 10px)` (5/8 px en móvil).
+- Recibo: borde inferior dentado con `mask`: `radial-gradient(circle at 6px 100%, transparent 5px, #000 5.5px) 0 0 / 12px 100% repeat-x`; radio superior de 6 px.
+- Barras punteadas por categoría: `repeating-linear-gradient(to top, <color> 0 7px, transparent 7px 10px)` (5/8 px en pantallas de menos de 480 px). Las del gasto diario del resumen usan `#0e0f11 0 4px, transparent 4px 6px`.
 
 ## Movimiento
 - Cinta: `translateX(0 → -50%)`, lineal e infinita, 40 s (configurable); se detiene con `prefers-reduced-motion`.

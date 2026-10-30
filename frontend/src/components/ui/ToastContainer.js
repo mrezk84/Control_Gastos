@@ -71,15 +71,15 @@ const Toast = ({ toast, onRemove }) => {
   const { type, message } = toast;
 
   const icons = {
-    success: '✓',
-    error: '✕',
-    warning: '⚠',
-    info: 'ⓘ',
+    success: 'ph ph-check-circle',
+    error: 'ph ph-warning-circle',
+    warning: 'ph ph-warning',
+    info: 'ph ph-info',
   };
 
   return (
     <div className={`toast toast-${type}`}>
-      <span className="toast-icon">{icons[type]}</span>
+      <span className="toast-icon"><i className={icons[type]} aria-hidden="true" /></span>
       <span className="toast-message">{message}</span>
       <button
         className="toast-close"

@@ -70,11 +70,17 @@ export function buildDashboard(expenses, today = new Date()) {
     .map(([name, amount]) => ({ name, amount }))
     .sort((a, b) => b.amount - a.amount);
   const maxCategory = sorted.length ? sorted[0].amount : 0;
-  const categories = sorted.slice(0, TOP_CATEGORIES).map((c) => ({
+  // Escala redondeada al orden de magnitud (p. ej. 832.000 → 900.000) para que la barra mayor no toque el techo
+  const magnitude = maxCategory > 0 ? 10 ** Math.floor(Math.log10(maxCategory)) : 1;
+  const categoryScale = maxCategory > 0 ? Math.ceil(maxCategory / magnitude) * magnitude : 0;
+  const top = sorted.slice(0, TOP_CATEGORIES);
+  const categories = top.map((c) => ({
     ...c,
     share: total ? (c.amount / total) * 100 : 0,
-    heightPct: maxCategory ? (c.amount / maxCategory) * 100 : 0,
+    heightPct: categoryScale ? (c.amount / categoryScale) * 100 : 0,
   }));
+  const restAmount = total - top.reduce((sum, c) => sum + c.amount, 0);
+  const rest = restAmount > 0 ? { amount: restAmount, share: total ? (restAmount / total) * 100 : 0 } : null;
 
   // --- mes en curso ---
   const year = today.getFullYear();
@@ -110,25 +116,19 @@ export function buildDashboard(expenses, today = new Date()) {
     value: byMonth[key],
   }));
   const values = months.map((m) => m.value);
-  const lo = Math.min(...values);
-  const hi = Math.max(...values);
-  const pad = (hi - lo) * 0.1 || hi * 0.1 || 1;
-  const yOf = (v) => (hi === lo ? 100 : 200 - ((v - (lo - pad)) / (hi + pad - (lo - pad))) * 200);
-  const trendPoints = [];
-  months.forEach((m, i) => {
-    const y = yOf(m.value).toFixed(1);
-    trendPoints.push(`${i * 100},${y}`, `${(i + 1) * 100},${y}`);
+  const peak = Math.max(...values, 1);
+  const segment = 600 / Math.max(months.length, 1);
+  // Línea escalonada: cada mes es un tramo horizontal; la altura es proporcional al máximo (base en cero)
+  const ys = values.map((v) => (130 - (v / peak) * 110).toFixed(1));
+  let line = '';
+  ys.forEach((y, i) => {
+    line += i === 0 ? `M0 ${y}` : ` V${y}`;
+    line += ` H${((i + 1) * segment).toFixed(1)}`;
   });
-  const trendWidth = Math.max(months.length, 1) * 100;
   const trend = {
-    width: trendWidth,
-    points: trendPoints.join(' '),
-    area: months.length ? `0,200 ${trendPoints.join(' ')} ${trendWidth},200` : '',
-    months: months.map((m, i) => ({
-      ...m,
-      leftPct: ((i * 100 + 50) / trendWidth) * 100,
-      topPct: yOf(m.value) / 2,
-    })),
+    months,
+    line,
+    area: line ? `${line} V140 H0 Z` : '',
     deltaPct: months.length >= 2 && months[0].value ? (months[months.length - 1].value / months[0].value - 1) * 100 : null,
     fromLabel: months.length ? months[0].label : '',
   };
@@ -157,13 +157,16 @@ export function buildDashboard(expenses, today = new Date()) {
     count,
     average: count ? total / count : 0,
     topCategory: sorted.length ? sorted[0].name : '—',
+    topAmount: sorted.length ? sorted[0].amount : 0,
     categoryCount: sorted.length,
     categories,
-    month: { name: MONTHS[month], year, daysInMonth, total: thisMonthTotal, days },
+    categoryScale,
+    rest,
+    month: { name: MONTHS[month], year, daysInMonth, elapsedDays: today.getDate(), total: thisMonthTotal, days },
     trend,
     groups,
-    hiddenRows: Math.max(0, list.length - MAX_HISTORY_ROWS),
     latest: ordered[0] || null,
+    latestLabel: ordered[0] ? groupLabel(parseLocalDate(ordered[0].date), today) : '',
     todayLong: longDate(today),
   };
 }
