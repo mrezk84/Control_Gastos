@@ -42,6 +42,10 @@ def send_password_reset_email(to_email: str, reset_url: str) -> bool:
         )
         resp.raise_for_status()
         return True
+    except httpx.HTTPStatusError as e:
+        # El cuerpo de Resend explica el motivo (p. ej. "solo puedes enviar a tu propio correo" sin dominio verificado)
+        logger.error("Resend rechazó el correo (HTTP %s): %s", e.response.status_code, e.response.text[:300])
+        return False
     except httpx.HTTPError as e:
-        logger.error(f"No se pudo enviar el correo de recuperación: {e}")
+        logger.error(f"No se pudo contactar con Resend: {e}")
         return False
