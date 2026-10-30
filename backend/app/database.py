@@ -21,9 +21,26 @@ if not SQLALCHEMY_DATABASE_URL:
         raise RuntimeError("DATABASE_URL no está configurada en el entorno de Vercel")
     SQLALCHEMY_DATABASE_URL = "sqlite:///./temp.db"  # Fallback solo para desarrollo local
 
-# SQLAlchemy only accepts the postgresql:// scheme
-if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
-    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+def normalize_database_url(url: str) -> str:
+    """
+    Deja la URL con el esquema y el controlador explícitos: ``postgresql+psycopg2://``.
+
+    - Neon y otros proveedores entregan ``postgres://`` o ``postgresql://``.
+    - Sin controlador explícito, SQLAlchemy elige el predeterminado de *su versión*. Las dependencias de
+      Vercel se instalan sin versiones fijas y una versión reciente pasó a usar psycopg 3, que no está
+      instalado (ModuleNotFoundError: No module named 'psycopg'). El controlador de este proyecto es
+      psycopg2 (requirements.txt), así que se indica siempre.
+    - Si la URL ya trae un controlador (``postgresql+algo://``) se respeta.
+    """
+    if url.startswith("postgres://"):
+        url = "postgresql://" + url[len("postgres://"):]
+    if url.startswith("postgresql://"):
+        url = "postgresql+psycopg2://" + url[len("postgresql://"):]
+    return url
+
+
+SQLALCHEMY_DATABASE_URL = normalize_database_url(SQLALCHEMY_DATABASE_URL)
 
 _is_postgres = SQLALCHEMY_DATABASE_URL.startswith("postgresql")
 _is_local_host = any(h in SQLALCHEMY_DATABASE_URL for h in ("@localhost", "@127.0.0.1", "@db:"))
