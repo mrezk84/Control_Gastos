@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey, Enum, DateTime, Boolean
+from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey, Enum, DateTime, Boolean, LargeBinary
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from .database import Base
@@ -9,10 +9,10 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(150), unique=True, index=True)
     email = Column(String(255), unique=True, index=True)
-    supabase_id = Column(String(36), unique=True, index=True, nullable=True)  # auth.users.id in Supabase
-    hashed_password = Column(String(255), nullable=True)  # Legacy: passwords now live in Supabase Auth
+    supabase_id = Column(String(36), unique=True, index=True, nullable=True)  # Sin uso desde que se dejó Supabase
+    hashed_password = Column(String(255), nullable=True)  # Nullable for OAuth users
     avatar_url = Column(String(500), nullable=True)
-    auth_provider = Column(String(50), default="email")  # email, google, azure (Microsoft), ...
+    auth_provider = Column(String(50), default="local")  # local, google, microsoft
     provider_id = Column(String(255), nullable=True)
 
     expenses = relationship("Expense", back_populates="owner")
@@ -51,10 +51,11 @@ class ReceiptImage(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     expense_id = Column(Integer, ForeignKey("expenses.id"))
-    file_path = Column(String(500))
+    file_path = Column(String(500), nullable=True)  # Legado (disco local); los recibos nuevos viven en "content"
     file_name = Column(String(255))
     file_type = Column(String(50))  # 'image' or 'pdf'
     extracted_data = Column(String(2000), nullable=True)  # JSON string of extracted data
     uploaded_at = Column(DateTime, default=datetime.utcnow)
+    content = Column(LargeBinary, nullable=True)  # Archivo guardado en la base (el disco de Vercel es efímero)
 
     expense = relationship("Expense", back_populates="receipts")

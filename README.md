@@ -1,15 +1,15 @@
 # Control de Gastos 💰
 
-Aplicación moderna para el control de gastos personales con **escaneo de recibos mediante OCR** y **autenticación OAuth**.
+Aplicación moderna para el control de gastos personales con **escaneo de recibos mediante OCR** y **login propio (usuario/contraseña, Google, Microsoft)**.
 
 ## ✨ Características
 
 ### Backend (Python/FastAPI)
 - ⚡ API REST moderna con FastAPI
-- 🔐 Autenticación OAuth (Google, Microsoft, Apple)
+- 🔐 Autenticación JWT propia + OAuth (Google, Microsoft)
 - 📸 **Escaneo de recibos y facturas con OCR**
 - 📄 **Procesamiento de PDFs**
-- 💾 Base de datos SQLAlchemy
+- 💾 SQLAlchemy sobre PostgreSQL (Neon)
 - 📊 Análisis de gastos con estadísticas
 
 ### Frontend (React)
@@ -31,16 +31,9 @@ source venv/bin/activate  # En Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-**Variables de entorno** (crear `.env`):
-```env
-DATABASE_URL=postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres
-SUPABASE_URL=https://<ref>.supabase.co
-SUPABASE_JWT_SECRET=  # Solo si el proyecto usa el JWT secret legacy (HS256)
-FRONTEND_URL=http://localhost:3000
-OCR_SPACE_API_KEY=tu_api_key_opcional  # Opcional, usa Tesseract local por defecto
-```
-
-> La base de datos y el login (email, Google, Microsoft) usan **Supabase**. Ver [SUPABASE_MIGRATION.md](./SUPABASE_MIGRATION.md).
+**Variables de entorno**: copia `backend/.env.example` a `backend/.env` y complétalo
+(`DATABASE_URL` de Neon, `SECRET_KEY`, y opcionalmente Resend, OCR.space y OAuth).
+Sin `DATABASE_URL` el backend usa un SQLite temporal, solo para desarrollo local.
 
 **Ejecutar**:
 ```bash
@@ -57,8 +50,6 @@ npm install
 **Variables de entorno** (crear `.env`):
 ```env
 REACT_APP_API_URL=http://localhost:8000
-REACT_APP_SUPABASE_URL=https://<ref>.supabase.co
-REACT_APP_SUPABASE_ANON_KEY=<anon-key>
 ```
 
 **Ejecutar**:
@@ -70,7 +61,7 @@ npm start
 
 La aplicación permite escanear recibos y facturas automáticamente:
 
-1. **Imágenes**: JPG, PNG (máx 10MB)
+1. **Imágenes**: JPG, PNG (máx 4MB)
 2. **PDFs**: Soportados para facturas digitales
 3. **OCR**: Extrae automáticamente:
    - ✅ Monto total
@@ -83,7 +74,7 @@ La aplicación permite escanear recibos y facturas automáticamente:
 ### Backend
 - FastAPI
 - SQLAlchemy
-- Pytesseract / OCR.space
+- OCR.space (imágenes)
 - PDFPlumber
 - Python-jose (JWT)
 - Passlib (bcrypt)
@@ -93,7 +84,6 @@ La aplicación permite escanear recibos y facturas automáticamente:
 - React Router
 - Axios
 - Chart.js
-- React Bootstrap
 
 ## 📁 Estructura del Proyecto
 
@@ -106,7 +96,8 @@ Proyecto_Control_Gastos/
 │   │   ├── models.py      # Modelos BD
 │   │   ├── schemas.py     # Pydantic schemas
 │   │   └── main.py        # App entry point
-│   ├── uploads/           # Archivos subidos
+│   ├── api/               # Entrada serverless de Vercel
+│   ├── migrations/        # SQL del esquema
 │   └── requirements.txt
 └── frontend/
     ├── src/
@@ -116,78 +107,19 @@ Proyecto_Control_Gastos/
     └── package.json
 ```
 
-## 🔒 Variables de Entorno Opcionales
-
-```env
-# OCR (opcional - usa Tesseract local si no se configura)
-OCR_SPACE_API_KEY=
-```
-
 ## 📝 Notas
 
-- Para usar Tesseract OCR local, instalar: `apt-get install tesseract-ocr tesseract-spa-eng`
-- Para usar OCR.space API, registrarse en https://ocr.space/ y obtener API key
-- Los archivos subidos se guardan en `backend/uploads/receipts/`
+- El OCR de imágenes usa la API de OCR.space (clave gratuita en https://ocr.space/ocrapi/freekey); los PDFs se leen con pdfplumber.
+- Los recibos subidos se guardan en la base de datos (el disco de Vercel es efímero).
 
 ---
 
-## 🌐 Deployment en Producción
+## 🌐 Despliegue
 
-### Opción Recomendada: Render (Gratis)
-
-**Railway ya no ofrece plan gratuito**. La mejor alternativa actual es **Render**.
-
-- **Frontend**: Render Static Site (o Vercel)
-- **Backend + DB**: Render Web Service + PostgreSQL
-
-```
-┌─────────────┐         ┌─────────────┐
-│   Render    │         │   Render    │
-│  Frontend   │◄───────►│  Backend    │
-│   (React)   │  API    │  (FastAPI)  │
-│             │         │   + PGSQL   │
-└─────────────┘         └─────────────┘
-```
-
-### Guía de Deployment Paso a Paso
-
-📖 **Ver guía completa**: [RENDER_DEPLOY.md](./RENDER_DEPLOY.md)
-
-#### Resumen Rápido - Render:
-
-1. **Crear cuenta en [render.com](https://render.com)** con GitHub
-
-2. **Backend (Render)**
-   - New → Web Service → Conectar repo `Control_Gastos`
-   - Root: `backend`, Runtime: Docker, Plan: Free
-   - Variables: `DATABASE_URL` (Supabase), `SUPABASE_URL`, `SUPABASE_JWT_SECRET` (opcional), `FRONTEND_URL`
-
-3. **Base de Datos y Auth (Supabase)**
-   - Ver [SUPABASE_MIGRATION.md](./SUPABASE_MIGRATION.md)
-
-4. **Frontend (Render o Vercel)**
-   - Render: New → Static Site → Root: `frontend`
-   - Variables: `REACT_APP_API_URL` (URL del backend), `REACT_APP_SUPABASE_URL`, `REACT_APP_SUPABASE_ANON_KEY`
-
-### URLs de Producción (Ejemplo)
-
-| Servicio | URL |
-|----------|-----|
-| Frontend | `https://control-gastos-frontend.onrender.com` |
-| Backend | `https://control-gastos-backend.onrender.com` |
-
-### Costos
-
-- ✅ **Render Backend**: Gratis (plan Free)
-- ✅ **Render PostgreSQL**: Gratis (90 días, luego $7/mes)
-- ✅ **Vercel Frontend**: Gratis (opcional)
-
----
+Todo corre en capas gratuitas sin tarjeta: **Vercel** (frontend y backend), **Neon** (PostgreSQL),
+**Resend** (correo) y **OCR.space**. Guía paso a paso en [DEPLOY.md](./DEPLOY.md).
 
 ## 🔗 Links Útiles
 
-- [Deployment en Render (Recomendado)](./RENDER_DEPLOY.md)
-- [Deployment Híbrido Vercel + Railway](./HYBRID_DEPLOY.md) ⚠️ Railway ya no es gratis
-- [Deployment en Google Cloud](./DEPLOYMENT.md)
-- [Deployment en Railway](./RAILWAY_DEPLOY.md)
+- [Guía de despliegue](./DEPLOY.md)
 - [Manual de Usuario](./MANUAL_USUARIO.md)

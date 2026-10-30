@@ -15,10 +15,14 @@ class User(BaseModel):
     username: str
     email: str
     avatar_url: Optional[str] = None
-    auth_provider: Optional[str] = "email"
+    auth_provider: Optional[str] = "local"
 
     class Config:
         from_attributes = True
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
 
 # --- Expense Schemas ---
 
@@ -100,7 +104,7 @@ class ReceiptImageCreate(BaseModel):
 class ReceiptImage(BaseModel):
     id: int
     expense_id: int
-    file_path: str
+    file_path: Optional[str] = None
     file_name: str
     file_type: str
     extracted_data: Optional[str] = None
