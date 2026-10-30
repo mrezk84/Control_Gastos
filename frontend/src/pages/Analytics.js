@@ -17,7 +17,7 @@ import { getAllExpenses, getExpensesSummary } from '../services/api';
 import { CHART_COLORS, formatCurrency } from '../utils';
 import logger from '../utils/logger';
 import { useCountUp } from '../hooks/useCountUp';
-import { EXPENSE_CREATED_EVENT } from '../components/Layout/SidebarLayout';
+import { EXPENSE_CREATED_EVENT } from '../utils/events';
 
 ChartJS.register(
   CategoryScale,

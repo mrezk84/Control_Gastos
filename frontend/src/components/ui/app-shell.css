@@ -276,21 +276,12 @@
 /* ============================================
    Light Theme Text Visibility Fixes
    ============================================ */
-[data-theme="light"] h1,
-[data-theme="light"] h2,
-[data-theme="light"] h3,
-[data-theme="light"] h4,
-[data-theme="light"] h5,
-[data-theme="light"] h6 {
+/* :where() baja la especificidad: las clases del rediseño (styles/caja.css) deben poder ganar */
+:where([data-theme="light"]) :is(h1, h2, h3, h4, h5, h6) {
   color: var(--text-primary);
 }
 
-[data-theme="light"] p,
-[data-theme="light"] span,
-[data-theme="light"] div,
-[data-theme="light"] li {
-  color: var(--text-primary);
-}
+/* (se quitó la regla genérica de color para p, span, div y li: el color lo hereda del body) */
 
 [data-theme="light"] .page-title {
   color: var(--text-primary);
@@ -597,8 +588,8 @@
 }
 
 /* Links */
-[data-theme="light"] a {
-  color: #2563eb !important;
+:where([data-theme="light"]) a {
+  color: var(--accent-primary);
 }
 
 /* Text content general */

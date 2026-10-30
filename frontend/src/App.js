@@ -9,7 +9,7 @@ import Analytics from './pages/Analytics';
 import OAuthCallback from './components/OAuthCallback';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
-import SidebarLayout from './components/Layout/SidebarLayout';
+import AppLayout from './components/Layout/AppLayout';
 import { PageTransition } from './components/ui/PageTransition';
 import { ToastProvider } from './components/ui/ToastContainer';
 import { setAuthToken } from './services/api';
@@ -19,7 +19,7 @@ function ProtectedRoute({ children }) {
   if (!token) {
     return <Navigate to="/login" replace />;
   }
-  return <SidebarLayout>{children}</SidebarLayout>;
+  return <AppLayout>{children}</AppLayout>;
 }
 
 function App() {

@@ -6,7 +6,7 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { CATEGORY_EMOJIS, CATEGORY_COLORS, formatCurrency, formatDate } from '../utils';
 import logger from '../utils/logger';
 import { useToast } from '../components/ui/ToastContainer';
-import { EXPENSE_CREATED_EVENT } from '../components/Layout/SidebarLayout';
+import { EXPENSE_CREATED_EVENT } from '../utils/events';
 
 const PAGE_SIZE = 25;
 

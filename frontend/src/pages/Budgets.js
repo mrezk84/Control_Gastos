@@ -5,7 +5,7 @@ import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import logger from '../utils/logger';
 import { useToast } from '../components/ui/ToastContainer';
-import { EXPENSE_CREATED_EVENT } from '../components/Layout/SidebarLayout';
+import { EXPENSE_CREATED_EVENT } from '../utils/events';
 
 const CATEGORIES = [
   'Alimentación',

@@ -1,356 +1,241 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  ArcElement,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-} from 'chart.js';
-import { Bar, Doughnut, Line } from 'react-chartjs-2';
-import { getExpenses } from '../services/api';
-import logger from '../utils/logger';
-import { useCountUp } from '../hooks/useCountUp';
-import GamificationPanel from '../components/ui/GamificationPanel';
-import { EXPENSE_CREATED_EVENT } from '../components/Layout/SidebarLayout';
+import React, { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import RegisterPanel from '../components/caja/RegisterPanel';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
+import { useToast } from '../components/ui/ToastContainer';
+import { useAppData } from '../context/ExpensesContext';
+import { deleteExpense } from '../services/api';
+import { buildDashboard, formatStamp } from '../utils/dashboardStats';
+import { categoryIconClass } from '../utils/categoryIcons';
+import { formatCurrency } from '../utils/formatters';
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  ArcElement,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-);
+const pct = (n) => `${n.toFixed(1).replace('.', ',')}%`;
+const short = (n) => (n >= 1000 ? `$${Math.round(n / 1000)}k` : `$${Math.round(n)}`);
 
-// Emerald-forward palette with a warm gold counterpoint
-const CHART_COLORS = [
-  '#34d399', '#22d3ee', '#f2c185', '#a78bfa',
-  '#fb923c', '#fb7185', '#38bdf8', '#8d9089',
-];
-const CHART_COLORS_ALPHA = CHART_COLORS.map(c => c + '25');
+function Kpi({ icon, label, value, text }) {
+  return (
+    <div className="cj-kpi">
+      <div className="cj-kpi-label"><i className={`ph-duotone ph-${icon}`} aria-hidden="true" />{label}</div>
+      <span className={`cj-kpi-value${text ? ' is-text' : ''}`}>{value}</span>
+    </div>
+  );
+}
 
 function Dashboard() {
-  const [expenses, setExpenses] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { user, expenses, refresh } = useAppData();
+  const { success, error } = useToast();
+  const [editing, setEditing] = useState(null);
+  const [toDelete, setToDelete] = useState(null);
 
-  const fetchData = useCallback(async () => {
+  const data = useMemo(() => buildDashboard(expenses), [expenses]);
+  const { month, trend, categories } = data;
+  const name = (user?.username || 'usuario');
+  const greetingName = name.charAt(0).toUpperCase() + name.slice(1);
+
+  const startEdit = (expense) => {
+    setEditing(expense);
+    document.getElementById('registrar')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const confirmDelete = async () => {
+    const target = toDelete;
+    setToDelete(null);
     try {
-      const expRes = await getExpenses();
-      setExpenses(expRes.data);
-    } catch (err) {
-      logger.apiError('Error fetching expenses', err);
-    } finally {
-      setLoading(false);
+      await deleteExpense(target.id);
+      if (editing?.id === target.id) setEditing(null);
+      success('Gasto eliminado');
+      refresh();
+    } catch {
+      error('No se pudo eliminar el gasto');
     }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  // Refresh when an expense is created anywhere in the app (FAB / Cmd+N).
-  useEffect(() => {
-    window.addEventListener(EXPENSE_CREATED_EVENT, fetchData);
-    return () => window.removeEventListener(EXPENSE_CREATED_EVENT, fetchData);
-  }, [fetchData]);
-
-  // -- KPI calculations with useMemo --
-  const kpiData = useMemo(() => {
-    const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
-    const avgExpense = expenses.length ? totalExpenses / expenses.length : 0;
-
-    const categoryMap = {};
-    expenses.forEach((exp) => {
-      const category = exp.category || 'Sin categoría';
-      categoryMap[category] = (categoryMap[category] || 0) + exp.amount;
-    });
-
-    const categories = Object.keys(categoryMap);
-    const topCategory = categories.length
-      ? categories.reduce((max, cat) => (categoryMap[cat] > categoryMap[max] ? cat : max))
-      : '—';
-
-    return {
-      totalExpenses,
-      avgExpense,
-      categoryMap,
-      categories,
-      topCategory
-    };
-  }, [expenses]);
-
-  // -- Monthly trends --
-  const monthlyData = useMemo(() => {
-    const monthlyMap = {};
-
-    expenses.forEach((exp) => {
-      const date = new Date(exp.date);
-      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      monthlyMap[key] = (monthlyMap[key] || 0) + exp.amount;
-    });
-
-    const sortedMonths = Object.keys(monthlyMap).sort();
-    const last6Months = sortedMonths.slice(-6);
-
-    return { monthlyMap, last6Months };
-  }, [expenses]);
-
-  // -- Doughnut chart --
-  const doughnutData = useMemo(() => ({
-    labels: kpiData.categories,
-    datasets: [{
-      data: kpiData.categories.map(cat => kpiData.categoryMap[cat]),
-      backgroundColor: CHART_COLORS.slice(0, kpiData.categories.length),
-      borderColor: 'transparent',
-      borderWidth: 0,
-      hoverOffset: 12,
-    }],
-  }), [kpiData]);
-
-  const doughnutOptions = useMemo(() => ({
-    responsive: true,
-    maintainAspectRatio: false,
-    cutout: '70%',
-    plugins: {
-      legend: {
-        position: 'bottom',
-        labels: {
-          color: '#8d9089',
-          font: { family: 'Outfit', size: 13, weight: '500' },
-          padding: 20,
-          usePointStyle: true,
-          pointStyle: 'circle',
-        },
-      },
-    },
-  }), []);
-
-  // -- Line chart --
-  const lineData = useMemo(() => ({
-    labels: monthlyData.last6Months.map(month => {
-      const [year, monthNum] = month.split('-');
-      const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-      return `${monthNames[parseInt(monthNum) - 1]} '${year.slice(-2)}`;
-    }),
-    datasets: [{
-      label: 'Gastos Mensuales',
-      data: monthlyData.last6Months.map(month => monthlyData.monthlyMap[month] || 0),
-      borderColor: '#34d399',
-      backgroundColor: 'rgba(52, 211, 153, 0.12)',
-      fill: true,
-      tension: 0.4,
-      pointRadius: 6,
-      pointBackgroundColor: '#34d399',
-      pointBorderColor: 'rgba(52, 211, 153, 0.3)',
-      pointBorderWidth: 3,
-      pointHoverRadius: 10,
-    }],
-  }), [monthlyData]);
-
-  const lineOptions = useMemo(() => ({
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        backgroundColor: 'rgba(20, 25, 34, 0.92)',
-        titleColor: '#f5f4ef',
-        bodyColor: '#8d9089',
-        borderColor: 'rgba(52, 211, 153, 0.35)',
-        borderWidth: 1,
-        cornerRadius: 8,
-        padding: 12,
-      },
-    },
-    scales: {
-      x: {
-        grid: { color: 'rgba(255, 255, 255, 0.04)' },
-        ticks: {
-          color: '#8d9089',
-          font: { family: 'Outfit', size: 12, weight: '500' }
-        },
-      },
-      y: {
-        grid: { color: 'rgba(255, 255, 255, 0.04)' },
-        ticks: {
-          color: '#8d9089',
-          font: { family: 'Outfit', size: 12, weight: '500' },
-          callback: value => '$' + value.toLocaleString('es-AR')
-        },
-      },
-    },
-  }), []);
-
-  // -- Bar chart --
-  const barData = useMemo(() => ({
-    labels: kpiData.categories,
-    datasets: [{
-      label: 'Total por Categoría',
-      data: kpiData.categories.map(cat => kpiData.categoryMap[cat]),
-      backgroundColor: CHART_COLORS_ALPHA.slice(0, kpiData.categories.length),
-      borderColor: CHART_COLORS.slice(0, kpiData.categories.length),
-      borderWidth: 2,
-      borderRadius: 8,
-      borderSkipped: false,
-    }],
-  }), [kpiData]);
-
-  const barOptions = useMemo(() => ({
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        backgroundColor: 'rgba(20, 25, 34, 0.92)',
-        titleColor: '#f5f4ef',
-        bodyColor: '#8d9089',
-        borderColor: 'rgba(52, 211, 153, 0.35)',
-        borderWidth: 1,
-        cornerRadius: 8,
-        padding: 12,
-      },
-    },
-    scales: {
-      x: {
-        grid: { display: false },
-        ticks: {
-          color: '#8d9089',
-          font: { family: 'Outfit', size: 12, weight: '500' }
-        },
-      },
-      y: {
-        grid: { color: 'rgba(255, 255, 255, 0.04)' },
-        ticks: {
-          color: '#8d9089',
-          font: { family: 'Outfit', size: 12, weight: '500' },
-          callback: value => '$' + value.toLocaleString('es-AR')
-        },
-      },
-    },
-  }), []);
-
-  const formatCurrency = (value) =>
-    new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      maximumFractionDigits: 0
-    }).format(value);
-
-  // Animated KPI counters
-  const animatedTotal = useCountUp(kpiData.totalExpenses);
-  const animatedAvg = useCountUp(kpiData.avgExpense);
-  const animatedCount = useCountUp(expenses.length);
-
-  if (loading) {
-    return (
-      <div className="dashboard-page">
-        <div className="dashboard-container">
-          <div className="dashboard-loading">
-            <div className="spinner" />
-            <p>Cargando dashboard...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  };
 
   return (
-    <div className="dashboard-page">
-      <div className="dashboard-container">
-        {/* Header */}
-        <div className="page-header">
-          <div className="page-header-content">
-            <h1>Dashboard</h1>
-            <p className="page-subtitle">Resumen general de tus gastos</p>
+    <div className="cj-dash">
+      <div className="cj-head">
+        <div>
+          <div className="cj-eyebrow">Panel principal · {month.name} {month.year}</div>
+          <h1 className="cj-greeting">Hola, {greetingName}</h1>
+        </div>
+        <div>
+          <div className="cj-eyebrow is-total">Total acumulado</div>
+          <div className="cj-total">{formatCurrency(data.total)}</div>
+        </div>
+      </div>
+
+      <section className="cj-hero" aria-label="Gasto del mes">
+        <div className="cj-hero-main">
+          <div className="cj-hero-title"><i className="ph-duotone ph-wallet" aria-hidden="true" />Este mes</div>
+          <div>
+            <div className="cj-hero-amount">{formatCurrency(month.total)}</div>
+            <div className="cj-hero-sub">{month.name} {month.year} · {month.daysInMonth} días</div>
           </div>
         </div>
-
-        {/* KPI Cards */}
-        <div className="kpi-grid">
-          <div className="kpi-card">
-            <div className="kpi-icon purple">💸</div>
-            <div className="kpi-label">Total Gastos</div>
-            <div className="kpi-value">{formatCurrency(animatedTotal)}</div>
+        <div className="cj-hero-chart">
+          <div className="cj-hero-cap">GASTO DIARIO</div>
+          <div className="cj-bars" role="img" aria-label={`Gasto diario de ${month.name}`}>
+            {month.days.map((d, i) => (
+              <div key={i} className={`cj-bar${d.today ? ' is-today' : ''}`} style={{ '--h': `${d.heightPct}%` }} />
+            ))}
           </div>
-
-          <div className="kpi-card">
-            <div className="kpi-icon blue">📊</div>
-            <div className="kpi-label">Promedio</div>
-            <div className="kpi-value">{formatCurrency(animatedAvg)}</div>
-          </div>
-
-          <div className="kpi-card">
-            <div className="kpi-icon green">🏆</div>
-            <div className="kpi-label">Categoría Top</div>
-            <div className="kpi-value" style={{ fontSize: '1.5rem' }}>
-              {kpiData.topCategory}
-            </div>
-          </div>
-
-          <div className="kpi-card">
-            <div className="kpi-icon orange">📋</div>
-            <div className="kpi-label">Transacciones</div>
-            <div className="kpi-value">{Math.round(animatedCount)}</div>
-          </div>
+          <div className="cj-hero-axis"><span>1 {month.name.slice(0, 3).toUpperCase()}</span><span>15</span><span>HOY</span></div>
         </div>
+      </section>
 
-        {/* Gamification */}
-        <GamificationPanel expenses={expenses} />
+      <div className="cj-kpis">
+        <Kpi icon="chart-bar" label="Promedio" value={formatCurrency(Math.round(data.average))} />
+        <Kpi icon="trophy" label="Top categoría" value={data.topCategory} text />
+        <Kpi icon="receipt" label="Transacciones" value={data.count} />
+        <Kpi icon="squares-four" label="Categorías" value={data.categoryCount} />
+      </div>
 
-        {/* Charts Grid */}
-        <div className="charts-grid">
-          <div className="chart-card">
-            <div className="chart-card-title">📈 Distribución por Categoría</div>
-            <div style={{ height: 300 }}>
-              {kpiData.categories.length > 0 ? (
-                <Doughnut data={doughnutData} options={doughnutOptions} />
-              ) : (
-                <div className="empty-state">
-                  <div className="empty-state-icon">📭</div>
-                  <p>Sin datos todavía</p>
-                  {expenses.length === 0 && (
-                    <p className="empty-state-sub">Agregá tus primeros gastos para ver estadísticas</p>
-                  )}
+      <div className="cj-charts">
+        <section className="cj-card" aria-label="Gasto por categoría">
+          <div className="cj-card-head">
+            <span className="cj-card-title">Por categoría</span>
+            <span className="cj-card-meta">{categories.length ? `escala ${short(categories[0].amount)}` : ''}</span>
+          </div>
+          {categories.length === 0 ? (
+            <div className="cj-empty">Aún no hay gastos registrados.</div>
+          ) : (
+            <div className="cj-catbars">
+              {categories.map((c, i) => (
+                <div className="cj-catcol" key={c.name} title={`${c.name}: ${formatCurrency(c.amount)}`}>
+                  <span className="cj-catval">{short(c.amount)}</span>
+                  <div className="cj-track">
+                    <div className="cj-fill" style={{ '--h': `${c.heightPct}%`, '--c': `var(--cat-${i + 1})` }} />
+                  </div>
+                  <span className="cj-caticon"><i className={categoryIconClass(c.name)} aria-label={c.name} /></span>
                 </div>
-              )}
+              ))}
             </div>
-          </div>
+          )}
+        </section>
 
-          <div className="chart-card">
-            <div className="chart-card-title">📉 Tendencia Mensual</div>
-            <div style={{ height: 300 }}>
-              {monthlyData.last6Months.length > 0 ? (
-                <Line data={lineData} options={lineOptions} />
-              ) : (
-                <div className="empty-state">
-                  <div className="empty-state-icon">📭</div>
-                  <p>Sin datos todavía</p>
-                </div>
-              )}
-            </div>
-          </div>
+        <section className="cj-card cj-dist" aria-label="Distribución del gasto">
+          <span className="cj-card-title">Distribución</span>
+          {categories.length === 0 ? (
+            <div className="cj-empty">Sin datos todavía.</div>
+          ) : (
+            <>
+              <div className="cj-stack" aria-hidden="true">
+                {categories.map((c, i) => (
+                  <span key={c.name} style={{ '--w': `${c.share}%`, '--c': `var(--cat-${i + 1})` }} />
+                ))}
+              </div>
+              <div className="cj-legend">
+                {categories.map((c, i) => (
+                  <div className="cj-legend-row" key={c.name}>
+                    <span className="cj-swatch" style={{ '--c': `var(--cat-${i + 1})` }} />
+                    <span>{c.name}</span>
+                    <span className="cj-dots" />
+                    <span className="cj-legend-pct">{pct(c.share)}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </section>
+      </div>
+
+      <section className="cj-card" aria-label="Tendencia mensual">
+        <div className="cj-card-head">
+          <span className="cj-card-title">Tendencia</span>
+          {trend.deltaPct !== null && (
+            <span className="cj-card-meta is-acc">
+              {trend.deltaPct >= 0 ? '+' : ''}{Math.round(trend.deltaPct)}% vs {trend.fromLabel}
+            </span>
+          )}
         </div>
-
-        {/* Bar Chart */}
-        {kpiData.categories.length > 0 && (
-          <div className="chart-card" style={{ marginBottom: 40 }}>
-            <div className="chart-card-title">📊 Total por Categoría</div>
-            <div style={{ height: 280 }}>
-              <Bar data={barData} options={barOptions} />
-            </div>
+        {trend.months.length === 0 ? (
+          <div className="cj-empty">Registra gastos para ver la tendencia.</div>
+        ) : (
+          <div className="cj-trend">
+            <div className="cj-trend-grid" />
+            <svg viewBox={`0 0 ${trend.width} 200`} preserveAspectRatio="none" role="img" aria-label="Gasto mensual">
+              <polygon points={trend.area} fill="var(--acct)" fillOpacity="0.1" />
+              <polyline points={trend.points} fill="none" stroke="var(--acct)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+            </svg>
+            {trend.months.map((m) => (
+              <React.Fragment key={m.label}>
+                <div className="cj-trend-val" style={{ left: `${m.leftPct}%`, top: `${m.topPct}%` }}>{short(m.value)}</div>
+                <div className="cj-trend-lbl" style={{ left: `${m.leftPct}%` }}>{m.label}</div>
+              </React.Fragment>
+            ))}
           </div>
         )}
-      </div>
+      </section>
+
+      <aside className="cj-side" id="registrar" aria-label="Registrar gasto">
+        <RegisterPanel editing={editing} onSaved={refresh} onCancelEdit={() => setEditing(null)} />
+        <div className="cj-paper" aria-label="Último registro">
+          <div className="cj-paper-row"><span>ÚLTIMO REGISTRO</span><span>{formatStamp(data.latest)}</span></div>
+          <div className="cj-paper-rule" />
+          {data.latest ? (
+            <>
+              <div className="cj-paper-line">
+                <span><i className={categoryIconClass(data.latest.category)} aria-hidden="true" /> {data.latest.description}</span>
+                <span className="cj-dots" />
+                <span>{formatCurrency(data.latest.amount)}</span>
+              </div>
+              <div className="cj-paper-sub">
+                {data.latest.category}
+                {data.latest.receipt_url && <> · <i className="ph ph-paperclip" aria-hidden="true" /> con recibo</>}
+              </div>
+            </>
+          ) : (
+            <div className="cj-paper-sub">Aún no hay registros.</div>
+          )}
+        </div>
+      </aside>
+
+      <section className="cj-card" aria-label="Historial de gastos">
+        <div className="cj-card-head" style={{ marginBottom: 10 }}>
+          <span className="cj-card-title"><i className="ph ph-clock-counter-clockwise" aria-hidden="true" />Historial</span>
+          <span className="cj-pill">{data.count} registros</span>
+        </div>
+        {data.groups.length === 0 && <div className="cj-empty">Todavía no registraste gastos. Usa el panel para cargar el primero.</div>}
+        {data.groups.map((g) => (
+          <div key={g.key}>
+            <div className="cj-gh"><span>{g.label}</span><span>{formatCurrency(g.total)}</span></div>
+            {g.items.map((r) => (
+              <div className={`cj-row${editing?.id === r.id ? ' is-editing' : ''}`} key={r.id}>
+                <div className="cj-row-ico"><i className={categoryIconClass(r.category)} aria-hidden="true" /></div>
+                <div className="cj-row-main">
+                  <div className="cj-row-desc">
+                    <span>{r.description}</span>
+                    {r.receipt_url && <span className="cj-row-rcpt"><i className="ph ph-paperclip" aria-hidden="true" /> Con recibo</span>}
+                  </div>
+                  <span className="cj-row-sub">{r.category}</span>
+                </div>
+                <span className="cj-row-cat cj-row-cat-col">{r.category}</span>
+                <span className="cj-row-amt">{formatCurrency(r.amount)}</span>
+                <div className="cj-row-actions">
+                  <button type="button" title="Editar" aria-label={`Editar ${r.description}`} onClick={() => startEdit(r)}>
+                    <i className="ph ph-pencil-simple" aria-hidden="true" />
+                  </button>
+                  <button type="button" title="Eliminar" aria-label={`Eliminar ${r.description}`} onClick={() => setToDelete(r)}>
+                    <i className="ph ph-trash" aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+        {data.hiddenRows > 0 && (
+          <Link className="cj-more" to="/expenses">Ver los {data.hiddenRows} registros anteriores →</Link>
+        )}
+      </section>
+
+      <ConfirmDialog
+        isOpen={Boolean(toDelete)}
+        onClose={() => setToDelete(null)}
+        onConfirm={confirmDelete}
+        title="Eliminar gasto"
+        message={toDelete ? `¿Eliminar "${toDelete.description}" por ${formatCurrency(toDelete.amount)}? Esta acción no se puede deshacer.` : ''}
+        confirmText="Eliminar"
+        type="danger"
+      />
     </div>
   );
 }
