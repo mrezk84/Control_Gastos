@@ -52,6 +52,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Tests
+        # TZ al oeste de UTC: es donde las fechas YYYY-MM-DD se mostraban un día antes
+        env:
+          CI: true
+          TZ: America/Argentina/Buenos_Aires
+        run: npm test -- --watchAll=false
+
       - name: Build
         env:
           CI: false

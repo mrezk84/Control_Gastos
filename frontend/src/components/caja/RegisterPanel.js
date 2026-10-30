@@ -4,11 +4,11 @@ import { useToast } from '../ui/ToastContainer';
 import { suggestCategory } from '../../utils/autoCategory';
 import { CATEGORY_ICON, categoryIconClass } from '../../utils/categoryIcons';
 import { FOCUS_REGISTER_EVENT } from '../../utils/events';
+import { pressKey } from '../../utils/amountKeypad';
 
 const CATEGORIES = Object.keys(CATEGORY_ICON);
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '000', '0', '⌫'];
 const MAX_RECEIPT_BYTES = 4 * 1024 * 1024; // límite del backend (Vercel acepta hasta 4,5 MB)
-const MAX_AMOUNT_CHARS = 9;
 
 const money = new Intl.NumberFormat('es-AR', {
   style: 'currency',
@@ -20,14 +20,6 @@ const money = new Intl.NumberFormat('es-AR', {
 const todayLocal = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-};
-
-/** Aplica una tecla al monto (cadena de dígitos, con decimales solo si el gasto editado los tenía). */
-export const pressKey = (prev, key) => {
-  if (key === '⌫') return prev.slice(0, -1);
-  const next = (prev + key).replace(/^0+(?=\d)/, '');
-  if (next.length > MAX_AMOUNT_CHARS || /\.\d{3,}/.test(next)) return prev;
-  return next;
 };
 
 const EMPTY = () => ({ amount: '', description: '', category: '', date: todayLocal() });
