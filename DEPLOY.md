@@ -49,7 +49,7 @@ Límites de Vercel a tener en cuenta: cuerpo de petición de 4,5 MB (por eso los
 
 ## 3. Frontend en Vercel
 1. Segundo proyecto con **Root Directory = `frontend`**.
-2. En *Settings → Environment Variables* crea `REACT_APP_API_URL` = URL **real** del backend (sin barra final). No está en el repositorio a propósito. Se aplica al compilar: **redespliega** después de crearla o cambiarla.
+2. La URL del backend va en `frontend/.env.production` (`REACT_APP_API_URL`, sin barra final): es pública, no un secreto, y Create React App la incorpora al compilar. Si prefieres, puedes definirla también como variable de entorno en Vercel con ese mismo nombre y tendrá prioridad; pero Vercel avisa de que los prefijos públicos (`REACT_APP_`) exponen el valor al navegador y puede no dejar guardarla como variable *sensible*: por eso el archivo es la vía más simple. **Nunca pongas un secreto en una variable `REACT_APP_`.** Se aplica al compilar: redespliega tras cambiarla.
 3. En el backend, `FRONTEND_URL` debe ser la URL pública del frontend (varias, separadas por coma): es el origen que acepta el CORS.
 4. Si el frontend también tiene *Vercel Authentication* activa, la app solo la verá quien tenga cuenta de Vercel en tu equipo: desactívala para Production, porque la app ya tiene su propio login.
 
