@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import Ticker from '../caja/Ticker';
 import QuickAddExpense from '../QuickAddExpense';
@@ -7,7 +7,7 @@ import { AppDataContext } from '../../context/ExpensesContext';
 import { getCurrentUser, getExpenses, logout } from '../../services/api';
 import { useTheme } from '../../hooks/useTheme';
 import { buildDashboard } from '../../utils/dashboardStats';
-import { formatCurrency } from '../../utils/formatters';
+import { formatPesos } from '../../utils/formatters';
 import { EXPENSE_CREATED_EVENT, FOCUS_REGISTER_EVENT } from '../../utils/events';
 import logger from '../../utils/logger';
 
@@ -24,6 +24,8 @@ function AppLayout({ children }) {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
   const { theme, setTheme, toggle } = useTheme();
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -81,15 +83,29 @@ function AppLayout({ children }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [onDashboard]);
 
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const onDown = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
+    const onKey = (e) => { if (e.key === 'Escape') setMenuOpen(false); };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [menuOpen]);
+
+  useEffect(() => { setMenuOpen(false); }, [pathname]);
+
   const stats = useMemo(() => buildDashboard(expenses), [expenses]);
 
   const tickerItems = useMemo(
     () => [
-      'Tu control financiero',
-      `Gastos registrados ${stats.count}`,
-      `Total ${formatCurrency(stats.total)}`,
-      `Categoría top ${stats.topCategory}`,
-      `Actualizado ${stats.todayLong}`,
+      ['Tu control financiero', null],
+      ['Gastos registrados', String(stats.count)],
+      ['Total', formatPesos(stats.total)],
+      ['Categoría top', stats.topCategory],
+      ['Actualizado', stats.todayLong],
     ],
     [stats]
   );
@@ -154,17 +170,43 @@ function AppLayout({ children }) {
             >
               <i className={`ph ph-${theme === 'dark' ? 'sun' : 'moon'}`} aria-hidden="true" />
             </button>
-            <div className="cj-avatar" title={username}>
-              {user?.avatar_url ? (
-                <img src={user.avatar_url} alt="" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-              ) : (
-                <span aria-hidden="true">{username[0].toUpperCase()}</span>
+
+            {/* Escritorio: avatar, usuario y Salir a la vista */}
+            <div className="cj-account-wide">
+              <div className="cj-avatar" title={username}>
+                {user?.avatar_url ? (
+                  <img src={user.avatar_url} alt="" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                ) : (
+                  <span aria-hidden="true">{username[0].toUpperCase()}</span>
+                )}
+              </div>
+              <span className="cj-user">{username.toLowerCase()}</span>
+              <button type="button" className="cj-logout" onClick={handleLogout}>
+                <i className="ph ph-sign-out" aria-hidden="true" />Salir
+              </button>
+            </div>
+
+            {/* Móvil: el avatar abre un menú con el usuario y Salir */}
+            <div className="cj-account-narrow" ref={menuRef}>
+              <button
+                type="button"
+                className="cj-avatar-btn"
+                aria-label="Cuenta"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                onClick={() => setMenuOpen((open) => !open)}
+              >
+                {username[0].toUpperCase()}
+              </button>
+              {menuOpen && (
+                <div className="cj-menu" role="menu">
+                  <div className="cj-menu-user">{username.toLowerCase()}</div>
+                  <button type="button" role="menuitem" className="cj-menu-item" onClick={handleLogout}>
+                    <i className="ph ph-sign-out" aria-hidden="true" />Salir
+                  </button>
+                </div>
               )}
             </div>
-            <span className="cj-user">{username}</span>
-            <button type="button" className="cj-btn is-logout" onClick={handleLogout} aria-label="Salir">
-              <i className="ph ph-sign-out" aria-hidden="true" /><span>Salir</span>
-            </button>
           </div>
         </header>
 
