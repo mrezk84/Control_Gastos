@@ -14,16 +14,15 @@ from .. import schemas, models
 from ..auth.utils import hash_password, verify_password, create_access_token, get_current_user, SECRET_KEY
 from ..crud import get_user_by_username, create_user
 from ..services.email_service import send_password_reset_email
+from ..frontend_url import primary_frontend_url
 from jose import JWTError, jwt
 from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel, Field, field_validator
-import os
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Authentication"])
 
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
 
 # Request/Response Schemas
@@ -168,7 +167,7 @@ def forgot_password(
             SECRET_KEY,
             algorithm="HS256"
         )
-        reset_url = f"{FRONTEND_URL}/reset-password?token={reset_token}"
+        reset_url = f"{primary_frontend_url()}/reset-password?token={reset_token}"
         send_password_reset_email(user.email, reset_url)
         logger.info(f"Password reset initiated for user: {user.username}")
         return generic_response

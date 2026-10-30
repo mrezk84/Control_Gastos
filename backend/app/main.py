@@ -3,8 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from .routes import expenses, auth, budgets, oauth
 from .routes import receipts
 from .database import Base, engine
+from .frontend_url import frontend_urls
 from dotenv import load_dotenv
-import os
 
 load_dotenv()
 
@@ -19,7 +19,7 @@ app = FastAPI(
 
 # Configuración de CORS
 # FRONTEND_URL admite varias URLs separadas por coma (producción y previews)
-FRONTEND_URLS = [u.strip().rstrip("/") for u in os.getenv("FRONTEND_URL", "http://localhost:5173").split(",") if u.strip()]
+FRONTEND_URLS = frontend_urls()
 
 app.add_middleware(
     CORSMiddleware,

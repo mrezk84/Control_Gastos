@@ -21,12 +21,12 @@ from sqlalchemy.orm import Session
 from .. import models
 from ..auth.utils import SECRET_KEY, create_access_token
 from ..database import get_db
+from ..frontend_url import primary_frontend_url
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["OAuth"])
 
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
 PROVIDERS = {
@@ -162,7 +162,7 @@ async def _callback(provider: str, code: str, state: str, db: Session) -> Redire
         avatar_url=info.get("picture"),
     )
     access_token = create_access_token(data={"sub": user.username})
-    return RedirectResponse(url=f"{FRONTEND_URL.rstrip('/')}/oauth-callback?token={access_token}")
+    return RedirectResponse(url=f"{primary_frontend_url()}/oauth-callback?token={access_token}")
 
 
 @router.get("/google")
