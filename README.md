@@ -13,12 +13,11 @@ Aplicación moderna para el control de gastos personales con **escaneo de recibo
 - 📊 Análisis de gastos con estadísticas
 
 ### Frontend (React)
-- 🎨 **Diseño moderno con efecto Glassmorphism**
+- 🎨 **Diseño "Caja registradora"**: teclado numérico para el monto, recibo de papel y tema oscuro y claro ([spec](./docs/design/SPEC.md))
 - 📱 Totalmente responsivo
-- 📈 Gráficos interactivos con Chart.js
+- 📈 Resumen del mes, barras por categoría, distribución y tendencia
 - 📷 **Cámara para escanear recibos**
 - 📎 **Subida de imágenes y PDFs**
-- 🌙 Tema oscuro premium
 
 ## 🚀 Instalación
 
@@ -57,6 +56,21 @@ REACT_APP_API_URL=http://localhost:8000
 npm start
 ```
 
+## ✅ Pruebas
+
+Se ejecutan en cada pull request (`.github/workflows/ci.yml`).
+
+```bash
+# Backend (48 pruebas; usan SQLite en memoria, no necesitan .env)
+cd backend
+pip install -r requirements.txt -r requirements-dev.txt
+pytest
+
+# Frontend (Jest, incluido en react-scripts)
+cd frontend
+npm test -- --watchAll=false
+```
+
 ## 📸 Escaneo de Recibos
 
 La aplicación permite escanear recibos y facturas automáticamente:
@@ -80,15 +94,17 @@ La aplicación permite escanear recibos y facturas automáticamente:
 - Passlib (bcrypt)
 
 ### Frontend
-- React 18
+- React 18 (Create React App)
 - React Router
 - Axios
-- Chart.js
+- Chart.js (pantallas heredadas)
+- Geist y Phosphor Icons
 
 ## 📁 Estructura del Proyecto
 
 ```
 Proyecto_Control_Gastos/
+├── docs/design/           # Spec de diseño (SPEC, tokens, screens)
 ├── backend/
 │   ├── app/
 │   │   ├── routes/        # Endpoints API
@@ -98,12 +114,15 @@ Proyecto_Control_Gastos/
 │   │   └── main.py        # App entry point
 │   ├── api/               # Entrada serverless de Vercel
 │   ├── migrations/        # SQL del esquema
+│   ├── tests/             # Pruebas (pytest)
 │   └── requirements.txt
 └── frontend/
     ├── src/
-    │   ├── components/    # React components
-    │   ├── services/      # API client
-    │   └── theme.css      # Estilos globales
+    │   ├── components/    # Componentes (caja/ = diseño nuevo)
+    │   ├── pages/         # Pantallas
+    │   ├── services/      # Cliente de la API
+    │   ├── utils/         # Lógica pura (con pruebas)
+    │   └── styles/caja.css  # Tokens y estilos del diseño
     └── package.json
 ```
 
@@ -123,3 +142,4 @@ Todo corre en capas gratuitas sin tarjeta: **Vercel** (frontend y backend), **Ne
 
 - [Guía de despliegue](./DEPLOY.md)
 - [Manual de Usuario](./MANUAL_USUARIO.md)
+- [Spec de diseño](./docs/design/SPEC.md)

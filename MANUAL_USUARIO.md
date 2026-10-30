@@ -1,4 +1,4 @@
-# 📖 Manual de Usuario - FinanzaFlow
+# 📖 Manual de Usuario - Control de Gastos
 
 Guía completa para usar la aplicación de Control de Gastos.
 
@@ -31,48 +31,61 @@ Guía completa para usar la aplicación de Control de Gastos.
 
 Tienes tres opciones:
 
-**Opción A: Con email y contraseña**
-1. Ingresa tu usuario y contraseña
+**Opción A: Con usuario o email y contraseña**
+1. Escribe tu **usuario o tu email** y tu contraseña
 2. Haz clic en **"Iniciar Sesión"**
 
-**Opción B: Google Sign In**
-1. Haz clic en **"Continuar con Google"**
+**Opción B: Google**
+1. Haz clic en **"Google"**
 2. Selecciona tu cuenta de Google
 3. Confirma los permisos
 
-**Opción C: Microsoft Sign In**
-1. Haz clic en **"Continuar con Microsoft"**
+**Opción C: Microsoft**
+1. Haz clic en **"Microsoft"**
 2. Ingresa tu correo de Microsoft
 3. Confirma los permisos
+
+> Si tu cuenta se creó con Google o Microsoft no tiene contraseña: entra siempre con ese botón.
 
 ---
 
 ## 2. Dashboard
 
-El Dashboard es tu pantalla principal donde ves un resumen de tus finanzas.
+El Dashboard ("Panel") es tu pantalla principal. A la izquierda ves el resumen de tus finanzas y a la derecha, en la columna lateral, registras gastos. En el móvil todo se apila en una sola columna.
 
-### 2.1 Tarjetas de Resumen
+### 2.1 Barra superior
 
-En la parte superior encontrarás 4 tarjetas:
+- **Cinta**: la franja lima de arriba repite datos clave (gastos registrados, total, categoría principal y fecha).
+- **Navegación**: Panel, Gastos, Presupuestos y Analíticas.
+- **Tema**: el selector **Oscuro / Claro** (ver [6.1](#61-modo-claroscuro)).
+- **Cuenta**: tu avatar y tu usuario, y **Salir**. En el móvil, toca el avatar para abrir el menú de cuenta.
 
-| Tarjeta | Descripción |
-|---------|-------------|
-| **Total del Mes** | Suma de todos los gastos del mes actual |
-| **Gastos Hoy** | Total de gastos registrados hoy |
-| **Presupuesto** | Estado de tu presupuesto mensual |
-| **Categoría Principal** | La categoría donde más gastaste |
+### 2.2 Resumen del mes
 
-### 2.2 Gráficos
+La tarjeta lima **"Este mes"** muestra lo gastado en el mes actual y, a la derecha, el **gasto diario**: una barra por día, con el día de hoy resaltado.
 
-**Gráfico de Barras**
-- Muestra tus gastos por categoría
-- Las barras más altas indican más gastos
-- Haz clic en una barra para ver detalles
+Debajo hay cuatro indicadores:
 
-**Gráfico de Líneas**
-- Muestra la tendencia de tus gastos
-- Cada punto representa un día
-- Útil para identificar patrones de gasto
+| Indicador | Qué muestra |
+|-----------|-------------|
+| **Promedio** | Gasto promedio por transacción |
+| **Top categoría** | La categoría donde más gastaste y su monto |
+| **Transacciones** | Cuántos gastos tienes registrados |
+| **Categorías** | Cuántas de las 10 categorías usas |
+
+### 2.3 Gráficos
+
+- **Por categoría**: barras punteadas de tus seis categorías con más gasto. Sobre cada barra ves su monto y debajo su porcentaje del total. La escala se indica arriba a la derecha.
+- **Distribución**: la misma información como una barra apilada, con el monto y el porcentaje de cada categoría. Las categorías que no entran entre las seis principales se agrupan en **"Resto"**.
+- **Tendencia**: tus gastos de los últimos seis meses con datos. Debajo de cada mes ves su total, y arriba a la derecha cuánto subió o bajó el último mes frente al primero.
+
+### 2.4 Historial
+
+Los últimos 20 gastos, agrupados por día (**HOY**, **AYER** y luego la fecha) con el total de cada día. Cada fila tiene un lápiz para editar y una papelera para eliminar. **"Ver todos"** te lleva a la pantalla Gastos.
+
+### 2.5 Último registro
+
+Bajo el formulario, un **recibo de papel** muestra tu gasto más reciente y el total del mes.
 
 ---
 
@@ -80,46 +93,48 @@ En la parte superior encontrarás 4 tarjetas:
 
 ### 3.1 Registrar un Nuevo Gasto
 
-1. Haz clic en **"+ Nuevo Gasto"** (botón flotante o en la esquina superior derecha)
-2. Completa el formulario:
+Usa el panel **"Registrar gasto"** del Dashboard (en el móvil está debajo de la tendencia):
 
-   | Campo | Descripción | Ejemplo |
-   |-------|-------------|---------|
-   | **Descripción** | Qué compraste | "Supermercado" |
-   | **Monto** | Cuánto gastaste | 1500.00 |
-   | **Categoría** | Tipo de gasto | Alimentación |
-   | **Fecha** | Cuándo fue | 2024-03-15 |
+1. **Monto**: pulsa las teclas del teclado numérico. La tecla **000** agrega tres ceros y la tecla de borrar quita el último dígito. También puedes escribir los números con el teclado de tu computadora.
+2. **¿En qué gastaste?**: escribe una descripción, por ejemplo "Supermercado". La categoría se sugiere sola según lo que escribas.
+3. **Categoría**: elige un icono de la cuadrícula (o deja la sugerida). El visor muestra el nombre de la categoría elegida.
+4. **Fecha**: por defecto es hoy.
+5. **Recibo** (opcional): adjunta una foto o un PDF de hasta 4 MB.
+6. Haz clic en **"Registrar gasto"** (o pulsa **Enter**).
 
-3. Haz clic en **"Guardar"**
+**Escanear**: el botón "Escanear" lee un recibo (foto o PDF) y rellena monto, descripción, fecha y categoría. Revisa siempre los datos antes de registrar.
+
+> Si algo falta (descripción, monto mayor a 0 o categoría) verás un aviso y el gasto no se guarda.
 
 ### 3.2 Categorías Disponibles
 
-- 🛒 **Alimentación**: Supermercado, restaurantes, comida
-- 🏠 **Vivienda**: Alquiler, servicios, expensas
-- 🚗 **Transporte**: Nafta, peajes, transporte público
-- 🏥 **Salud**: Farmacia, médico, seguros médicos
-- 🎮 **Entretenimiento**: Cine, juegos, suscripciones
-- 👕 **Ropa**: Indumentaria y calzado
-- 📱 **Tecnología**: Electrónica, software, apps
-- 🎓 **Educación**: Cursos, libros, matrícula
-- 💼 **Trabajo**: Transporte al trabajo, útiles
-- 🎁 **Regalos**: Regalos para otros
-- 🏖️ **Vacaciones**: Viajes, hotelería
-- 💊 **Farmacia**: Medicamentos y productos de higiene
-- 📦 **Otros**: Categoría general
+| Categoría | Ejemplos |
+|-----------|----------|
+| **Vivienda** | Alquiler, ferretería, muebles |
+| **Alimentación** | Supermercado, restaurantes, café |
+| **Transporte** | Nafta, peajes, colectivo, SUBE |
+| **Servicios** | Luz, gas, agua, internet |
+| **Entretenimiento** | Cine, Netflix, Spotify |
+| **Salud** | Farmacia, médico, dentista |
+| **Educación** | Cursos, libros, matrícula |
+| **Ropa** | Indumentaria y calzado |
+| **Tecnología** | Celulares, software, accesorios |
+| **Otros** | Todo lo demás |
+
+Las categorías son fijas: no se pueden crear nuevas.
 
 ### 3.3 Editar un Gasto
 
-1. Busca el gasto en la lista
-2. Haz clic en el ícono de lápiz ✏️
-3. Modifica los campos necesarios
-4. Haz clic en **"Guardar"**
+1. Busca el gasto en el **Historial** del Dashboard
+2. Haz clic en el lápiz de esa fila
+3. El gasto se carga en el panel, que pasa a **"Editar gasto"**
+4. Cambia lo que necesites y haz clic en **"Guardar"** (o en **"Cancelar"** para descartar)
 
 ### 3.4 Eliminar un Gasto
 
-1. Busca el gasto en la lista
-2. Haz clic en el ícono de papelera 🗑️
-3. Confirma la eliminación
+1. Busca el gasto en el **Historial**
+2. Haz clic en la papelera de esa fila
+3. En la ventana **"¿Eliminar gasto?"** confirma con **"Eliminar"** (o cancela con **"Cancelar"** o la tecla Esc)
 
 ⚠️ **Atención**: Esta acción no se puede deshacer.
 
@@ -227,27 +242,27 @@ La sección de análisis te ayuda a entender tus hábitos de gasto.
 ### 6.1 Modo Claro/Oscuro
 
 Cambia el tema de la aplicación:
-- Haz clic en el ícono de sol/luna ☀️🌙 en la barra superior
-- El tema se guarda automáticamente
-- Vuelve a la aplicación y mantendrás tu preferencia
+- En la barra superior, elige **Oscuro** o **Claro**. En el móvil, toca el botón con el sol o la luna.
+- El tema se guarda en tu navegador: al volver mantendrás tu preferencia.
+- Si nunca elegiste uno, se usa el de tu dispositivo.
 
 ### 6.2 Perfil de Usuario
 
-**Ver tu perfil:**
-1. Haz clic en tu nombre o avatar
-2. Se muestra tu información de cuenta
+En la barra superior ves tu avatar y tu usuario. En el móvil, toca el avatar para abrir el menú de cuenta.
 
 **Cerrar sesión:**
-1. Haz clic en **"Cerrar Sesión"**
+1. Haz clic en **"Salir"** (en el móvil, está dentro del menú de cuenta)
 2. Serás redirigido a la página de login
 
-### 6.3 Cambiar Contraseña
+### 6.3 Recuperar la Contraseña
 
-Si usas email/contraseña:
+Si usas usuario y contraseña:
 
 1. Ve a **"¿Olvidaste tu contraseña?"** en la página de login
 2. Ingresa tu email
-3. Recibirás un enlace para restablecer tu contraseña
+3. Si hay una cuenta con ese correo, te llegará un enlace para elegir una contraseña nueva (vence en 15 minutos)
+
+Por seguridad, la aplicación responde igual exista o no la cuenta, así que el mensaje no confirma si tu correo está registrado. Si tu cuenta se creó con Google o Microsoft no tiene contraseña que recuperar.
 
 ---
 
