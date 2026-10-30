@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from datetime import date, datetime
+import datetime as dt  # alias: un campo llamado "date" sombrea el tipo "date" dentro de la clase
 from typing import Optional, List
 
 # --- Auth Schemas ---
@@ -32,7 +33,7 @@ class ExpenseUpdate(BaseModel):
     description: Optional[str] = None
     amount: Optional[float] = None
     category: Optional[str] = None
-    date: Optional[date] = None
+    date: Optional[dt.date] = None
     receipt_url: Optional[str] = None
 
 class Expense(BaseModel):
