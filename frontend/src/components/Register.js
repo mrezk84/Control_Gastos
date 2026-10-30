@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { register, signInWithOAuth } from '../services/api';
-import { GoogleIcon, MicrosoftIcon, AppleIcon, UserIcon, LockIcon, MailIcon } from './ui/icons';
+import { register, getOAuthUrl } from '../services/api';
+import { GoogleIcon, MicrosoftIcon, UserIcon, LockIcon, MailIcon } from './ui/icons';
 import Logo from './ui/Logo';
 
 function Register() {
   const [user, setUser] = useState({ username: '', email: '', password: '' });
   const [error, setError] = useState('');
-  const [info, setInfo] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -27,17 +26,10 @@ function Register() {
 
     setLoading(true);
     try {
-      const data = await register({ ...user, email: user.email.trim() });
-      if (data.session) {
-        navigate('/dashboard');
-      } else {
-        // Email confirmation is enabled in Supabase
-        setInfo('✅ Cuenta creada. Revisá tu email para confirmarla y después iniciá sesión.');
-      }
+      await register(user);
+      navigate('/login');
     } catch (err) {
-      const errorMsg = err?.code === 'user_already_exists'
-        ? 'El correo electrónico ya está registrado'
-        : (err?.message || 'Error al registrarse. El email podría estar en uso.');
+      const errorMsg = err?.response?.data?.detail || 'Error al registrarse. El usuario o email podría estar en uso.';
       setError(errorMsg);
     } finally {
       setLoading(false);
@@ -47,18 +39,21 @@ function Register() {
   const handleOAuth = async (provider) => {
     const providerNames = {
       google: 'Google',
-      microsoft: 'Microsoft',
-      apple: 'Apple'
+      microsoft: 'Microsoft'
     };
 
     const name = providerNames[provider] || provider;
 
     try {
-      // Supabase redirects the browser to the provider and back to /oauth-callback
-      await signInWithOAuth(provider);
+      const response = await getOAuthUrl(provider);
+      window.location.href = response.data.auth_url;
     } catch (err) {
-      if (err?.code === 'validation_failed' || /not enabled/i.test(err?.message || '')) {
-        setError(`${name} Sign In aún no está habilitado. Activá el proveedor en Supabase (Authentication > Providers).`);
+      const status = err?.response?.status;
+
+      if (status === 501) {
+        setError(`${name} Sign In aún no está configurado. Configurá las credenciales OAuth en el backend.`);
+      } else if (!err?.response) {
+        setError('No se pudo conectar al servidor. Verificá que el backend esté corriendo en el puerto 8000.');
       } else {
         setError(`Error al conectar con ${name}. Intentá de nuevo más tarde.`);
       }
@@ -104,16 +99,6 @@ function Register() {
             <div className="auth-alert" role="alert">
               <span className="auth-alert-icon">⚠️</span>
               {error}
-            </div>
-          )}
-
-          {info && (
-            <div className="auth-alert" role="status" style={{
-              background: 'rgba(67, 233, 123, 0.12)',
-              borderColor: 'rgba(67, 233, 123, 0.3)',
-              color: 'var(--accent-green)'
-            }}>
-              {info}
             </div>
           )}
 
@@ -228,15 +213,6 @@ function Register() {
               <span>Microsoft</span>
             </button>
 
-            <button
-              className="oauth-btn apple enhanced"
-              type="button"
-              onClick={() => handleOAuth('apple')}
-              disabled={loading}
-            >
-              <AppleIcon />
-              <span>Apple</span>
-            </button>
           </div>
 
           {/* Login Link */}

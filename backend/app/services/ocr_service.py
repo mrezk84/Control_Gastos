@@ -8,51 +8,51 @@ from datetime import datetime
 import httpx
 from PIL import Image
 import pdfplumber
-from pytesseract import image_to_string
 
-# OCR.space API key (opcional - usar gratis sin key tiene límites)
+# OCR.space API key (gratis en https://ocr.space/ocrapi/freekey). Sin ella no se puede escanear imágenes.
 OCR_API_KEY = os.getenv("OCR_SPACE_API_KEY", "")
+
+# El plan gratuito de OCR.space acepta archivos de hasta 1 MB
+MAX_IMAGE_SIDE = 1600
+JPEG_QUALITY = 75
 
 class OCRService:
     """Servicio para escanear recibos y extraer información usando OCR"""
 
     @staticmethod
-    def extract_from_image(image_bytes: bytes) -> Dict[str, Any]:
+    def prepare_image(image_bytes: bytes) -> bytes:
         """
-        Extrae datos de una imagen de recibo usando Tesseract local
+        Reduce la imagen (máx. 1600 px por lado, JPEG calidad 75, ~200 KB): cabe en el límite de
+        OCR.space y evita guardar fotos de varios MB en la base de datos.
+        """
+        image = Image.open(BytesIO(image_bytes))
+        if image.mode != "RGB":
+            image = image.convert("RGB")
+        image.thumbnail((MAX_IMAGE_SIDE, MAX_IMAGE_SIDE))
+        out = BytesIO()
+        image.save(out, format="JPEG", quality=JPEG_QUALITY, optimize=True)
+        return out.getvalue()
+
+    @staticmethod
+    async def extract_from_image(image_bytes: bytes) -> Dict[str, Any]:
+        """
+        Extrae datos de una imagen de recibo usando la API de OCR.space
         """
         try:
-            image = Image.open(BytesIO(image_bytes))
-
-            # Convertir a RGB si es necesario
-            if image.mode != 'RGB':
-                image = image.convert('RGB')
-
-            # Extraer texto con Tesseract
-            text = image_to_string(image, lang='spa+eng')
-
-            return OCRService._parse_receipt_text(text)
+            return await OCRService.extract_with_ocr_space(OCRService.prepare_image(image_bytes))
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     @staticmethod
     async def extract_from_pdf(pdf_bytes: bytes) -> Dict[str, Any]:
         """
-        Extrae datos de un PDF de factura/receipt
+        Extrae datos de un PDF de factura/receipt (en memoria: el disco de Vercel es efímero)
         """
         try:
-            # Guardar bytes temporalmente
-            temp_pdf_path = "/tmp/temp_receipt.pdf"
-            with open(temp_pdf_path, "wb") as f:
-                f.write(pdf_bytes)
-
             text = ""
-            with pdfplumber.open(temp_pdf_path) as pdf:
+            with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
                 for page in pdf.pages:
                     text += page.extract_text() or ""
-
-            # Limpiar archivo temporal
-            os.remove(temp_pdf_path)
 
             return OCRService._parse_receipt_text(text)
         except Exception as e:
@@ -139,18 +139,18 @@ class OCRService:
     @staticmethod
     async def extract_with_ocr_space(image_bytes: bytes) -> Dict[str, Any]:
         """
-        Usa OCR.space API como alternativa (opcional)
+        Envía una imagen JPEG a la API de OCR.space y parsea el texto devuelto
         """
         if not OCR_API_KEY:
             return {"success": False, "error": "OCR_SPACE_API_KEY not configured"}
 
         base64_image = base64.b64encode(image_bytes).decode('utf-8')
 
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=30) as client:
             response = await client.post(
                 "https://api.ocr.space/parse/image",
                 data={
-                    "base64Image": f"data:image/png;base64,{base64_image}",
+                    "base64Image": f"data:image/jpeg;base64,{base64_image}",
                     "language": "spa",
                     "isOverlayRequired": "false",
                     "scale": "true",

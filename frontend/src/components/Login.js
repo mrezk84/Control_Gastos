@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { login, signInWithOAuth } from '../services/api';
-import { GoogleIcon, MicrosoftIcon, AppleIcon, MailIcon, LockIcon } from './ui/icons';
+import { login, setAuthToken, getOAuthUrl } from '../services/api';
+import { GoogleIcon, MicrosoftIcon, UserIcon, LockIcon } from './ui/icons';
 import Logo from './ui/Logo';
 
 function Login() {
-  const [credentials, setCredentials] = useState({ email: '', password: '' });
+  const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -14,21 +14,20 @@ function Login() {
     e.preventDefault();
     setError('');
 
-    if (!credentials.email.trim() || !credentials.password) {
-      setError('Email y contraseña son obligatorios');
+    if (!credentials.username.trim() || !credentials.password) {
+      setError('Usuario o email y contraseña son obligatorios');
       return;
     }
 
     setLoading(true);
     try {
-      await login({ email: credentials.email.trim(), password: credentials.password });
+      const response = await login(credentials);
+      const token = response.data.access_token;
+      setAuthToken(token);
+      localStorage.setItem('token', token);
       navigate('/dashboard');
     } catch (err) {
-      if (err?.code === 'email_not_confirmed') {
-        setError('Tenés que confirmar tu email antes de ingresar. Revisá tu bandeja de entrada.');
-      } else {
-        setError('Credenciales incorrectas. Por favor, verificá tus datos.');
-      }
+      setError('Credenciales incorrectas. Por favor, verificá tus datos.');
     } finally {
       setLoading(false);
     }
@@ -37,18 +36,21 @@ function Login() {
   const handleOAuth = async (provider) => {
     const providerNames = {
       google: 'Google',
-      microsoft: 'Microsoft',
-      apple: 'Apple'
+      microsoft: 'Microsoft'
     };
 
     const name = providerNames[provider] || provider;
 
     try {
-      // Supabase redirects the browser to the provider and back to /oauth-callback
-      await signInWithOAuth(provider);
+      const response = await getOAuthUrl(provider);
+      window.location.href = response.data.auth_url;
     } catch (err) {
-      if (err?.code === 'validation_failed' || /not enabled/i.test(err?.message || '')) {
-        setError(`${name} Sign In aún no está habilitado. Activá el proveedor en Supabase (Authentication > Providers).`);
+      const status = err?.response?.status;
+
+      if (status === 501) {
+        setError(`${name} Sign In aún no está configurado. Configurá las credenciales OAuth en el backend.`);
+      } else if (!err?.response) {
+        setError('No se pudo conectar al servidor. Verificá que el backend esté corriendo en el puerto 8000.');
       } else {
         setError(`Error al conectar con ${name}. Intentá de nuevo más tarde.`);
       }
@@ -100,22 +102,22 @@ function Login() {
           {/* Login Form */}
           <form onSubmit={handleSubmit} noValidate>
             <div className="form-group-dark">
-              <label htmlFor="login-email">
-                <span className="form-label-icon">📧</span>
-                Email
+              <label htmlFor="login-username">
+                <span className="form-label-icon">👤</span>
+                Usuario o email
               </label>
               <div className="input-with-icon">
                 <input
-                  id="login-email"
+                  id="login-username"
                   className="input-dark"
-                  type="email"
-                  placeholder="tu@email.com"
-                  value={credentials.email}
-                  onChange={handleInputChange('email')}
-                  autoComplete="email"
+                  type="text"
+                  placeholder="Usuario o email"
+                  value={credentials.username}
+                  onChange={handleInputChange('username')}
+                  autoComplete="username"
                   disabled={loading}
                 />
-                <span className="input-icon"><MailIcon /></span>
+                <span className="input-icon"><UserIcon /></span>
               </div>
             </div>
 
@@ -192,15 +194,6 @@ function Login() {
               <span>Microsoft</span>
             </button>
 
-            <button
-              className="oauth-btn apple enhanced"
-              type="button"
-              onClick={() => handleOAuth('apple')}
-              disabled={loading}
-            >
-              <AppleIcon />
-              <span>Apple</span>
-            </button>
           </div>
 
           {/* Register Link */}

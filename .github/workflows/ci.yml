@@ -1,9 +1,9 @@
 name: CI
 
-# Vercel (frontend) and Railway (backend) are connected directly to this
-# GitHub repo via their own git integration, so they auto-deploy on every
-# push to main — no deploy step is needed here. This workflow only runs
-# build/sanity checks so pushes fail fast before Vercel/Railway pick them up.
+# Vercel (frontend y backend, dos proyectos) está conectado directamente a este
+# repo con su propia integración de git y despliega en cada push a main:
+# no hace falta un paso de deploy aquí. Este workflow solo corre chequeos de
+# build para que los pushes fallen rápido antes de que Vercel los tome.
 on:
   push:
     branches:
@@ -32,7 +32,7 @@ jobs:
       - name: Import check (catches missing deps / syntax errors)
         env:
           DATABASE_URL: "sqlite:///./ci_check.db"
-          SUPABASE_URL: "https://ci-placeholder.supabase.co"
+          SECRET_KEY: "ci-placeholder-no-es-un-secreto"
         run: python -c "from app.main import app; print('Backend imports OK')"
 
   frontend-build:

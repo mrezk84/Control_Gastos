@@ -1,182 +1,155 @@
 """
 Authentication utilities module.
-
-Authentication is delegated to Supabase Auth (email/password, Google, Microsoft...).
-The frontend sends the Supabase access token as a Bearer token; here we verify it
-and map the Supabase user to a row in our local `users` table.
+Handles password hashing, JWT token creation, and user authentication.
 """
 
-import logging
-import os
-import re
-import time
-from typing import Optional
-
-import httpx
-from dotenv import load_dotenv
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
+from passlib.context import CryptContext
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
+from typing import Optional
+import os
+from dotenv import load_dotenv
+import logging
 
 from ..database import get_db
 
+# Configure logging
 logger = logging.getLogger(__name__)
 
 load_dotenv()
 
 # Configuration
-SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
-# Legacy HS256 secret (Project Settings > API > JWT Secret). Optional for projects
-# using the new asymmetric signing keys, which are verified through JWKS instead.
-SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET")
-SUPABASE_JWT_AUDIENCE = "authenticated"
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    logger.error("SECRET_KEY environment variable is not set")
+    raise ValueError("SECRET_KEY must be set in environment variables")
 
-if not SUPABASE_URL:
-    logger.warning("SUPABASE_URL is not set: authenticated endpoints will reject every request")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("TOKEN_EXPIRATION", str(60 * 24)))
 
-bearer_scheme = HTTPBearer(auto_error=False)
+# Password hashing context
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-_JWKS_TTL_SECONDS = 3600
-_jwks_cache = {"keys": None, "fetched_at": 0.0}
-
-
-def _get_jwks(force_refresh: bool = False) -> list:
-    """Fetch (and cache) the project's public signing keys."""
-    now = time.time()
-    if (
-        not force_refresh
-        and _jwks_cache["keys"] is not None
-        and now - _jwks_cache["fetched_at"] < _JWKS_TTL_SECONDS
-    ):
-        return _jwks_cache["keys"]
-
-    resp = httpx.get(f"{SUPABASE_URL}/auth/v1/.well-known/jwks.json", timeout=5)
-    resp.raise_for_status()
-    _jwks_cache["keys"] = resp.json().get("keys", [])
-    _jwks_cache["fetched_at"] = now
-    return _jwks_cache["keys"]
+# OAuth2 scheme for token authentication
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 
-def decode_supabase_token(token: str) -> dict:
+def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
-    Verify a Supabase access token and return its claims.
+    Verify a plain password against a hashed password.
+
+    Args:
+        plain_password: The plain text password to verify
+        hashed_password: The hashed password to compare against
+
+    Returns:
+        bool: True if passwords match, False otherwise
+    """
+    try:
+        return pwd_context.verify(plain_password, hashed_password)
+    except Exception as e:
+        logger.error(f"Error verifying password: {e}")
+        return False
+
+
+def hash_password(password: str) -> str:
+    """
+    Hash a password using bcrypt.
+
+    Args:
+        password: The plain text password to hash
+
+    Returns:
+        str: The hashed password
 
     Raises:
-        JWTError: If the token is invalid, expired or cannot be verified
+        ValueError: If password is empty or too short
     """
-    header = jwt.get_unverified_header(token)
-    alg = header.get("alg")
-    issuer = f"{SUPABASE_URL}/auth/v1"
+    if not password or len(password) < 6:
+        raise ValueError("Password must be at least 6 characters long")
 
-    if alg == "HS256":
-        if not SUPABASE_JWT_SECRET:
-            raise JWTError("SUPABASE_JWT_SECRET is required to verify HS256 tokens")
-        key = SUPABASE_JWT_SECRET
-    else:
-        kid = header.get("kid")
-        try:
-            keys = _get_jwks()
-            key = next((k for k in keys if k.get("kid") == kid), None)
-            if key is None:
-                # Keys may have been rotated: refresh once.
-                key = next((k for k in _get_jwks(force_refresh=True) if k.get("kid") == kid), None)
-        except httpx.HTTPError as e:
-            raise JWTError(f"Could not fetch Supabase JWKS: {e}")
-        if key is None:
-            raise JWTError("Signing key not found in Supabase JWKS")
-
-    return jwt.decode(
-        token,
-        key,
-        algorithms=[alg],
-        audience=SUPABASE_JWT_AUDIENCE,
-        issuer=issuer,
-    )
+    try:
+        return pwd_context.hash(password)
+    except Exception as e:
+        logger.error(f"Error hashing password: {e}")
+        raise
 
 
-def _unique_username(db: Session, base: str) -> str:
-    from ..models import User
-
-    base = re.sub(r"[^a-zA-Z0-9_.-]", "", base or "")[:140] or "usuario"
-    username = base
-    counter = 1
-    while db.query(User).filter(User.username == username).first():
-        username = f"{base}{counter}"
-        counter += 1
-    return username
-
-
-def get_or_create_user_from_claims(db: Session, claims: dict):
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """
-    Find the local user linked to a Supabase user, linking by email or
-    creating it on first login.
+    Create a JWT access token.
+
+    Args:
+        data: The payload data to encode in the token
+        expires_delta: Optional custom expiration time delta
+
+    Returns:
+        str: The encoded JWT token
+
+    Raises:
+        ValueError: If token creation fails
     """
-    from ..models import User
-
-    supabase_id = claims["sub"]
-    email = (claims.get("email") or "").lower()
-    metadata = claims.get("user_metadata") or {}
-    app_metadata = claims.get("app_metadata") or {}
-    provider = app_metadata.get("provider") or "email"
-    avatar_url = metadata.get("avatar_url") or metadata.get("picture")
-
-    user = db.query(User).filter(User.supabase_id == supabase_id).first()
-    if user:
-        return user
-
-    # Existing account (e.g. migrated from the old database): link it by email.
-    if email:
-        user = db.query(User).filter(User.email.ilike(email)).first()
-    if user:
-        user.supabase_id = supabase_id
-        if avatar_url and not user.avatar_url:
-            user.avatar_url = avatar_url
-    else:
-        user = User(
-            username=_unique_username(
-                db,
-                metadata.get("username") or (email.split("@")[0] if email else supabase_id[:8]),
-            ),
-            email=email,
-            supabase_id=supabase_id,
-            auth_provider=provider,
-            avatar_url=avatar_url,
+    try:
+        to_encode = data.copy()
+        expire = datetime.now(timezone.utc) + (
+            expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         )
-        db.add(user)
-
-    db.commit()
-    db.refresh(user)
-    logger.info(f"Linked Supabase user {supabase_id} to local user '{user.username}'")
-    return user
+        to_encode.update({"exp": expire})
+        encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+        logger.debug(f"Created access token for user: {data.get('sub', 'unknown')}")
+        return encoded_jwt
+    except Exception as e:
+        logger.error(f"Error creating access token: {e}")
+        raise ValueError("Failed to create access token")
 
 
 def get_current_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
+    token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ):
     """
-    Get the current authenticated user from the Supabase access token.
+    Get the current authenticated user from JWT token.
+
+    Args:
+        token: The JWT token from the request
+        db: Database session (injected by FastAPI)
+
+    Returns:
+        User: The authenticated user
 
     Raises:
-        HTTPException: If token is missing or invalid
+        HTTPException: If token is invalid or user not found
     """
+    from ..models import User
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    if credentials is None or not SUPABASE_URL:
-        raise credentials_exception
-
     try:
-        claims = decode_supabase_token(credentials.credentials)
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     except JWTError as e:
-        logger.warning(f"Supabase token rejected: {e}")
+        logger.warning(f"JWT decode error: {e}")
         raise credentials_exception
 
-    if not claims.get("sub"):
+    username: Optional[str] = payload.get("sub")
+    if username is None:
+        logger.warning("Token payload missing 'sub' field")
         raise credentials_exception
 
-    return get_or_create_user_from_claims(db, claims)
+    # Los tokens con "purpose" (p. ej. recuperación de contraseña) no sirven como sesión
+    if payload.get("purpose"):
+        logger.warning("Token with purpose used as access token")
+        raise credentials_exception
+
+    user = db.query(User).filter(User.username == username).first()
+    if user is None:
+        logger.warning(f"User not found: {username}")
+        raise credentials_exception
+
+    return user

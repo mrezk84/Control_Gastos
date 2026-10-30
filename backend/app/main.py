@@ -1,8 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from pathlib import Path
-from .routes import expenses, auth, budgets
+from .routes import expenses, auth, budgets, oauth
 from .routes import receipts
 from .database import Base, engine
 from dotenv import load_dotenv
@@ -15,17 +13,18 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Control de Gastos API",
-    description="API moderna para control de gastos personales con autenticación Supabase y escaneo de recibos",
+    description="API moderna para control de gastos personales con autenticación JWT y escaneo de recibos",
     version="2.1.0"
 )
 
 # Configuración de CORS
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+# FRONTEND_URL admite varias URLs separadas por coma (producción y previews)
+FRONTEND_URLS = [u.strip().rstrip("/") for u in os.getenv("FRONTEND_URL", "http://localhost:5173").split(",") if u.strip()]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        FRONTEND_URL,
+        *FRONTEND_URLS,
         "http://localhost:3000",
         "http://localhost:5173",
     ],
@@ -34,12 +33,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Crear directorio de uploads si no existe
-uploads_dir = Path("uploads/receipts")
-uploads_dir.mkdir(parents=True, exist_ok=True)
-
 # Incluir enrutadores
 app.include_router(auth, prefix="/auth")
+app.include_router(oauth, prefix="/auth")
 app.include_router(expenses, prefix="/expenses")
 app.include_router(receipts, prefix="/receipts")
 app.include_router(budgets, prefix="/budgets")

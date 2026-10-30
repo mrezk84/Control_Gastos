@@ -1,4 +1,4 @@
-# Frontend Dockerfile for React on Railway
+# Frontend Dockerfile for React (nginx)
 FROM node:18-alpine as build
 
 WORKDIR /app

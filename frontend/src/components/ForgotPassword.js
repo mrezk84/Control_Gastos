@@ -18,11 +18,11 @@ function ForgotPassword() {
         }
         setLoading(true);
         try {
-            await requestPasswordReset(email.trim());
-            setSuccess('✅ Si existe una cuenta con ese email, te enviamos un enlace para restablecer tu contraseña.');
+            await requestPasswordReset(email);
+            setSuccess('✅ Si el correo está registrado, te enviamos un enlace para restablecer tu contraseña. Revisá tu bandeja de entrada.');
         } catch (err) {
-            if (err?.status === 429) {
-                setError('Demasiados intentos. Esperá unos minutos y volvé a probar.');
+            if (!err?.response) {
+                setError('🔌 No se pudo conectar al servidor. Asegurate de que el backend esté corriendo.');
             } else {
                 setError('Error al procesar la solicitud. Intentá de nuevo.');
             }

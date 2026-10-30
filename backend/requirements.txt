@@ -4,12 +4,12 @@ sqlalchemy
 psycopg2-binary
 python-dotenv
 python-jose[cryptography]
+passlib[bcrypt]
+bcrypt==4.0.1
 python-multipart
 httpx
 email-validator
 Pillow
-pytesseract
 pdfplumber
-aiofiles
 python-dateutil
 openpyxl

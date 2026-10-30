@@ -7,24 +7,19 @@ if critical configuration is missing.
 
 from pydantic_settings import BaseSettings
 from pydantic import Field
-from typing import Optional
-import os
 
 
 class Settings(BaseSettings):
     """Application settings with validation."""
 
-    # Supabase
-    supabase_url: str = Field(..., description="Supabase project URL (https://<ref>.supabase.co)")
-    supabase_jwt_secret: Optional[str] = Field(
-        None, description="Legacy HS256 JWT secret; not needed with asymmetric signing keys"
-    )
+    # Database - Neon Postgres (pooled connection string)
+    database_url: str = Field(..., description="Postgres connection string")
 
-    # Database - Supabase Postgres connection string
-    database_url: str = Field(..., description="Supabase Postgres connection string")
+    # Auth
+    secret_key: str = Field(..., description="Secret used to sign JWTs")
 
     # Frontend
-    frontend_url: str = Field("http://localhost:5173", description="Frontend URL for CORS")
+    frontend_url: str = Field("http://localhost:3000", description="Frontend URL for CORS")
 
     # Rate Limiting
     rate_limit_requests: int = Field(10, description="Max requests per minute for auth endpoints")
