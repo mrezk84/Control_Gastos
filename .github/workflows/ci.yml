@@ -27,13 +27,17 @@ jobs:
           python-version: "3.13"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements.txt -r requirements-dev.txt
 
       - name: Import check (catches missing deps / syntax errors)
         env:
           DATABASE_URL: "sqlite:///./ci_check.db"
           SECRET_KEY: "ci-placeholder-no-es-un-secreto"
         run: python -c "from app.main import app; print('Backend imports OK')"
+
+      - name: Tests
+        # Las pruebas fijan sus propias variables de entorno (ver tests/conftest.py)
+        run: pytest -q
 
   frontend-build:
     runs-on: ubuntu-latest
