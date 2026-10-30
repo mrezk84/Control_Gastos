@@ -1,1 +1,2 @@
-pytest
+# Solo para desarrollo y la CI; no se instala en producción.
+pytest==9.2.0
