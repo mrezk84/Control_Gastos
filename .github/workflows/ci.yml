@@ -32,7 +32,7 @@ jobs:
       - name: Import check (catches missing deps / syntax errors)
         env:
           DATABASE_URL: "sqlite:///./ci_check.db"
-          SECRET_KEY: "ci-only-not-a-real-secret"
+          SUPABASE_URL: "https://ci-placeholder.supabase.co"
         run: python -c "from app.main import app; print('Backend imports OK')"
 
   frontend-build:

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { getCurrentUser } from '../../services/api';
+import { getCurrentUser, logout } from '../../services/api';
 import { FloatingActionButton } from '../ui/FloatingActionButton';
 import QuickAddExpense from '../QuickAddExpense';
 
@@ -61,8 +61,8 @@ function SidebarLayout({ children }) {
     window.dispatchEvent(new CustomEvent(EXPENSE_CREATED_EVENT, { detail: expense }));
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
+  const handleLogout = async () => {
+    await logout();
     setUser(null);
   };
 

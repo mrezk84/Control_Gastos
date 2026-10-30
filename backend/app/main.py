@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 from .routes import expenses, auth, budgets
-from .routes.oauth_routes import router as oauth
 from .routes import receipts
 from .database import Base, engine
 from dotenv import load_dotenv
@@ -16,7 +15,7 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Control de Gastos API",
-    description="API moderna para control de gastos personales con autenticación OAuth y escaneo de recibos",
+    description="API moderna para control de gastos personales con autenticación Supabase y escaneo de recibos",
     version="2.1.0"
 )
 
@@ -41,7 +40,6 @@ uploads_dir.mkdir(parents=True, exist_ok=True)
 
 # Incluir enrutadores
 app.include_router(auth, prefix="/auth")
-app.include_router(oauth, prefix="/auth")
 app.include_router(expenses, prefix="/expenses")
 app.include_router(receipts, prefix="/receipts")
 app.include_router(budgets, prefix="/budgets")

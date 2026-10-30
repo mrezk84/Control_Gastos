@@ -16,7 +16,7 @@ import {
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 import ExpenseForm from './ExpenseForm';
 import ExpenseList from './ExpenseList';
-import { getExpenses, getCurrentUser } from '../services/api';
+import { getExpenses, getCurrentUser, logout } from '../services/api';
 
 ChartJS.register(
   CategoryScale,
@@ -187,8 +187,8 @@ function Dashboard() {
     },
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
 
