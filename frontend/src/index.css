@@ -5,4 +5,5 @@
 @import './components/ui/LoadingScreen.css';
 @import './components/ui/EmptyState.css';
 @import './components/ui/AuthEnhancements.css';
-@import './components/Layout/SidebarEnhancements.css';
+/* Rediseño "Caja registradora": va al final para sobrescribir el tema anterior */
+@import './styles/caja.css';

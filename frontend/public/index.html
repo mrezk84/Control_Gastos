@@ -4,10 +4,10 @@
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0b0e13" />
+    <meta name="theme-color" content="#0e0f11" />
     <meta
       name="description"
-      content="FinanzaFlow - Controla tus gastos, administra tus presupuestos y toma el control de tus finanzas personales de manera elegante y sencilla."
+      content="Control de Gastos - Controla tus gastos, administra tus presupuestos y toma el control de tus finanzas personales de manera elegante y sencilla."
     />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <!--
@@ -24,9 +24,21 @@
       work correctly both with client-side routing and a non-root public URL.
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
-    <title>FinanzaFlow 💰</title>
+    <title>Control de Gastos</title>
   </head>
-  <body>
+  <body class="cj cj-legacy">
+    <script>
+      // Tema inicial antes de pintar (evita el destello): elección guardada o preferencia del sistema
+      (function () {
+        var t = 'dark';
+        try {
+          var s = localStorage.getItem('theme');
+          if (s === 'dark' || s === 'light') t = s;
+          else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) t = 'light';
+        } catch (e) {}
+        document.documentElement.setAttribute('data-theme', t);
+      })();
+    </script>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
     <!--
@@ -34,7 +46,19 @@
       If you open it directly in the browser, you will see an empty page.
 
       You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
+      The build step will place the bundled scripts into the <body class="cj cj-legacy">
+    <script>
+      // Tema inicial antes de pintar (evita el destello): elección guardada o preferencia del sistema
+      (function () {
+        var t = 'dark';
+        try {
+          var s = localStorage.getItem('theme');
+          if (s === 'dark' || s === 'light') t = s;
+          else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) t = 'light';
+        } catch (e) {}
+        document.documentElement.setAttribute('data-theme', t);
+      })();
+    </script> tag.
 
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.

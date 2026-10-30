@@ -14,7 +14,7 @@ export const setAuthToken = (token) => {
 
 // Initialize the auth header synchronously at module load, before any component
 // renders. This avoids a race on hard refresh / direct navigation where a child
-// effect (e.g. SidebarLayout -> getCurrentUser) fires before App's effect sets it.
+// effect (e.g. AppLayout -> getCurrentUser) fires before App's effect sets it.
 setAuthToken(localStorage.getItem('token'));
 
 // Global 401 handler: if the token is missing/expired, clear it and send the
