@@ -290,9 +290,13 @@
 .cj-link:hover { text-decoration: underline; }
 
 /* Inicio de sesión (Login.dc.html) */
-.cj-login { display: flex; flex-wrap: wrap; }
+.cj-login { display: flex; flex-direction: column; }
+.cj-login-split { flex: 1; display: flex; flex-wrap: wrap; min-width: 0; }
+/* Marquesina oscura: se distingue del panel de acento que tiene debajo */
+.cj-login-ticker .cj-ticker { background: #0e0f11; color: var(--display-amt); }
+.cj-login-ticker .cj-ticker-dot { background: var(--display-amt); }
 .cj-login-aside {
-  flex: 1 1 420px; min-height: 260px; background: var(--acc); color: var(--ink-on-acc);
+  flex: 1 1 min(420px, 100%); min-height: 260px; background: var(--acc); color: var(--ink-on-acc);
   padding: clamp(24px, 4vw, 48px); display: flex; flex-direction: column; justify-content: space-between; gap: 32px;
 }
 .cj-login-brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 16px; }
@@ -318,7 +322,7 @@
 .cj-login-lamps span:nth-child(2) { opacity: 0.45; }
 .cj-login-lamps span:nth-child(3) { opacity: 0.2; }
 
-.cj-login-main { flex: 1 1 420px; display: flex; flex-direction: column; padding: clamp(20px, 4vw, 40px); min-width: 0; }
+.cj-login-main { flex: 1 1 min(420px, 100%); display: flex; flex-direction: column; padding: clamp(20px, 4vw, 40px); min-width: 0; }
 .cj-login-top { display: flex; justify-content: flex-end; }
 .cj-login-theme {
   width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--raised); color: var(--tx);
@@ -356,7 +360,8 @@
 .cj-login-submit:disabled { opacity: 0.7; cursor: progress; }
 .cj-login-or { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--mu); }
 .cj-login-or::before, .cj-login-or::after { content: ''; flex: 1; height: 1px; background: var(--line); }
-.cj-login-oauth { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cj-login-oauth { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.cj-login-oauth svg { width: 20px; height: 20px; flex: none; }
 .cj-login-oauth button { height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; }
 .cj-login-alt { margin: 0; text-align: center; font-size: 14px; color: var(--mu); }
 
