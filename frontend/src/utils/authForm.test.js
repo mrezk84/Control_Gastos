@@ -12,3 +12,31 @@ describe('validación del inicio de sesión', () => {
     expect(validateLogin({ username: 'ana@example.com', password: 'secreto1' })).toBeNull();
   });
 });
+
+describe('fuerza de la contraseña', () => {
+  const { passwordStrength } = require('./authForm');
+
+  test('puntúa largo, mayúsculas y minúsculas, número y símbolo', () => {
+    expect(passwordStrength('')).toEqual({ score: 0, label: '—' });
+    expect(passwordStrength('abc')).toEqual({ score: 0, label: 'MUY DÉBIL' });
+    expect(passwordStrength('abcdefgh').score).toBe(1);
+    expect(passwordStrength('abcdefG1').score).toBe(3);
+    expect(passwordStrength('abcdefG1!')).toEqual({ score: 4, label: 'FUERTE' });
+  });
+});
+
+describe('validación del registro', () => {
+  const { validateRegister } = require('./authForm');
+  const ok = { name: 'Martina', email: 'martina@correo.com', password: 'secreto1', confirm: 'secreto1' };
+
+  test('datos válidos', () => {
+    expect(validateRegister(ok)).toBeNull();
+  });
+
+  test('orden de los problemas: nombre, correo, largo, coincidencia', () => {
+    expect(validateRegister({ ...ok, name: '  ' }).field).toBe('name');
+    expect(validateRegister({ ...ok, email: 'no-es-correo' }).field).toBe('email');
+    expect(validateRegister({ ...ok, password: 'abc', confirm: 'abc' }).field).toBe('password');
+    expect(validateRegister({ ...ok, confirm: 'otra' })).toEqual({ field: 'confirm', message: 'Las contraseñas no coinciden' });
+  });
+});
