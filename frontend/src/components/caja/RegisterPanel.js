@@ -1,5 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { createExpense, updateExpense, uploadReceipt, scanReceipt } from '../../services/api';
+import { createExpense, createReminder, updateExpense, uploadReceipt, scanQr, scanReceipt } from '../../services/api';
+import { useAppData } from '../../context/ExpensesContext';
+import { decodeQrFromFile } from '../../utils/qrFromImage';
+import { classifyScan, shortDate } from '../../utils/scanFlow';
 import { useToast } from '../ui/ToastContainer';
 import { suggestCategory } from '../../utils/autoCategory';
 import { CATEGORY_ICON, categoryIconClass } from '../../utils/categoryIcons';
@@ -29,6 +32,9 @@ function RegisterPanel({ editing, onSaved, onCancelEdit }) {
   const [receipt, setReceipt] = useState(null);
   const [saving, setSaving] = useState(false);
   const [scanning, setScanning] = useState(false);
+  // Datos del último escaneo: { source: 'qr' | 'ocr', dueDate: 'aaaa-mm-dd' | null }; dueDate solo si la factura vence en el futuro
+  const [scan, setScan] = useState(null);
+  const { user } = useAppData();
   const descRef = useRef(null);
   const formRef = useRef(null);
   const attachRef = useRef(null);
@@ -46,10 +52,12 @@ function RegisterPanel({ editing, onSaved, onCancelEdit }) {
       });
       setCategoryTouched(true);
       setReceipt(null);
+      setScan(null);
     } else {
       setForm(EMPTY());
       setCategoryTouched(false);
       setReceipt(null);
+      setScan(null);
     }
   }, [editing]);
 
@@ -118,7 +126,19 @@ function RegisterPanel({ editing, onSaved, onCancelEdit }) {
     }
     setScanning(true);
     try {
-      const res = await scanReceipt(file);
+      // Primero un QR (si es una imagen y hay uno legible); si no, el OCR de siempre
+      let res = null;
+      let source = 'ocr';
+      const qrText = await decodeQrFromFile(file);
+      if (qrText) {
+        try {
+          res = await scanQr(qrText);
+          source = 'qr';
+        } catch (err) {
+          if (err?.response?.status !== 422) throw err; // 422: el QR no trae un monto legible → OCR
+        }
+      }
+      if (!res) res = await scanReceipt(file);
       const data = res.data?.data || {};
       setForm((f) => {
         const next = { ...f };
@@ -132,7 +152,16 @@ function RegisterPanel({ editing, onSaved, onCancelEdit }) {
         return next;
       });
       setReceipt(file);
-      info('Recibo leído: revisá los datos antes de registrar');
+      const pending = classifyScan(data.due_date) === 'pending';
+      setScan({ source, dueDate: pending ? data.due_date : null });
+      const profileCurrency = user?.currency || 'UYU';
+      if (data.currency && data.currency !== profileCurrency) {
+        warning(`El monto está en ${data.currency} y tu moneda es ${profileCurrency}. Revisa el monto antes de registrar.`);
+      } else if (pending) {
+        info(`Factura por vencer el ${shortDate(data.due_date)}: guárdala como recordatorio o regístrala`);
+      } else {
+        info(source === 'qr' ? 'QR leído: revisa los datos antes de registrar' : 'Recibo leído: revisa los datos antes de registrar');
+      }
     } catch (err) {
       error(err?.response?.data?.detail || 'No se pudo leer el recibo');
     } finally {
@@ -150,7 +179,10 @@ function RegisterPanel({ editing, onSaved, onCancelEdit }) {
     const payload = { description: form.description.trim(), amount, category: form.category, date: form.date };
     setSaving(true);
     try {
-      const res = editing ? await updateExpense(editing.id, payload) : await createExpense(payload);
+      // from_scan: el servidor avisa «Pago registrado» con el monto y el total del mes
+      const res = editing
+        ? await updateExpense(editing.id, payload)
+        : await createExpense({ ...payload, from_scan: Boolean(scan) });
       if (receipt) {
         try {
           await uploadReceipt(res.data.id, receipt);
@@ -164,6 +196,7 @@ function RegisterPanel({ editing, onSaved, onCancelEdit }) {
         setForm(EMPTY());
         setCategoryTouched(false);
         setReceipt(null);
+        setScan(null);
       }
       onSaved();
     } catch {
@@ -171,6 +204,40 @@ function RegisterPanel({ editing, onSaved, onCancelEdit }) {
     } finally {
       setSaving(false);
     }
+  };
+
+  // Factura por vencer: guardar como recordatorio en lugar de registrar el gasto
+  const saveReminder = async () => {
+    const amount = Number(form.amount);
+    if (!form.description.trim()) return warning('Ingresa una descripción');
+    if (!form.amount || Number.isNaN(amount) || amount <= 0) return warning('El monto debe ser mayor a 0');
+    setSaving(true);
+    try {
+      await createReminder({
+        description: form.description.trim(),
+        amount,
+        category: form.category || null,
+        due_date: scan.dueDate,
+        source: scan.source,
+      });
+      success(`Recordatorio guardado: vence el ${shortDate(scan.dueDate)}`);
+      setForm(EMPTY());
+      setCategoryTouched(false);
+      setReceipt(null);
+      setScan(null);
+      onSaved();
+    } catch {
+      error('No se pudo guardar el recordatorio');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Ya está pagada: se registra hoy; la persona revisa los datos y pulsa «Registrar gasto»
+  const markPaid = () => {
+    setForm((f) => ({ ...f, date: todayLocal() }));
+    setScan((s) => ({ ...s, dueDate: null }));
+    info('Revisa los datos y pulsa «Registrar gasto»');
   };
 
   // En el visor las categorías largas se recortan ("ENTRETE.") para que quepan junto al monto
@@ -253,6 +320,20 @@ function RegisterPanel({ editing, onSaved, onCancelEdit }) {
         </button>
         <input ref={attachRef} type="file" accept="image/*,application/pdf" onChange={pickReceipt} hidden />
       </div>
+
+      {scan?.dueDate && !editing && (
+        <div className="cj-due" role="status">
+          <i className="ph-duotone ph-calendar-check" aria-hidden="true" />
+          <div className="cj-due-text">
+            <b>Factura por vencer el {shortDate(scan.dueDate)}</b>
+            <span>Guárdala como recordatorio o, si ya la pagaste, regístrala hoy.</span>
+          </div>
+          <div className="cj-due-actions">
+            <button type="button" className="cj-btn-secondary" onClick={markPaid} disabled={saving}>Ya la pagué</button>
+            <button type="button" className="cj-btn cj-btn-key" onClick={saveReminder} disabled={saving}>Guardar recordatorio</button>
+          </div>
+        </div>
+      )}
 
       <div className="cj-actions-row">
         {editing && (
