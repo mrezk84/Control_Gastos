@@ -1,7 +1,7 @@
 import React from 'react';
 
 /**
- * Cinta superior lima. `items` son pares [etiqueta, valor]; el valor se resalta en negrita.
+ * Cinta superior en el color de acento. `items` son pares [etiqueta, valor]; el valor se resalta en negrita.
  * Se repite en bucle continuo y se detiene con prefers-reduced-motion.
  */
 function Ticker({ items, seconds = 40 }) {

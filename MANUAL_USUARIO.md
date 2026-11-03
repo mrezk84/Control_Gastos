@@ -55,14 +55,22 @@ El Dashboard ("Panel") es tu pantalla principal. A la izquierda ves el resumen d
 
 ### 2.1 Barra superior
 
-- **Cinta**: la franja lima de arriba repite datos clave (gastos registrados, total, categoría principal y fecha).
+- **Cinta**: la franja de color de arriba repite datos clave (gastos registrados, total, categoría principal y fecha).
 - **Navegación**: Panel, Gastos, Presupuestos y Analíticas.
 - **Tema**: el selector **Oscuro / Claro** (ver [6.1](#61-modo-claroscuro)).
 - **Cuenta**: tu avatar y tu usuario, y **Salir**. En el móvil, toca el avatar para abrir el menú de cuenta.
 
 ### 2.2 Resumen del mes
 
-La tarjeta lima **"Este mes"** muestra lo gastado en el mes actual y, a la derecha, el **gasto diario**: una barra por día, con el día de hoy resaltado.
+La tarjeta de acento **"Este mes"** muestra lo gastado en el mes actual y, a la derecha, el **gasto diario**: una barra por día, con el día de hoy resaltado.
+
+Justo debajo está el **semáforo del saldo**: tres lámparas (verde, ámbar y rojo), una barra de avance y el texto «Gastado $X de $Y. Te quedan $Z.».
+
+- **Verde, «dentro del saldo»:** has gastado menos del 80 % del saldo.
+- **Ámbar, «cerca del límite»:** ya llevas el 80 % o más.
+- **Rojo, «saldo superado»:** gastaste más que el saldo del mes.
+
+El saldo se cambia en el campo **«Saldo del mes»** (por defecto $300.000). Se guarda en este navegador: en otro dispositivo habrá que volver a escribirlo.
 
 Debajo hay cuatro indicadores:
 
