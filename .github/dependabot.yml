@@ -22,6 +22,15 @@ updates:
     groups:
       frontend-minor-patch:
         update-types: [minor, patch]
+    ignore:
+      # Migraciones mayores a decidir a mano: React 19 y react-router 7 cambian APIs, y react-scripts
+      # puede no ser compatible. Los parches y menores siguen llegando.
+      - dependency-name: react
+        update-types: [version-update:semver-major]
+      - dependency-name: react-dom
+        update-types: [version-update:semver-major]
+      - dependency-name: react-router-dom
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: github-actions
     directory: /
