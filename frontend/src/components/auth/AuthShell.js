@@ -2,6 +2,9 @@ import React from 'react';
 import Ticker from '../caja/Ticker';
 import { useTheme } from '../../hooks/useTheme';
 
+// Marquesina promocional del login y el registro: desactivada. Ponla en true para volver a mostrarla.
+const SHOW_PROMO_TICKER = false;
+
 // Marquesina promocional (cada par es [texto, resaltado en negrita])
 const PROMO_ITEMS = [
   ['Tu control financiero', null],
@@ -19,7 +22,7 @@ function AuthShell({ children }) {
 
   return (
     <div className="cj cj-login">
-      <div className="cj-login-ticker"><Ticker items={PROMO_ITEMS} seconds={45} /></div>
+      {SHOW_PROMO_TICKER && <div className="cj-login-ticker"><Ticker items={PROMO_ITEMS} seconds={45} /></div>}
       <div className="cj-login-split">
         <aside className="cj-login-aside" aria-hidden="true">
           <div className="cj-login-brand">
