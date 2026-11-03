@@ -1,0 +1,29 @@
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /backend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      backend-minor-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Sin soporte validado: SQLAlchemy 2.1 rompió el arranque; bcrypt >= 4.1 rompe passlib 1.7.4.
+      - dependency-name: sqlalchemy
+        update-types: [version-update:semver-major, version-update:semver-minor]
+      - dependency-name: bcrypt
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      frontend-minor-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
