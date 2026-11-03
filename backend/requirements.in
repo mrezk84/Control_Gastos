@@ -16,3 +16,4 @@ pdfplumber
 python-dateutil
 openpyxl
 tzdata            # zona horaria de cada persona (zoneinfo no la trae en todos los entornos)
+pywebpush         # notificaciones del navegador (Web Push)
