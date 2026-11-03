@@ -139,6 +139,37 @@ def get_current_user_info(
     return current_user
 
 
+@router.put("/me", response_model=schemas.User)
+def update_profile(
+    payload: schemas.ProfileUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """Actualiza país (ISO 3166), moneda (ISO 4217) y zona horaria (IANA) de la persona."""
+    from zoneinfo import ZoneInfo
+    data = payload.model_dump(exclude_unset=True)
+    if data.get("country") is not None:
+        c = data["country"].strip().upper()
+        if not (len(c) == 2 and c.isalpha()):
+            raise HTTPException(status_code=422, detail="País inválido (código de 2 letras)")
+        data["country"] = c
+    if data.get("currency") is not None:
+        c = data["currency"].strip().upper()
+        if not (len(c) == 3 and c.isalpha()):
+            raise HTTPException(status_code=422, detail="Moneda inválida (código de 3 letras)")
+        data["currency"] = c
+    if data.get("timezone") is not None:
+        try:
+            ZoneInfo(data["timezone"])
+        except Exception:
+            raise HTTPException(status_code=422, detail="Zona horaria inválida")
+    for key, value in data.items():
+        setattr(current_user, key, value)
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+
 @router.post("/forgot-password")
 def forgot_password(
     request: ForgotPasswordRequest,

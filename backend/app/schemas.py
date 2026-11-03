@@ -16,9 +16,17 @@ class User(BaseModel):
     email: str
     avatar_url: Optional[str] = None
     auth_provider: Optional[str] = "local"
+    country: Optional[str] = None
+    currency: Optional[str] = None
+    timezone: Optional[str] = None
 
     class Config:
         from_attributes = True
+
+class ProfileUpdate(BaseModel):
+    country: Optional[str] = None
+    currency: Optional[str] = None
+    timezone: Optional[str] = None
 
 class Token(BaseModel):
     access_token: str
@@ -32,6 +40,7 @@ class ExpenseCreate(BaseModel):
     category: str
     date: date
     receipt_url: Optional[str] = None
+    from_scan: bool = False  # gasto creado desde un escaneo: genera la notificación "Pago registrado"
 
 class ExpenseUpdate(BaseModel):
     description: Optional[str] = None
@@ -125,6 +134,55 @@ class OCRExtractedData(BaseModel):
     date: Optional[str] = None
     merchant: Optional[str] = None
     raw_text: Optional[str] = None
+
+class QRScanRequest(BaseModel):
+    text: str
+
+# --- Reminder / Notification Schemas ---
+
+class ReminderCreate(BaseModel):
+    description: str
+    amount: float
+    category: Optional[str] = None
+    due_date: dt.date
+    source: str = "manual"  # ocr | qr | manual
+
+class ReminderUpdate(BaseModel):
+    description: Optional[str] = None
+    amount: Optional[float] = None
+    category: Optional[str] = None
+    due_date: Optional[dt.date] = None
+    status: Optional[str] = None  # pending | dismissed
+
+class Reminder(BaseModel):
+    id: int
+    description: str
+    amount: float
+    category: Optional[str] = None
+    due_date: dt.date
+    source: str
+    status: str
+    expense_id: Optional[int] = None
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class Notification(BaseModel):
+    id: int
+    kind: str
+    title: str
+    body: str
+    link: Optional[str] = None
+    read_at: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class NotificationList(BaseModel):
+    unread_count: int
+    notifications: List[Notification]
 
 # --- Dashboard Schemas ---
 

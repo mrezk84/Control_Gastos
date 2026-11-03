@@ -15,6 +15,7 @@ de quien los registra primero, y un frontend que apunte a un backend inexistente
 1. Crea un proyecto en Neon. En **Connect** activa **Connection pooling** y copia la cadena (el host lleva `-pooler` y termina en `?sslmode=require`).
 2. Crea las tablas: en el *SQL Editor* pega `backend/migrations/001_initial_schema.sql` y pulsa **Run**
    (o `psql "$DATABASE_URL" -f backend/migrations/001_initial_schema.sql`). Es idempotente. El backend también crea las tablas que falten al arrancar, pero no añade columnas a tablas existentes.
+   Después ejecuta también `backend/migrations/002_recordatorios.sql` (recordatorios, notificaciones y las columnas regionales de `users`): sin ella, las bases ya creadas fallan al leer usuarios.
 3. Comprueba que están las 4 tablas:
    ```sql
    select table_name, count(*) as columnas from information_schema.columns

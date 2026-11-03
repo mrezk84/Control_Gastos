@@ -14,6 +14,9 @@ class User(Base):
     avatar_url = Column(String(500), nullable=True)
     auth_provider = Column(String(50), default="local")  # local, google, microsoft
     provider_id = Column(String(255), nullable=True)
+    country = Column(String(2), nullable=True)       # ISO 3166-1 alfa-2; si falta, UY
+    currency = Column(String(3), nullable=True)      # ISO 4217; si falta, UYU
+    timezone = Column(String(64), nullable=True)     # IANA; si falta, America/Montevideo
 
     expenses = relationship("Expense", back_populates="owner")
 
@@ -59,3 +62,44 @@ class ReceiptImage(Base):
     content = Column(LargeBinary, nullable=True)  # Archivo guardado en la base (el disco de Vercel es efímero)
 
     expense = relationship("Expense", back_populates="receipts")
+
+
+class PaymentReminder(Base):
+    __tablename__ = "payment_reminders"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True)
+    description = Column(String(255))
+    amount = Column(Float)
+    category = Column(String(100), nullable=True)
+    due_date = Column(Date)
+    source = Column(String(10), default="manual")      # ocr | qr | manual
+    status = Column(String(10), default="pending", index=True)  # pending | paid | dismissed
+    expense_id = Column(Integer, ForeignKey("expenses.id"), nullable=True)
+    last_notified_kind = Column(String(20), nullable=True)
+    last_notified_on = Column(Date, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True)
+    kind = Column(String(20))  # due_soon | due_today | overdue | payment_registered
+    title = Column(String(255))
+    body = Column(String(500))
+    link = Column(String(255), nullable=True)
+    read_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class PushSubscription(Base):
+    __tablename__ = "push_subscriptions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True)
+    endpoint = Column(String(1000), unique=True)
+    p256dh = Column(String(255))
+    auth = Column(String(255))
+    created_at = Column(DateTime, default=datetime.utcnow)
