@@ -2,8 +2,20 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { login, setAuthToken, getOAuthUrl } from '../services/api';
 import { GoogleIcon, MicrosoftIcon } from './ui/icons';
+import Ticker from './caja/Ticker';
 import { useTheme } from '../hooks/useTheme';
 import { validateLogin } from '../utils/authForm';
+
+// Marquesina promocional (cada par es [texto, resaltado en negrita])
+const PROMO_ITEMS = [
+  ['Tu control financiero', null],
+  ['Escanea facturas y códigos', 'QR'],
+  ['Avisos antes de', 'cada vencimiento'],
+  ['Presupuestos y', 'analíticas'],
+  ['Funciona en', 'cualquier país'],
+  ['Modo', 'claro y oscuro'],
+  ['Cada peso,', 'a la vista'],
+];
 
 /** Inicio de sesión: diseño «Caja registradora» (Login.dc.html de Claude Design). */
 function Login() {
@@ -67,6 +79,8 @@ function Login() {
 
   return (
     <div className="cj cj-login">
+      <div className="cj-login-ticker"><Ticker items={PROMO_ITEMS} seconds={45} /></div>
+      <div className="cj-login-split">
       <aside className="cj-login-aside" aria-hidden="true">
         <div className="cj-login-brand">
           <div className="cj-login-mark">$</div>
@@ -171,6 +185,7 @@ function Login() {
           </form>
         </div>
       </main>
+      </div>
     </div>
   );
 }
