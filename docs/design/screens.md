@@ -58,7 +58,7 @@ Formato: montos como `$58.000` (sin espacio ni decimales) y porcentajes como `84
 - **Descripción:** etiqueta visible "¿En qué gastaste?" sobre el campo; al escribir, sugiere categoría con `utils/autoCategory.js` hasta que la persona elige una.
 - **Categoría:** grupo de opciones (`role="radiogroup"`) de 10 iconos en cuadrícula de 5; la elegida lleva borde `--acct` y fondo `--accsoft`. El visor muestra su nombre en lima (recortado si es largo: "ENTRETE.").
 - **Fecha:** `input[type=date]` (hoy por defecto). **Recibo:** adjunta un archivo que se sube con `POST /receipts/upload` tras crear el gasto.
-- **Escanear:** envía el archivo a `POST /receipts/scan` y rellena monto, descripción, fecha y categoría con lo reconocido.
+- **Escanear:** envía el archivo a `POST /receipts/scan` y rellena monto, descripción, fecha y categoría con lo reconocido. Lectura de QR, recordatorios de pago y notificaciones: ver [../specs/recordatorios.md](../specs/recordatorios.md).
 - **Editar** (lápiz del historial): carga el gasto en el mismo panel, que pasa a "Editar gasto" con los botones "Cancelar" y "Guardar" (`PUT /expenses/{id}`).
 - **Enter** registra el gasto cuando el foco no está en un campo ni en un botón.
 - **Eliminar** (papelera): diálogo "¿Eliminar gasto?" con el detalle y los botones Cancelar / Eliminar (este último en `--tx` sobre `--bg`) antes de `DELETE /expenses/{id}`.
