@@ -1,234 +1,174 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { register, getOAuthUrl } from '../services/api';
-import { GoogleIcon, MicrosoftIcon, UserIcon, LockIcon, MailIcon } from './ui/icons';
-import Logo from './ui/Logo';
+import { GoogleIcon, MicrosoftIcon } from './ui/icons';
+import AuthShell from './auth/AuthShell';
+import { passwordStrength, validateRegister } from '../utils/authForm';
 
+const STRENGTH_COLORS = ['var(--line)', 'var(--bad)', 'var(--warn)', 'oklch(0.7 0.14 125)', 'var(--ok)'];
+
+/** Registro: misma pantalla que el inicio de sesión (Login.dc.html, modo «Crear cuenta»). */
 function Register() {
-  const [user, setUser] = useState({ username: '', email: '', password: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [badField, setBadField] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const strength = passwordStrength(form.password);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-
-    if (!user.username.trim() || !user.email.trim() || !user.password) {
-      setError('Todos los campos son obligatorios');
-      return;
-    }
-
-    if (user.password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres');
+    const problem = validateRegister(form);
+    if (problem) {
+      setError(problem.message);
+      setBadField(problem.field);
       return;
     }
 
     setLoading(true);
     try {
-      await register(user);
+      // El nombre es el usuario con el que también se puede iniciar sesión
+      await register({ username: form.name.trim(), email: form.email.trim(), password: form.password });
       navigate('/login');
     } catch (err) {
-      const errorMsg = err?.response?.data?.detail || 'Error al registrarse. El usuario o email podría estar en uso.';
-      setError(errorMsg);
+      setError(err?.response?.data?.detail || 'No se pudo crear la cuenta. Inténtalo de nuevo en un momento.');
+      setBadField(/usuario/i.test(err?.response?.data?.detail || '') ? 'name' : /correo/i.test(err?.response?.data?.detail || '') ? 'email' : '');
     } finally {
       setLoading(false);
     }
   };
 
   const handleOAuth = async (provider) => {
-    const providerNames = {
-      google: 'Google',
-      microsoft: 'Microsoft'
-    };
-
-    const name = providerNames[provider] || provider;
-
+    const name = { google: 'Google', microsoft: 'Microsoft' }[provider] || provider;
     try {
       const response = await getOAuthUrl(provider);
       window.location.href = response.data.auth_url;
     } catch (err) {
       const status = err?.response?.status;
-
-      if (status === 501) {
-        setError(`${name} Sign In aún no está configurado. Configurá las credenciales OAuth en el backend.`);
-      } else if (!err?.response) {
-        setError('No se pudo conectar al servidor. Verificá que el backend esté corriendo en el puerto 8000.');
-      } else {
-        setError(`Error al conectar con ${name}. Intentá de nuevo más tarde.`);
-      }
+      if (status === 501) setError(`El acceso con ${name} aún no está configurado.`);
+      else if (!err?.response) setError('No se pudo conectar con el servidor. Inténtalo de nuevo en un momento.');
+      else setError(`Error al conectar con ${name}. Inténtalo de nuevo más tarde.`);
+      setBadField('');
     }
   };
 
-  const handleInputChange = (field) => (e) => {
-    setUser(prev => ({ ...prev, [field]: e.target.value }));
-    if (error) setError('');
+  const handleChange = (field) => (e) => {
+    setForm((prev) => ({ ...prev, [field]: e.target.value }));
+    if (error) {
+      setError('');
+      setBadField('');
+    }
   };
 
   return (
-    <div className="auth-page">
-      <div className="animated-bg" />
-
-      {/* Background Elements */}
-      <div className="auth-bg-elements">
-        <div className="auth-bg-circle auth-bg-circle-1"></div>
-        <div className="auth-bg-circle auth-bg-circle-2"></div>
-        <div className="auth-bg-circle auth-bg-circle-3"></div>
-      </div>
-
-      <div className="auth-container">
-        <div className="auth-card">
-          {/* Enhanced Logo Section */}
-          <div className="auth-logo">
-            <div className="auth-logo-wrapper">
-              <Logo width={72} height={72} variant="default" />
-              <div className="auth-logo-glow"></div>
-            </div>
-            <div className="auth-logo-text">
-              <h1 className="auth-logo-title">Control Gastos</h1>
-              <p className="auth-logo-tagline">Tu finanzas bajo control</p>
-            </div>
-          </div>
-
-          {/* Header */}
-          <h2 className="auth-title">Crear Cuenta</h2>
-          <p className="auth-subtitle">Unite y empezá a controlar tus gastos hoy.</p>
-
-          {/* Error Alert */}
-          {error && (
-            <div className="auth-alert" role="alert">
-              <span className="auth-alert-icon">⚠️</span>
-              {error}
-            </div>
-          )}
-
-          {/* Register Form */}
-          <form onSubmit={handleSubmit} noValidate>
-            <div className="form-group-dark">
-              <label htmlFor="reg-username">
-                <span className="form-label-icon">👤</span>
-                Usuario
-              </label>
-              <div className="input-with-icon">
-                <input
-                  id="reg-username"
-                  className="input-dark"
-                  type="text"
-                  placeholder="Elegí un nombre de usuario"
-                  value={user.username}
-                  onChange={handleInputChange('username')}
-                  autoComplete="username"
-                  disabled={loading}
-                />
-                <span className="input-icon"><UserIcon /></span>
-              </div>
-            </div>
-
-            <div className="form-group-dark">
-              <label htmlFor="reg-email">
-                <span className="form-label-icon">📧</span>
-                Email
-              </label>
-              <div className="input-with-icon">
-                <input
-                  id="reg-email"
-                  className="input-dark"
-                  type="email"
-                  placeholder="tu@email.com"
-                  value={user.email}
-                  onChange={handleInputChange('email')}
-                  autoComplete="email"
-                  disabled={loading}
-                />
-                <span className="input-icon"><MailIcon /></span>
-              </div>
-            </div>
-
-            <div className="form-group-dark">
-              <label htmlFor="reg-password">
-                <span className="form-label-icon">🔒</span>
-                Contraseña
-              </label>
-              <div className="input-with-icon">
-                <input
-                  id="reg-password"
-                  className="input-dark"
-                  type="password"
-                  placeholder="Mínimo 6 caracteres"
-                  value={user.password}
-                  onChange={handleInputChange('password')}
-                  autoComplete="new-password"
-                  disabled={loading}
-                  minLength={6}
-                />
-                <span className="input-icon"><LockIcon /></span>
-              </div>
-            </div>
-
-            <button
-              className="btn-gradient btn-gradient-enhanced"
-              type="submit"
-              disabled={loading}
-            >
-              <span className="btn-content">
-                {loading ? (
-                  <>
-                    <span className="btn-spinner"></span>
-                    Creando cuenta...
-                  </>
-                ) : (
-                  <>
-                    <span className="btn-icon">✓</span>
-                    Crear Cuenta
-                  </>
-                )}
-              </span>
-            </button>
-          </form>
-
-          {/* Divider */}
-          <div className="auth-divider">
-            <span>o registrate con</span>
-          </div>
-
-          {/* Enhanced OAuth Buttons */}
-          <div className="oauth-buttons">
-            <button
-              className="oauth-btn google enhanced"
-              type="button"
-              onClick={() => handleOAuth('google')}
-              disabled={loading}
-            >
-              <GoogleIcon />
-              <span>Google</span>
-            </button>
-
-            <button
-              className="oauth-btn microsoft enhanced"
-              type="button"
-              onClick={() => handleOAuth('microsoft')}
-              disabled={loading}
-            >
-              <MicrosoftIcon />
-              <span>Microsoft</span>
-            </button>
-
-          </div>
-
-          {/* Login Link */}
-          <p className="auth-link">
-            ¿Ya tenés cuenta? <Link to="/login" className="auth-link-highlight">Iniciá sesión</Link>
-          </p>
+    <AuthShell>
+      <form className="cj-login-form" onSubmit={handleSubmit} noValidate>
+        <div className="cj-login-head">
+          <div className="cj-eyebrow">CREAR CUENTA</div>
+          <h1>Empieza hoy</h1>
         </div>
 
-        {/* Footer */}
-        <div className="auth-footer">
-          <p className="auth-footer-text">
-            💰 Control Gastos · Gestión financiera inteligente
-          </p>
+        <label className="cj-login-field">
+          <span>Nombre</span>
+          <input
+            id="register-name"
+            type="text"
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+            placeholder="Martina"
+            value={form.name}
+            onChange={handleChange('name')}
+            aria-invalid={badField === 'name'}
+            disabled={loading}
+          />
+        </label>
+
+        <label className="cj-login-field">
+          <span>Correo electrónico</span>
+          <input
+            id="register-email"
+            type="email"
+            autoComplete="email"
+            placeholder="martina@correo.com"
+            value={form.email}
+            onChange={handleChange('email')}
+            aria-invalid={badField === 'email'}
+            disabled={loading}
+          />
+        </label>
+
+        <label className="cj-login-field">
+          <span>Contraseña</span>
+          <span className="cj-login-pw">
+            <input
+              id="register-password"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="new-password"
+              value={form.password}
+              onChange={handleChange('password')}
+              aria-invalid={badField === 'password'}
+              aria-describedby="register-strength"
+              disabled={loading}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+            >
+              <i className={`ph ph-${showPassword ? 'eye-slash' : 'eye'}`} aria-hidden="true" />
+            </button>
+          </span>
+        </label>
+
+        <div className="cj-strength" id="register-strength">
+          <div className="cj-strength-bars" aria-hidden="true">
+            {[1, 2, 3, 4].map((i) => (
+              <span key={i} style={{ background: i <= strength.score ? STRENGTH_COLORS[Math.max(1, strength.score)] : 'var(--line)' }} />
+            ))}
+          </div>
+          <span className="cj-strength-label">SEGURIDAD: {strength.label}</span>
         </div>
-      </div>
-    </div>
+
+        <label className="cj-login-field">
+          <span>Confirmar contraseña</span>
+          <input
+            id="register-confirm"
+            type={showPassword ? 'text' : 'password'}
+            autoComplete="new-password"
+            value={form.confirm}
+            onChange={handleChange('confirm')}
+            aria-invalid={badField === 'confirm'}
+            disabled={loading}
+          />
+        </label>
+
+        {error && (
+          <div className="cj-login-error" role="alert">
+            <i className="ph ph-warning" aria-hidden="true" />{error}
+          </div>
+        )}
+
+        <button className="cj-login-submit" type="submit" disabled={loading}>
+          {loading ? 'Creando…' : 'Crear cuenta'}
+        </button>
+
+        <div className="cj-login-or"><span>o continúa con</span></div>
+        <div className="cj-login-oauth">
+          <button type="button" className="cj-btn-secondary" onClick={() => handleOAuth('google')} disabled={loading}>
+            <GoogleIcon /><span>Google</span>
+          </button>
+          <button type="button" className="cj-btn-secondary" onClick={() => handleOAuth('microsoft')} disabled={loading}>
+            <MicrosoftIcon /><span>Microsoft</span>
+          </button>
+        </div>
+
+        <p className="cj-login-alt">
+          ¿Ya tienes cuenta? <Link to="/login">Iniciar sesión</Link>
+        </p>
+      </form>
+    </AuthShell>
   );
 }
 

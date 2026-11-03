@@ -363,6 +363,10 @@
 .cj-login-oauth { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .cj-login-oauth svg { width: 20px; height: 20px; flex: none; }
 .cj-login-oauth button { height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; }
+.cj-strength { display: flex; flex-direction: column; gap: 8px; margin-top: -6px; }
+.cj-strength-bars { display: flex; gap: 4px; }
+.cj-strength-bars span { flex: 1; height: 6px; border-radius: 3px; transition: background 0.2s; }
+.cj-strength-label { font: 12px/1.2 'Geist Mono Variable', 'Geist Mono', monospace; color: var(--mu); }
 .cj-login-alt { margin: 0; text-align: center; font-size: 14px; color: var(--mu); }
 
 /* Campana de notificaciones */
