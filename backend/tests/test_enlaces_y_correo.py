@@ -96,3 +96,31 @@ class TestCorreoResend:
         with caplog.at_level("DEBUG"):
             email.send_password_reset_email("ana@example.com", "https://x/r")
         assert "re_clave_de_prueba" not in caplog.text
+
+
+class TestUrlsSinEsquema:
+    """Una BACKEND_URL escrita sin https:// hacía que Google rechazara el redirect_uri."""
+
+    def test_with_scheme(self):
+        from app.frontend_url import with_scheme
+        assert with_scheme("mi-api.vercel.app") == "https://mi-api.vercel.app"
+        assert with_scheme("mi-api.vercel.app/") == "https://mi-api.vercel.app"
+        assert with_scheme("https://mi-api.vercel.app/") == "https://mi-api.vercel.app"
+        assert with_scheme("localhost:8000") == "http://localhost:8000"
+        assert with_scheme("127.0.0.1:3000") == "http://127.0.0.1:3000"
+        assert with_scheme("  ") == ""
+
+    def test_frontend_urls_agrega_el_esquema(self, monkeypatch):
+        from app.frontend_url import frontend_urls
+        monkeypatch.setenv("FRONTEND_URL", "app.vercel.app, https://otra.vercel.app/")
+        assert frontend_urls() == ["https://app.vercel.app", "https://otra.vercel.app"]
+
+    def test_redirect_uri_del_login_social(self, client, monkeypatch):
+        from urllib.parse import parse_qs, urlparse
+        from app.routes import oauth_routes
+        monkeypatch.setitem(oauth_routes.PROVIDERS["google"], "client_id", "id-de-prueba")
+        monkeypatch.setenv("BACKEND_URL", "mi-api.vercel.app")  # sin esquema, como estaba en Vercel
+        monkeypatch.delenv("GOOGLE_REDIRECT_URI", raising=False)  # un backend/.env local podría definirla
+        url = client.get("/auth/google").json()["auth_url"]
+        redirect = parse_qs(urlparse(url).query)["redirect_uri"][0]
+        assert redirect == "https://mi-api.vercel.app/auth/google/callback"
