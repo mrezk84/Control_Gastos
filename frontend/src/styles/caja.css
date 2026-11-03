@@ -11,28 +11,33 @@
   --bg: #0e0f11;
   --panel: #16171a;
   --raised: #1d1f22;
-  --line: #26282c;
+  --line: #34373b;
   --tx: #ededea;
-  --mu: #8f918f;
-  --acc: oklch(0.88 0.18 128);
-  --acct: oklch(0.88 0.18 128);
-  --accsoft: oklch(0.88 0.18 128 / 0.12);
-  --acc-edge: oklch(0.62 0.14 128);
+  --mu: #a8aaa7;
+  --acc: oklch(0.68 0.13 58);
+  --acct: oklch(0.68 0.13 58);
+  --accsoft: oklch(0.68 0.13 58 / 0.12);
+  --acc-edge: oklch(0.46 0.1 52);
   --key: #08090a;
   --paper: #e9e8e1;
   --ink-on-acc: #0e0f11;
   --display-bg: #0b0c0d;
-  --display-mu: #8f918f;
+  --display-mu: #a8aaa7;
+  --display-amt: oklch(0.78 0.14 58);
   --display-line: #1a1c1e;
   --paper-tx: #1b1c1a;
-  --paper-mu: #5f615c;
+  --paper-mu: #4b4d48;
   --danger: #ff8a7d;
-  --cat-1: oklch(0.88 0.18 128);
-  --cat-2: oklch(0.74 0.14 128);
-  --cat-3: oklch(0.6 0.1 128);
-  --cat-4: #6b6e70;
-  --cat-5: #4a4d50;
-  --cat-6: #33363a;
+  --focus: oklch(0.85 0.13 215);
+  --ok: oklch(0.8 0.17 150);
+  --warn: oklch(0.87 0.16 95);
+  --bad: oklch(0.7 0.19 25);
+  --cat-1: oklch(0.68 0.13 58);
+  --cat-2: oklch(0.78 0.13 255);
+  --cat-3: oklch(0.84 0.15 125);
+  --cat-4: oklch(0.76 0.14 305);
+  --cat-5: oklch(0.78 0.13 350);
+  --cat-6: #9a9c99;
 }
 
 :root[data-theme="light"] {
@@ -40,20 +45,25 @@
   --bg: #f1f1ec;
   --panel: #ffffff;
   --raised: #f6f6f1;
-  --line: #e1e1da;
+  --line: #c9c9c0;
   --tx: #141513;
-  --mu: #686a65;
-  --acct: oklch(0.5 0.14 135);
-  --accsoft: oklch(0.88 0.18 128 / 0.25);
+  --mu: #575953;
+  --acct: oklch(0.44 0.1 52);
+  --accsoft: oklch(0.68 0.13 58 / 0.25);
   --key: #d9d9d1;
   --paper: #f7f6ef;
   --danger: #b3261e;
-  --cat-1: oklch(0.8 0.19 128);
-  --cat-2: oklch(0.66 0.16 132);
-  --cat-3: oklch(0.5 0.12 135);
-  --cat-4: #3a3c39;
-  --cat-5: #80827c;
-  --cat-6: #b8b9b2;
+  --display-amt: oklch(0.78 0.14 58);
+  --focus: oklch(0.45 0.15 250);
+  --ok: oklch(0.5 0.14 150);
+  --warn: oklch(0.55 0.13 80);
+  --bad: oklch(0.5 0.2 25);
+  --cat-1: oklch(0.5 0.12 55);
+  --cat-2: oklch(0.5 0.15 255);
+  --cat-3: oklch(0.55 0.13 125);
+  --cat-4: oklch(0.5 0.17 305);
+  --cat-5: oklch(0.52 0.18 350);
+  --cat-6: #6b6d68;
 }
 
 /* ---- Base ---- */
@@ -74,10 +84,10 @@
 :where(.cj) a { color: inherit; text-decoration: none; }
 :where(.cj) i[class^="ph"] { line-height: 1; vertical-align: -0.14em; }
 .cj .mono, .cj-mono { font-family: 'Geist Mono Variable', 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace; }
-.cj :focus-visible { outline: 2px solid var(--acct); outline-offset: 2px; }
+.cj :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .cj-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-/* ---- Cinta (ticker) lima ---- */
+/* ---- Cinta (ticker) en el color de acento ---- */
 .cj-ticker {
   overflow: hidden;
   white-space: nowrap;
@@ -162,12 +172,13 @@
   display: grid;
   gap: 20px;
   grid-template-columns: minmax(0, 1fr) 380px;
-  grid-template-rows: auto auto auto auto auto auto 1fr;
-  grid-template-areas: "head side" "hero side" "kpi side" "charts side" "trend side" "hist side" "fill side";
+  grid-template-rows: auto auto auto auto auto auto auto 1fr;
+  grid-template-areas: "head side" "hero side" "sema side" "kpi side" "charts side" "trend side" "hist side" "fill side";
 }
 .cj-dash > * { min-width: 0; }
 .cj-area-head { grid-area: head; }
 .cj-area-hero { grid-area: hero; }
+.cj-area-sema { grid-area: sema; }
 .cj-area-kpi { grid-area: kpi; }
 .cj-area-charts { grid-area: charts; }
 .cj-area-trend { grid-area: trend; }
@@ -192,7 +203,7 @@
 .cj-hero-sub { font: 12px/1.2 'Geist Mono Variable', 'Geist Mono', monospace; letter-spacing: 0.04em; }
 .cj-hero-chart {
   flex: 1.4 1 280px; display: flex; flex-direction: column; gap: 8px; min-width: 0;
-  border-left: 1px solid oklch(0.3 0.05 128 / 0.25); padding-left: clamp(0px, 2vw, 28px);
+  border-left: 1px solid oklch(0.3 0.05 55 / 0.25); padding-left: clamp(0px, 2vw, 28px);
 }
 .cj-hero-cap { font: 500 11px/1.2 'Geist Mono Variable', 'Geist Mono', monospace; letter-spacing: 0.08em; }
 .cj-bars { display: flex; align-items: flex-end; gap: 3px; height: 104px; }
@@ -202,6 +213,29 @@
 }
 .cj-bar.is-today { opacity: 1; }
 .cj-hero-axis { display: flex; justify-content: space-between; font: 500 10.5px/1.2 'Geist Mono Variable', 'Geist Mono', monospace; letter-spacing: 0.06em; }
+
+/* Semáforo del saldo del mes */
+.cj-sema {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 3px 0 var(--key);
+  padding: clamp(16px, 2vw, 20px); display: flex; flex-wrap: wrap; align-items: center; gap: 18px 28px;
+}
+.cj-lamps { display: flex; gap: 10px; padding: 10px 14px; border-radius: 999px; background: var(--display-bg); box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5); }
+.cj-lamps span { width: 26px; height: 26px; border-radius: 50%; background: var(--c); opacity: 0.2; }
+.cj-lamps span.is-on { opacity: 1; box-shadow: 0 0 16px var(--c); }
+.cj-sema-body { flex: 1 1 240px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.cj-sema-state { display: flex; align-items: center; gap: 8px; font: 600 12px/1.2 'Geist Mono Variable', 'Geist Mono', monospace; letter-spacing: 0.08em; color: var(--c); }
+.cj-sema-state i { font-size: 17px; }
+.cj-sema-text { font-size: 14.5px; }
+.cj-meter { height: 10px; border-radius: 6px; background: var(--raised); border: 1px solid var(--line); overflow: hidden; }
+.cj-meter > div { height: 100%; width: var(--w); background: var(--c); }
+.cj-sema-scale { display: flex; justify-content: space-between; font: 12px/1.2 'Geist Mono Variable', 'Geist Mono', monospace; color: var(--mu); }
+.cj-limit { display: flex; flex-direction: column; gap: 6px; flex: 0 1 190px; }
+.cj-limit span { font-size: 13px; color: var(--mu); }
+.cj-limit input {
+  height: 46px; width: 100%; border-radius: 11px; border: 1px solid var(--line); background: var(--raised); color: var(--tx);
+  padding: 0 14px; font: 600 16px 'Geist Mono Variable', 'Geist Mono', monospace; outline: none;
+}
+.cj-limit input:focus-visible { border-color: var(--acct); outline: 3px solid var(--focus); outline-offset: 2px; }
 
 .cj-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
 .cj-kpi {
@@ -290,10 +324,10 @@
 }
 .cj-display-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; font: 10.5px/1.2 'Geist Mono Variable', 'Geist Mono', monospace; letter-spacing: 0.08em; color: var(--display-mu); }
 .cj-display-top span:last-child { display: flex; align-items: center; gap: 6px; }
-.cj-display-top .is-set { color: oklch(0.88 0.18 128); }
+.cj-display-top .is-set { color: var(--acc); }
 .cj-display-amt {
   font: 600 clamp(36px, 4vw, 44px)/1.1 'Geist Mono Variable', 'Geist Mono', monospace; letter-spacing: -0.02em; text-align: right;
-  color: oklch(0.88 0.18 128); text-shadow: 0 0 18px oklch(0.88 0.18 128 / 0.35); white-space: nowrap; overflow: hidden;
+  color: var(--display-amt); text-shadow: 0 0 18px oklch(0.78 0.14 58 / 0.35); white-space: nowrap; overflow: hidden;
 }
 .cj-keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .cj-key {
@@ -386,7 +420,7 @@
   .cj-dash {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto;
-    grid-template-areas: "head" "hero" "kpi" "charts" "trend" "side" "hist";
+    grid-template-areas: "head" "hero" "sema" "kpi" "charts" "trend" "side" "hist";
   }
 }
 @media (max-width: 759px) {
@@ -464,7 +498,7 @@
 .cj-legacy .btn-gradient,
 .cj-legacy .btn-primary { color: var(--ink-on-acc); }
 
-/* Legibilidad en pantallas heredadas: el degradado pasó a ser un lima sólido */
+/* Legibilidad en pantallas heredadas: el degradado pasó a ser un color sólido */
 .cj-legacy .page-title,
 .cj-legacy .auth-logo-title {
   background: none;

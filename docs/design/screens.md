@@ -3,7 +3,7 @@
 ## Marco de la aplicación (barra superior)
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ ● TU CONTROL FINANCIERO ● GASTOS REGISTRADOS 42 ● TOTAL $…   │  cinta lima (30 px)
+│ ● TU CONTROL FINANCIERO ● GASTOS REGISTRADOS 42 ● TOTAL $…   │  cinta de acento (30 px)
 ├──────────────────────────────────────────────────────────────┤
 │ [$] Control de Gastos   Panel Gastos Presupuestos Analíticas │  cabecera (fondo --panel)
 │                        [☾ Oscuro|☀ Claro]  (M) martina  Salir│
@@ -16,7 +16,7 @@
 
 ## Dashboard
 Escritorio (≥ 1024 px): columna principal flexible + columna lateral de 380 px (ancho máximo 1440 px, separación de 20 px).
-Móvil: una columna; orden **hero → KPIs → por categoría y distribución → tendencia → registrar gasto → historial**.
+Móvil: una columna; orden **hero → saldo del mes → KPIs → por categoría y distribución → tendencia → registrar gasto → historial**.
 
 ```
 ┌ principal ───────────────────────────────┐ ┌ lateral ─────────────────┐
@@ -26,6 +26,7 @@ Móvil: una columna; orden **hero → KPIs → por categoría y distribución �
 │ │ Este mes   |  GASTO DIARIO ▂▃▅▂▇▃▂   │ │ │ │            $12.350    │ │
 │ │ $248.700   |  1 OCT    15    HOY     │ │ │ └───────────────────────┘ │
 │ └──────────────────────────────────────┘ │ │ [1][2][3][4][5][6][7][8][9]│
+│ [● ● ● semáforo + Saldo del mes]         │ │                           │
 │ [Promedio][Top categoría][Transac.][Categ.]│ │ [000][0][⌫]               │
 │ [Por categoría (barras)] [Distribución]  │ │ ¿En qué gastaste?         │
 │ [Tendencia (línea escalonada)]           │ │ [10 iconos de categoría]  │
@@ -48,6 +49,7 @@ Todo sale de `GET /expenses/` (sin endpoints nuevos).
 | Por categoría | 6 categorías de mayor monto; etiqueta `$<n>k` sobre la barra, icono y porcentaje debajo. **Escala redondeada** al orden de magnitud (832.000 → 900.000) |
 | Distribución | Barra apilada fina (16 px) y leyenda con icono, nombre, monto y porcentaje; las categorías restantes se agrupan en "Resto" |
 | Tendencia | Últimos 6 meses con datos, línea escalonada con base en cero, y debajo cada mes con su valor (el último, destacado); variación del último frente al primero (`+31% vs MAY`) |
+| Saldo del mes | Semáforo de tres lámparas (verde / ámbar / rojo) con barra de avance: «DENTRO DEL SALDO», «CERCA DEL LÍMITE» (desde el 80 % gastado) y «SALDO SUPERADO». Texto «Gastado $X de $Y. Te quedan $Z.» (o «Superaste el saldo por $Z»), porcentaje y «AVISO AL 80 %». El saldo se edita en el campo «Saldo del mes» (predeterminado $300.000) y se guarda en el navegador (`localStorage`, clave `saldo`) |
 | Historial | Agrupado por día (`HOY`, `AYER`, `MIÉ 28 OCT`) con el total del día; máximo 20 filas; enlace "Ver todos" a `/expenses` |
 | Último registro | Recibo de papel con N.º (id con 4 dígitos), descripción, monto, categoría, cuándo y **TOTAL MES** |
 
@@ -56,7 +58,7 @@ Formato: montos como `$58.000` (sin espacio ni decimales) y porcentajes como `84
 ### Registrar gasto
 - **Visor + teclado:** dígitos enteros (pesos), tecla `000`, borrar. Máximo 9 dígitos. Acepta teclado físico mientras el foco no esté en un campo de texto.
 - **Descripción:** etiqueta visible "¿En qué gastaste?" sobre el campo; al escribir, sugiere categoría con `utils/autoCategory.js` hasta que la persona elige una.
-- **Categoría:** grupo de opciones (`role="radiogroup"`) de 10 iconos en cuadrícula de 5; la elegida lleva borde `--acct` y fondo `--accsoft`. El visor muestra su nombre en lima (recortado si es largo: "ENTRETE.").
+- **Categoría:** grupo de opciones (`role="radiogroup"`) de 10 iconos en cuadrícula de 5; la elegida lleva borde `--acct` y fondo `--accsoft`. El visor muestra su nombre en el color de acento (recortado si es largo: "ENTRETE.").
 - **Fecha:** `input[type=date]` (hoy por defecto). **Recibo:** adjunta un archivo que se sube con `POST /receipts/upload` tras crear el gasto.
 - **Escanear:** envía el archivo a `POST /receipts/scan` y rellena monto, descripción, fecha y categoría con lo reconocido. Lectura de QR, recordatorios de pago y notificaciones: ver [../specs/recordatorios.md](../specs/recordatorios.md).
 - **Editar** (lápiz del historial): carga el gasto en el mismo panel, que pasa a "Editar gasto" con los botones "Cancelar" y "Guardar" (`PUT /expenses/{id}`).

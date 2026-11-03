@@ -6,13 +6,13 @@ oscuro y claro, escritorio y móvil). Este spec reemplaza al concepto anterior "
 Detalles en [tokens.md](./tokens.md) y [screens.md](./screens.md).
 
 ## Concepto
-Registrar un gasto es **cobrar en una caja registradora**: un visor con el monto en verde lima, un
+Registrar un gasto es **cobrar en una caja registradora**: un visor con el monto en cobre claro, un
 teclado numérico con teclas que se hunden, un recibo de papel con borde dentado y una cinta
 (*ticker*) de datos recorriendo la parte superior. El resto de la interfaz es sobria: paneles planos,
 tipografía técnica y un solo color de acento.
 
 ## Principios
-1. **Un acento.** Verde lima (`--acc`). Todo lo demás es neutro. En el tema claro el lima no se usa como texto: se usa `--acct`.
+1. **Un acento.** Cobre (`--acc`, `oklch(0.68 0.13 58)`). Todo lo demás es neutro, salvo los tres colores del semáforo del saldo y la paleta de categorías. En el tema claro el acento no se usa como texto: se usa `--acct`.
 2. **Relieve de tecla.** Los elementos accionables y las tarjetas de KPI llevan una sombra inferior sólida (`0 3px 0`) que se reduce al presionarse. Sin sombras difusas ni cristal.
 3. **Cifras de máquina.** Montos y datos en Geist Mono; texto en Geist.
 4. **Barras punteadas.** Los gráficos de barras se dibujan con rayas horizontales (estilo contador), no con rellenos lisos.
