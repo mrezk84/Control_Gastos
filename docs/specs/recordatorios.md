@@ -13,8 +13,10 @@ Las notificaciones llegan por dos canales: **dentro de la app** (campana) y **de
 No se envían por correo: Resend sin dominio propio solo entrega a `mrezk84@gmail.com`.
 
 ## Alcance
-- **País: Uruguay.** Moneda pesos uruguayos (UYU, `$`), zona horaria `America/Montevideo` (UTC-3).
-- Lectura de QR (CFE de la DGI, EMVCo y texto libre) además del OCR actual.
+- **Funciona en cualquier país.** Nada está atado a un país: moneda, zona horaria y formato de fecha salen del
+  perfil de cada persona, y los QR se leen con **adaptadores por país** sobre una base internacional.
+  Uruguay (DGI) y Argentina (AFIP/ARCA) son los primeros adaptadores; añadir otro país no toca el resto del código.
+- Lectura de QR (estándar EMVCo, adaptadores por país y texto libre) además del OCR actual.
 - Recordatorios de pago con estado `pending`, `paid` o `dismissed`.
 - Notificaciones en la app y Web Push, con un cron diario.
 - Fuera de alcance: correo, SMS, recordatorios recurrentes, edición masiva.
@@ -31,22 +33,38 @@ No se envían por correo: Resend sin dominio propio solo entrega a `mrezk84@gmai
 5. Siempre se revisan los datos antes de guardar; nada se crea sin confirmación.
 
 ## Formatos de QR
-| Formato | Reconocimiento | Campos que se extraen |
-|---|---|---|
-| **CFE de la DGI** (e-Ticket, e-Factura y notas) | URL del portal de la DGI (`https://www.efactura.dgi.gub.uy/consultaQR/cfe?...`) con los datos separados por comas | RUT del emisor, tipo de CFE (101 e-Ticket, 111 e-Factura, etc.), serie, número, monto total, fecha de emisión (`dd/mm/aaaa`) y código de seguridad → descripción "e-Ticket A-1234" |
-| **EMVCo** (pagos interoperables: Mercado Pago, Prex y similares) | Cadena TLV que empieza por `000201` | tag 54 = monto, tag 59 = comercio, tag 53 = moneda (`858` = UYU, `840` = USD) |
-| **Texto libre** | Cualquier otro texto | Mismas expresiones regulares que el OCR (`ocr_service._parse_receipt_text`) |
+El parser (`services/qr_parser.py`) prueba en este orden y se queda con el primero que devuelve un monto:
 
-- El orden y los nombres exactos de los campos del QR de la DGI **no están verificados contra un QR real**:
-  el parser se escribe de forma tolerante y se ajusta con una muestra real (ver Salvedades).
-- El QR del CFE no trae fecha de vencimiento; para facturas de servicios (UTE, OSE, Antel, etc.) el vencimiento
-  sale del OCR ("vencimiento", "vence", "vto.") o se ingresa a mano al guardar el recordatorio.
-- **Moneda:** si el QR o el texto indican dólares (`USD`, `U$S`, tag 53 = `840`), la app avisa que el monto está en
-  otra moneda y pide confirmarlo; hoy los gastos se guardan en pesos.
+1. **Adaptadores por país** (`services/qr_countries/<iso2>.py`). Cada uno expone `matches(text)` y `parse(text)`,
+   y se registra en una lista; el primero cuyo `matches` acierta, gana.
+2. **EMVCo** (estándar internacional de pagos con QR; lo usan Mercado Pago, Prex, Pix, UPI, SEPA y otros).
+3. **URL con parámetros** (`?importe=...&fecha=...`) con nombres de campo habituales en varios idiomas.
+4. **Texto libre**, con las mismas expresiones regulares que el OCR (`ocr_service._parse_receipt_text`).
+
+| Origen | Reconocimiento | Campos que se extraen |
+|---|---|---|
+| **Uruguay: CFE de la DGI** (e-Ticket, e-Factura, notas) | URL `efactura.dgi.gub.uy/consultaQR/cfe?...` con datos separados por comas | RUT emisor, tipo de CFE, serie, número, monto, fecha `dd/mm/aaaa` → descripción "e-Ticket A-1234" |
+| **Argentina: AFIP/ARCA** | URL `afip.gob.ar/fe/qr/?p=<base64>` con un JSON | `importe`, `fecha`, `cuit`, `ptoVta`, `tipoCmp`, `nroCmp` |
+| **EMVCo** | Cadena TLV que empieza por `000201` | tag 54 = monto, tag 59 = comercio, tag 53 = moneda ISO 4217 numérica |
+| **Texto libre** | Cualquier otro texto | monto, fecha, comercio |
+
+- Los formatos de Uruguay y Argentina **no están verificados contra un QR real**: los adaptadores se escriben de forma
+  tolerante y se ajustan con muestras reales (ver Salvedades).
+- Para otro país basta un archivo nuevo en `qr_countries/` con sus tests; si no hay adaptador, la persona sigue
+  teniendo EMVCo, URL con parámetros y texto libre.
+- **Fechas:** cada adaptador entrega la fecha ya en ISO (`aaaa-mm-dd`). El texto libre y el OCR interpretan
+  `dd/mm/aaaa` salvo que el perfil indique el orden `mm/dd/aaaa`.
+- **Vencimiento:** la mayoría de los QR fiscales no traen vencimiento. Sale del OCR ("vencimiento", "vence", "vto.",
+  "due date", "expires") o se ingresa a mano al guardar el recordatorio.
+- **Moneda:** el resultado incluye `currency` (ISO 4217, p. ej. `UYU`) cuando el QR o el texto la indican. Si difiere de
+  la moneda del perfil, la app avisa y pide confirmar el monto antes de guardar; los gastos se guardan en la moneda del perfil.
 
 Un QR ilegible o sin monto devuelve error 422 y la app pasa al OCR.
 
 ## Modelo de datos
+- **Perfil (`users`):** columnas nuevas `country` (ISO 3166-1 alfa-2), `currency` (ISO 4217) y `timezone` (IANA),
+  con valores por defecto tomados del navegador (`Intl`) la primera vez y editables en el perfil. Hoy la app asume
+  pesos y huso de Argentina; estas columnas lo vuelven configurable. Si faltan, se usa `UYU` / `America/Montevideo`.
 - **`payment_reminders`:** `id`, `user_id`, `description`, `amount`, `category`, `due_date`,
   `source` (`ocr` | `qr` | `manual`), `status` (`pending` | `paid` | `dismissed`), `expense_id` (nullable),
   `last_notified_kind`, `last_notified_on`, `created_at`.
@@ -75,9 +93,13 @@ Un QR ilegible o sin monto devuelve error 422 y la app pasa al OCR.
 | `overdue` | Vencido y sigue pendiente | "Vencida: Edenor · $58.000" |
 | `payment_registered` | Gasto creado con `from_scan` | "Pago registrado: $58.000 en Edenor · Total del mes: $412.000" |
 
-- El cron corre **una vez al día** (11:00 UTC = 08:00 en Montevideo, `backend/vercel.json`).
+Los montos se formatean con la moneda y el idioma del perfil (`Intl.NumberFormat` en el frontend; el backend guarda
+el texto ya formateado con la misma moneda). Los textos de ejemplo usan pesos.
+
+- El cron corre **una vez al día** (11:00 UTC, `backend/vercel.json`; es la misma hora para todos, así que el aviso llega a primera hora en Sudamérica y más tarde o antes en otras regiones).
 - Un recordatorio no se notifica dos veces el mismo día con el mismo tipo (`last_notified_kind` + `last_notified_on`),
   así que ejecutar el cron dos veces no duplica avisos.
+- «Hoy» y «faltan N días» se calculan con la **zona horaria de cada persona** (`users.timezone`).
 - `overdue` se avisa una sola vez; después solo se ve en el panel.
 - Toda notificación se guarda en la app; el Web Push se envía además si hay suscripciones.
   Si el envío devuelve 404 o 410, esa suscripción se borra.
@@ -93,9 +115,11 @@ Usa los tokens de [../design/tokens.md](../design/tokens.md), iconos Phosphor y 
 - **Service worker** `public/sw.js`: muestra la notificación y, al pulsarla, abre o enfoca la app en `link`.
 
 ## Criterios de aceptación
-- Un QR de CFE (DGI) con vencimiento futuro crea un recordatorio; uno ya pagado crea el gasto y la notificación con el monto.
+- Un QR de cualquier adaptador instalado (hoy Uruguay y Argentina) con vencimiento futuro crea un recordatorio; uno ya pagado crea el gasto y la notificación con el monto.
 - Pagar un recordatorio crea el gasto y lo marca como `paid`.
 - El cron sin secreto responde 401; con secreto, notifica según la tabla y no duplica.
+- Con el perfil en otro país y moneda, los montos, las fechas y el «hoy» del cron respetan ese perfil.
+- Un QR EMVCo de cualquier país se lee aunque no exista adaptador para él.
 - Una persona no puede leer ni modificar recordatorios o notificaciones de otra.
 - Contraste ≥ 4,5:1 y objetivos táctiles ≥ 44 px; la campana es operable con teclado.
 - Los tests nuevos (backend y frontend) pasan en la CI.
@@ -105,8 +129,10 @@ Usa los tokens de [../design/tokens.md](../design/tokens.md), iconos Phosphor y 
   interfiere con la detección de FastAPI, el plan B es un workflow de GitHub Actions con `schedule` que llame al endpoint.
 - **iPhone:** Web Push solo funciona con la app instalada en la pantalla de inicio (iOS 16.4 o superior).
   En escritorio y Android funciona desde el navegador.
-- **Muestra real pendiente:** hace falta al menos un QR real de e-Ticket/e-Factura uruguayo (texto del QR o foto)
-  para fijar el formato de la DGI en los tests de `test_qr_parser.py`.
+- **Muestras reales pendientes:** hace falta al menos un QR real de e-Ticket/e-Factura uruguayo y uno argentino
+  (texto del QR o foto) para fijar sus formatos en los tests de `test_qr_parser.py`.
+- **Cron único:** al ser un solo horario diario, no se puede avisar a cada persona a su hora local. Si hiciera falta,
+  se pasa a un cron más frecuente (requiere plan de pago en Vercel o un workflow de GitHub Actions).
 - **Cámara y QR:** la lectura es por foto (`jsQR`), no por vídeo en vivo; en el móvil `accept="image/*"` ya ofrece la cámara.
 - **Claves y secretos:** `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` y `CRON_SECRET` se cargan en Vercel
   (proyecto `control-gastos-api`); hay que redesplegar sin caché tras añadirlas.
