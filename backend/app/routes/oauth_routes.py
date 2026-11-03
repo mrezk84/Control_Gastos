@@ -21,13 +21,15 @@ from sqlalchemy.orm import Session
 from .. import models
 from ..auth.utils import SECRET_KEY, create_access_token
 from ..database import get_db
-from ..frontend_url import primary_frontend_url
+from ..frontend_url import primary_frontend_url, with_scheme
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["OAuth"])
 
-BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+def backend_url() -> str:
+    """URL pública del backend, con esquema y sin barra final (se lee al usarla: así una corrección en Vercel basta)."""
+    return with_scheme(os.getenv("BACKEND_URL") or "http://localhost:8000")
 
 PROVIDERS = {
     "google": {
@@ -52,7 +54,7 @@ PROVIDERS = {
 def _redirect_uri(provider: str) -> str:
     # GOOGLE_REDIRECT_URI / MICROSOFT_REDIRECT_URI tienen prioridad si están definidas
     explicit = os.getenv(f"{provider.upper()}_REDIRECT_URI")
-    return explicit or f"{BACKEND_URL.rstrip('/')}/auth/{provider}/callback"
+    return with_scheme(explicit) if explicit else f"{backend_url()}/auth/{provider}/callback"
 
 
 def _make_state(provider: str) -> str:
