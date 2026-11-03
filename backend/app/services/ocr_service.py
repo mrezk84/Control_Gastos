@@ -9,6 +9,8 @@ import httpx
 from PIL import Image
 import pdfplumber
 
+from .text_utils import extract_due_date
+
 # OCR.space API key (gratis en https://ocr.space/ocrapi/freekey). Sin ella no se puede escanear imágenes.
 OCR_API_KEY = os.getenv("OCR_SPACE_API_KEY", "")
 
@@ -71,6 +73,7 @@ class OCRService:
             "merchant": None,
             "amount": None,
             "date": None,
+            "due_date": extract_due_date(text),
             "description": None,
             "confidence": 0.0
         }

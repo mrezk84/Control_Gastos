@@ -5,6 +5,7 @@ from ..database import get_db
 from .. import schemas, models, crud
 from ..auth.utils import get_current_user
 from datetime import date
+from ..services.notify import notify, format_money, month_total, user_currency
 from typing import Optional
 from dateutil import parser as date_parser
 import csv
@@ -20,7 +21,16 @@ def create_expense(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    return crud.create_expense(db, expense, current_user.id)
+    created = crud.create_expense(db, expense, current_user.id)
+    if expense.from_scan and created:
+        cur = user_currency(current_user)
+        notify(
+            db, current_user.id, "payment_registered", "Pago registrado",
+            f"{format_money(created.amount, cur)} en {created.description} · "
+            f"Total del mes: {format_money(month_total(db, current_user.id, created.date), cur)}",
+            link="/expenses",
+        )
+    return created
 
 @router.get("/", response_model=list[schemas.Expense])
 def get_expenses(

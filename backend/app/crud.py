@@ -102,7 +102,7 @@ def create_expense(
         Exception: If database operation fails
     """
     try:
-        db_expense = models.Expense(**expense.model_dump(), user_id=user_id)
+        db_expense = models.Expense(**expense.model_dump(exclude={"from_scan"}), user_id=user_id)
         db.add(db_expense)
         db.commit()
         db.refresh(db_expense)

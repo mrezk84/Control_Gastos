@@ -4,6 +4,7 @@ from ..database import get_db
 from .. import schemas, models
 from ..auth.utils import get_current_user
 from ..services.ocr_service import OCRService
+from ..services.qr_parser import parse_qr
 from pathlib import Path
 
 router = APIRouter(tags=["Receipts"])
@@ -56,11 +57,32 @@ async def scan_receipt(
             "description": result.get("description"),
             "amount": result.get("amount"),
             "date": result.get("date"),
+            "due_date": result.get("due_date"),
             "merchant": result.get("merchant"),
             "raw_text": result.get("raw_text"),
         },
         message="Datos extraídos correctamente",
         confidence=result.get("confidence", 0)
+    )
+
+
+@router.post("/qr", response_model=schemas.ReceiptScanResult)
+def scan_qr(
+    payload: schemas.QRScanRequest,
+    current_user: models.User = Depends(get_current_user)
+):
+    """Interpreta el texto de un QR (adaptadores por país, EMVCo, URL con parámetros o texto libre)."""
+    if len(payload.text) > 4000:
+        raise HTTPException(status_code=422, detail="El contenido del QR es demasiado largo")
+    result = parse_qr(payload.text)
+    if not result:
+        raise HTTPException(status_code=422, detail="No se pudo leer un monto en el QR")
+    return schemas.ReceiptScanResult(
+        success=True,
+        data={k: result.get(k) for k in
+              ("description", "amount", "date", "due_date", "merchant", "currency", "source", "raw_text")},
+        message="Datos extraídos del QR",
+        confidence=100 if result["source"].startswith("country:") or result["source"] == "emvco" else 60,
     )
 
 
