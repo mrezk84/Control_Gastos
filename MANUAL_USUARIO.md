@@ -81,6 +81,14 @@ Debajo hay cuatro indicadores:
 | **Transacciones** | Cuántos gastos tienes registrados |
 | **Categorías** | Cuántas de las 10 categorías usas |
 
+### Facturas por vencer y notificaciones
+
+- **Escanear:** el botón **Escanear** del panel lee una foto o PDF de una factura, o el código **QR** de la factura o del comprobante de pago. Revisa siempre los datos antes de guardar.
+- **Factura por vencer:** si la factura vence más adelante, el panel pregunta qué hacer. **Guardar recordatorio** la añade a **Pendientes de pago**; **Ya la pagué** deja la fecha de hoy para registrarla como gasto.
+- **Pendientes de pago:** aparece en el Dashboard bajo el semáforo. **Pagar** crea el gasto de hoy; **Descartar** quita el recordatorio.
+- **Campana:** en la barra superior, con los avisos (por vencer, vence hoy, vencida y pagos registrados). Allí puedes **activar las notificaciones del navegador** para recibirlas aunque la app esté cerrada. En iPhone solo funcionan si instalas la app en la pantalla de inicio.
+- Los avisos de vencimiento se envían una vez al día, a primera hora.
+
 ### 2.3 Gráficos
 
 - **Por categoría**: barras punteadas de tus seis categorías con más gasto. Sobre cada barra ves su monto y debajo su porcentaje del total. La escala se indica arriba a la derecha.

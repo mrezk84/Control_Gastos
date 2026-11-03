@@ -6,6 +6,11 @@ export const AppDataContext = createContext({
   expenses: [],
   loading: true,
   refresh: () => {},
+  notifications: [],
+  unreadCount: 0,
+  reminders: [],
+  refreshNotifications: () => {},
+  refreshReminders: () => {},
 });
 
 export const useAppData = () => useContext(AppDataContext);

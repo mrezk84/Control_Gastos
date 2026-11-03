@@ -1,13 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import NotificationBell from '../caja/NotificationBell';
 import Ticker from '../caja/Ticker';
 import QuickAddExpense from '../QuickAddExpense';
 import { FloatingActionButton } from '../ui/FloatingActionButton';
 import { AppDataContext } from '../../context/ExpensesContext';
-import { getCurrentUser, getExpenses, logout } from '../../services/api';
+import { getCurrentUser, getExpenses, getNotifications, getReminders, logout, updateProfile } from '../../services/api';
 import { useTheme } from '../../hooks/useTheme';
 import { buildDashboard } from '../../utils/dashboardStats';
 import { formatPesos } from '../../utils/formatters';
+import { missingRegional } from '../../utils/regional';
 import { EXPENSE_CREATED_EVENT, FOCUS_REGISTER_EVENT } from '../../utils/events';
 import logger from '../../utils/logger';
 
@@ -22,6 +24,8 @@ const NAV_ITEMS = [
 function AppLayout({ children }) {
   const [user, setUser] = useState(null);
   const [expenses, setExpenses] = useState([]);
+  const [notifications, setNotifications] = useState({ unread_count: 0, notifications: [] });
+  const [reminders, setReminders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -39,6 +43,29 @@ function AppLayout({ children }) {
       logger.error('Error fetching expenses', err);
     }
   }, []);
+
+  // Avisos y recordatorios: errores no críticos (el resto de la app funciona sin ellos)
+  const refreshNotifications = useCallback(async () => {
+    try {
+      setNotifications((await getNotifications()).data);
+    } catch (err) {
+      logger.error('Error fetching notifications', err);
+    }
+  }, []);
+
+  const refreshReminders = useCallback(async () => {
+    try {
+      setReminders((await getReminders('pending')).data);
+    } catch (err) {
+      logger.error('Error fetching reminders', err);
+    }
+  }, []);
+
+  const refreshAll = useCallback(() => {
+    refresh();
+    refreshNotifications();
+    refreshReminders();
+  }, [refresh, refreshNotifications, refreshReminders]);
 
   useEffect(() => {
     let cancelled = false;
@@ -63,11 +90,39 @@ function AppLayout({ children }) {
     };
   }, [navigate, refresh]);
 
+  // Con la sesión cargada: avisos y recordatorios al entrar y cada vez que la pestaña vuelve a primer plano
+  const signedIn = Boolean(user);
+  useEffect(() => {
+    if (!signedIn) return undefined;
+    refreshNotifications();
+    refreshReminders();
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        refreshNotifications();
+        refreshReminders();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onVisible);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onVisible);
+    };
+  }, [signedIn, refreshNotifications, refreshReminders]);
+
+  // Perfil regional: la primera vez se rellena con lo que detecta el navegador (sin pisar lo ya elegido)
+  useEffect(() => {
+    if (!user) return;
+    const missing = missingRegional(user);
+    if (Object.keys(missing).length === 0) return;
+    updateProfile(missing).then((res) => setUser(res.data)).catch(() => {});
+  }, [user]);
+
   // Los gastos creados desde cualquier lugar (modal de gasto rápido) refrescan los datos compartidos
   useEffect(() => {
-    window.addEventListener(EXPENSE_CREATED_EVENT, refresh);
-    return () => window.removeEventListener(EXPENSE_CREATED_EVENT, refresh);
-  }, [refresh]);
+    window.addEventListener(EXPENSE_CREATED_EVENT, refreshAll);
+    return () => window.removeEventListener(EXPENSE_CREATED_EVENT, refreshAll);
+  }, [refreshAll]);
 
   // Cmd/Ctrl+N: en el panel enfoca el formulario; en el resto abre el gasto rápido
   useEffect(() => {
@@ -120,8 +175,18 @@ function AppLayout({ children }) {
   }, []);
 
   const contextValue = useMemo(
-    () => ({ user, expenses, loading, refresh }),
-    [user, expenses, loading, refresh]
+    () => ({
+      user,
+      expenses,
+      loading,
+      refresh: refreshAll,
+      notifications: notifications.notifications,
+      unreadCount: notifications.unread_count,
+      reminders,
+      refreshNotifications,
+      refreshReminders,
+    }),
+    [user, expenses, loading, refreshAll, notifications, reminders, refreshNotifications, refreshReminders]
   );
 
   if (loading) {
@@ -154,6 +219,7 @@ function AppLayout({ children }) {
           </nav>
 
           <div className="cj-actions">
+            <NotificationBell />
             <div className="cj-seg" role="group" aria-label="Tema">
               <button type="button" aria-pressed={theme === 'dark'} onClick={() => setTheme('dark')}>
                 <i className="ph ph-moon" aria-hidden="true" />Oscuro

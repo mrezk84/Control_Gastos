@@ -29,7 +29,7 @@ function SaldoCard({ monthTotal }) {
   };
 
   return (
-    <section className="cj-area-sema cj-sema" aria-label="Saldo del mes">
+    <section className="cj-sema" aria-label="Saldo del mes">
       <div className="cj-lamps" role="img" aria-label={level.label}>
         {LEVELS.map((l, i) => (
           <span key={l.label} className={i === status.level ? 'is-on' : ''} style={{ '--c': l.color }} />

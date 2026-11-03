@@ -159,4 +159,27 @@ export const getReceiptFile = (receiptId) => {
   return api.get(`/receipts/${receiptId}/file`, { responseType: 'blob' });
 };
 
+// QR: el texto leído en el navegador se interpreta en el servidor (adaptadores por país, EMVCo, URL, texto)
+export const scanQr = (text) => api.post('/receipts/qr', { text });
+
+// Perfil regional (país, moneda, zona horaria)
+export const updateProfile = (profile) => api.put('/auth/me', profile);
+
+// Recordatorios de pago
+export const getReminders = (status = 'pending') => api.get('/reminders/', { params: { status } });
+export const createReminder = (reminder) => api.post('/reminders/', reminder);
+export const updateReminder = (id, changes) => api.put(`/reminders/${id}`, changes);
+export const deleteReminder = (id) => api.delete(`/reminders/${id}`);
+export const payReminder = (id) => api.post(`/reminders/${id}/pay`);
+
+// Notificaciones
+export const getNotifications = () => api.get('/notifications/');
+export const markNotificationRead = (id) => api.post(`/notifications/${id}/read`);
+export const markAllNotificationsRead = () => api.post('/notifications/read-all');
+
+// Web Push
+export const getVapidKey = () => api.get('/push/vapid-key');
+export const pushSubscribe = (subscription) => api.post('/push/subscribe', subscription);
+export const pushUnsubscribe = (endpoint) => api.delete('/push/subscribe', { data: { endpoint } });
+
 export default api;

@@ -360,6 +360,64 @@
 .cj-login-oauth button { height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; }
 .cj-login-alt { margin: 0; text-align: center; font-size: 14px; color: var(--mu); }
 
+/* Campana de notificaciones */
+.cj-bell { position: relative; }
+.cj-bell-btn {
+  position: relative; width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--raised); color: var(--tx);
+  display: grid; place-items: center; font-size: 20px; cursor: pointer; box-shadow: 0 3px 0 var(--key);
+}
+.cj-bell-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--key); }
+.cj-bell-badge {
+  position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px;
+  background: var(--acc); color: var(--ink-on-acc); border: 2px solid var(--panel);
+  font: 600 11px/16px 'Geist Mono Variable', 'Geist Mono', monospace; text-align: center;
+}
+.cj-bell-panel {
+  position: absolute; right: 0; top: 54px; z-index: 30; width: min(380px, calc(100vw - 32px)); max-height: min(70vh, 520px);
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 3px 0 var(--key);
+}
+.cj-bell-head, .cj-bell-foot { padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.cj-bell-head { border-bottom: 1px solid var(--line); font: 11px/1.2 'Geist Mono Variable', 'Geist Mono', monospace; letter-spacing: 0.08em; color: var(--mu); }
+.cj-bell-foot { border-top: 1px solid var(--line); }
+.cj-link-btn { border: 0; background: none; padding: 6px 2px; cursor: pointer; font-size: 12.5px; font-weight: 500; color: var(--acct); }
+.cj-link-btn:hover { text-decoration: underline; }
+.cj-bell-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; }
+.cj-bell-item {
+  width: 100%; display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border: 0; border-bottom: 1px solid var(--line);
+  background: none; text-align: left; cursor: pointer; min-height: 44px;
+}
+.cj-bell-item:hover { background: var(--raised); }
+.cj-bell-item > i { font-size: 20px; color: var(--mu); margin-top: 1px; }
+.cj-bell-item.is-unread { background: var(--accsoft); }
+.cj-bell-item.is-unread > i { color: var(--acct); }
+.cj-bell-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.cj-bell-text b { font-weight: 600; font-size: 13.5px; }
+.cj-bell-text span { color: var(--mu); overflow-wrap: anywhere; }
+.cj-bell-time { font: 11px/1.2 'Geist Mono Variable', 'Geist Mono', monospace; color: var(--mu); white-space: nowrap; padding-top: 2px; }
+.cj-bell-push { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.cj-bell-note { font-size: 12.5px; color: var(--mu); line-height: 1.4; }
+
+/* Pendientes de pago y aviso de factura por vencer */
+.cj-stackcol { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.cj-pending-list { list-style: none; margin: 0; padding: 0; }
+.cj-pending-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.cj-pending-row:last-child { border-bottom: 0; }
+.cj-pending-due { font: 11.5px/1.2 'Geist Mono Variable', 'Geist Mono', monospace; letter-spacing: 0.04em; color: var(--mu); }
+.cj-pending-due.is-warn { color: var(--warn); }
+.cj-pending-due.is-bad { color: var(--bad); }
+.cj-pending-actions { display: flex; gap: 8px; margin-left: auto; }
+.cj-pending-actions .cj-btn, .cj-pending-actions .cj-btn-secondary { min-height: 44px; padding-inline: 14px; }
+.cj-due {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 12px 14px; border-radius: 12px;
+  border: 1px solid var(--acct); background: var(--accsoft);
+}
+.cj-due > i { font-size: 22px; color: var(--acct); }
+.cj-due-text { flex: 1 1 160px; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.cj-due-text span { color: var(--mu); }
+.cj-due-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.cj-due-actions .cj-btn, .cj-due-actions .cj-btn-secondary { min-height: 44px; padding-inline: 14px; }
+
 /* Historial */
 .cj-gh { display: flex; justify-content: space-between; padding: 12px 0 8px; border-bottom: 1px solid var(--line); font: 11px/1.2 'Geist Mono Variable', 'Geist Mono', monospace; letter-spacing: 0.08em; color: var(--mu); }
 .cj-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
@@ -503,6 +561,8 @@
   .cj-nav::-webkit-scrollbar { display: none; }
   .cj-nav a { flex-shrink: 0; min-height: 44px; padding: 0 14px; border-radius: 11px; border: 1px solid var(--line); white-space: nowrap; }
   .cj-hero-chart { border-left: 0; padding-left: 0; }
+  .cj-bell { position: static; }
+  .cj-bell-panel { position: fixed; left: 16px; right: 16px; top: 72px; width: auto; }
 }
 @media (max-width: 479px) {
   .cj-catbars { height: 200px; }

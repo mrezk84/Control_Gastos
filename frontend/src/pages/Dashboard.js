@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import RegisterPanel from '../components/caja/RegisterPanel';
+import PendingPayments from '../components/caja/PendingPayments';
 import SaldoCard from '../components/caja/SaldoCard';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { useToast } from '../components/ui/ToastContainer';
@@ -88,7 +89,10 @@ function Dashboard() {
         </div>
       </section>
 
-      <SaldoCard monthTotal={month.total} />
+      <div className="cj-area-sema cj-stackcol">
+        <SaldoCard monthTotal={month.total} />
+        <PendingPayments />
+      </div>
 
       <div className="cj-area-kpi cj-kpis">
         <Kpi icon="chart-bar" label="Promedio" value={formatPesos(data.average)} sub="por transacción" />
