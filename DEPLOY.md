@@ -59,6 +59,12 @@ psql "$DATABASE_URL" -f datos.sql
    | `RESEND_API_KEY`, `EMAIL_FROM` | correo de recuperación (opcional) |
    | `OCR_SPACE_API_KEY` | escaneo de recibos (opcional) |
    | `GOOGLE_CLIENT_ID/SECRET`, `MICROSOFT_CLIENT_ID/SECRET` | login social (opcional) |
+   | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | notificaciones del navegador (opcional). Par de claves: `npx web-push generate-vapid-keys`; `VAPID_SUBJECT` = `mailto:` con tu correo |
+   | `CRON_SECRET` | protege el aviso diario de recordatorios: `openssl rand -hex 32`. Vercel lo envía solo como `Authorization: Bearer ...` |
+
+   El aviso diario de vencimientos lo ejecuta Vercel Cron (`backend/vercel.json`, 11:00 UTC). Para probarlo a mano:
+   `curl -H "Authorization: Bearer $CRON_SECRET" https://TU-API.vercel.app/cron/reminders` → `{"checked":N,"notified":M}`.
+   Si `backend/vercel.json` llegara a interferir con el despliegue de FastAPI, bórralo y usa un workflow de GitHub Actions con `schedule` que haga ese mismo `curl`.
 
    > **Vercel aplica las variables solo a los despliegues nuevos.** Después de crear o cambiar una, ve a *Deployments → ⋯ → Redeploy*
    > (desmarca *Use existing Build Cache*). Sin eso, el cambio no surte efecto.

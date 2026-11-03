@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .routes import expenses, auth, budgets, oauth
-from .routes import receipts, reminders, notifications
+from .routes import receipts, reminders, notifications, push, cron
 from .database import Base, engine
 from .frontend_url import frontend_urls
 from dotenv import load_dotenv
@@ -41,6 +41,8 @@ app.include_router(receipts, prefix="/receipts")
 app.include_router(budgets, prefix="/budgets")
 app.include_router(reminders, prefix="/reminders")
 app.include_router(notifications, prefix="/notifications")
+app.include_router(push, prefix="/push")
+app.include_router(cron, prefix="/cron")
 
 @app.get("/")
 def root():

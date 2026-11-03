@@ -1,6 +1,7 @@
-"""Notificaciones dentro de la app y utilidades de perfil (moneda, huso horario).
+"""Notificaciones (en la app y Web Push) y utilidades de perfil (moneda, huso horario).
 
-El envío de Web Push se añade en el PR siguiente: notify() ya es el único punto por donde pasan los avisos.
+notify() es el único punto por donde pasan los avisos: guarda la notificación y, si hay claves VAPID y
+suscripciones, la envía también al navegador.
 """
 from datetime import date, datetime
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -9,6 +10,7 @@ from sqlalchemy import extract, func
 from sqlalchemy.orm import Session
 
 from .. import models
+from .push import send_push
 
 DEFAULT_CURRENCY = "UYU"
 DEFAULT_TIMEZONE = "America/Montevideo"
@@ -58,4 +60,8 @@ def notify(db: Session, user_id: int, kind: str, title: str, body: str, link: st
     db.add(n)
     db.commit()
     db.refresh(n)
+    try:
+        send_push(db, user_id, title, body, link)
+    except Exception:  # el push es un extra: nunca debe romper el registro del gasto ni el cron
+        db.rollback()
     return n
