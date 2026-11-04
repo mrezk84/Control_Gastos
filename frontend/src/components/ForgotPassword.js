@@ -1,83 +1,88 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { requestPasswordReset } from '../services/api';
+import AuthShell from './auth/AuthShell';
 
+/** Recuperar contraseña: mismo marco «Caja registradora» que el inicio de sesión. */
 function ForgotPassword() {
-    const [email, setEmail] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
-        setSuccess('');
-        if (!email.trim()) {
-            setError('Ingresá tu email para recuperar tu contraseña');
-            return;
-        }
-        setLoading(true);
-        try {
-            await requestPasswordReset(email);
-            setSuccess('✅ Si el correo está registrado, te enviamos un enlace para restablecer tu contraseña. Revisá tu bandeja de entrada.');
-        } catch (err) {
-            if (!err?.response) {
-                setError('🔌 No se pudo conectar al servidor. Asegurate de que el backend esté corriendo.');
-            } else {
-                setError('Error al procesar la solicitud. Intentá de nuevo.');
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (loading) return;
+    setError('');
+    setSuccess('');
+    if (!email.trim()) {
+      setError('Escribe tu correo para recuperar tu contraseña.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await requestPasswordReset(email);
+      setSuccess('Si el correo está registrado, te enviamos un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada.');
+    } catch (err) {
+      setError(
+        err?.response
+          ? 'No se pudo procesar la solicitud. Inténtalo de nuevo.'
+          : 'No se pudo conectar con el servidor. Inténtalo de nuevo en un momento.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return (
-        <div className="auth-page">
-            <div className="animated-bg" />
-            <div className="auth-container">
-                <div className="auth-card">
-                    <div className="auth-logo">
-                        <div className="auth-logo-icon">🔑</div>
-                    </div>
-                    <h1 className="auth-title">Recuperar Contraseña</h1>
-                    <p className="auth-subtitle">Ingresá tu email y te enviamos un enlace para restablecer tu contraseña</p>
-
-                    {error && <div className="auth-alert">{error}</div>}
-                    {success && (
-                        <div className="auth-alert" style={{
-                            background: 'rgba(67, 233, 123, 0.12)',
-                            borderColor: 'rgba(67, 233, 123, 0.3)',
-                            color: 'var(--accent-green)'
-                        }}>
-                            {success}
-                        </div>
-                    )}
-
-                    <form onSubmit={handleSubmit}>
-                        <div className="form-group-dark">
-                            <label htmlFor="reset-email">Email</label>
-                            <input
-                                id="reset-email"
-                                className="input-dark"
-                                type="email"
-                                placeholder="tu@email.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                autoComplete="email"
-                            />
-                        </div>
-                        <button className="btn-gradient" type="submit" disabled={loading}>
-                            {loading ? 'Enviando...' : 'Recuperar Contraseña'}
-                        </button>
-                    </form>
-
-                    <p className="auth-link">
-                        <Link to="/login">← Volver al login</Link>
-                    </p>
-                </div>
-            </div>
+  return (
+    <AuthShell>
+      <form className="cj-login-form" onSubmit={handleSubmit} noValidate aria-busy={loading}>
+        <div className="cj-login-head">
+          <h1>Recupera tu contraseña</h1>
+          <p className="cj-login-lede">Escribe tu correo y te enviamos un enlace para crear una nueva.</p>
         </div>
-    );
+
+        <div className="cj-login-field">
+          <label htmlFor="reset-email">Correo electrónico</label>
+          <input
+            id="reset-email"
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            autoCapitalize="none"
+            spellCheck={false}
+            placeholder="tu correo"
+            value={email}
+            onChange={(e) => { setEmail(e.target.value); if (error) setError(''); }}
+            aria-invalid={Boolean(error)}
+            aria-describedby={error ? 'forgot-error' : undefined}
+            readOnly={loading}
+          />
+        </div>
+
+        {error && (
+          <div id="forgot-error" className="cj-login-error" role="alert">
+            <i className="ph ph-warning" aria-hidden="true" />
+            <span>{error}</span>
+          </div>
+        )}
+        {success && (
+          <div className="cj-login-note" role="status">
+            <i className="ph ph-check-circle" aria-hidden="true" />
+            <span>{success}</span>
+          </div>
+        )}
+
+        <button className="cj-login-submit" type="submit" disabled={loading}>
+          {loading ? 'Enviando…' : 'Enviar enlace'}
+        </button>
+
+        <p className="cj-login-alt">
+          <Link to="/login"><i className="ph ph-arrow-left" aria-hidden="true" />Volver a iniciar sesión</Link>
+        </p>
+      </form>
+    </AuthShell>
+  );
 }
 
 export default ForgotPassword;

@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { login, setAuthToken, getOAuthUrl } from '../services/api';
 import { GoogleIcon, MicrosoftIcon } from './ui/icons';
 import AuthShell from './auth/AuthShell';
 import { validateLogin } from '../utils/authForm';
+
+const OAUTH_NAMES = { google: 'Google', microsoft: 'Microsoft' };
+const CONNECTION_ERROR = 'No se pudo conectar con el servidor. Inténtalo de nuevo en un momento.';
 
 /** Inicio de sesión: diseño «Caja registradora» (Login.dc.html de Claude Design). */
 function Login() {
@@ -12,14 +15,30 @@ function Login() {
   const [error, setError] = useState('');
   const [badField, setBadField] = useState('');
   const [loading, setLoading] = useState(false);
+  const [oauthProvider, setOauthProvider] = useState('');
+  const usernameRef = useRef(null);
+  const passwordRef = useRef(null);
   const navigate = useNavigate();
+  const busy = loading || Boolean(oauthProvider);
+
+  // Al fallar, el foco va al campo con problema para corregirlo sin buscarlo.
+  useEffect(() => {
+    if (!error || loading) return;
+    const target = badField === 'username' ? usernameRef.current : badField === 'password' ? passwordRef.current : null;
+    if (target) target.focus();
+  }, [error, badField, loading]);
+
+  const fail = (message, field = '') => {
+    setError(message);
+    setBadField(field);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (busy) return;
     const problem = validateLogin(credentials);
     if (problem) {
-      setError(problem.message);
-      setBadField(problem.field);
+      fail(problem.message, problem.field);
       return;
     }
 
@@ -31,28 +50,28 @@ function Login() {
       localStorage.setItem('token', token);
       navigate('/dashboard');
     } catch (err) {
-      setError(
-        err?.response
-          ? 'Credenciales incorrectas. Revisa tus datos.'
-          : 'No se pudo conectar con el servidor. Inténtalo de nuevo en un momento.'
-      );
-      setBadField(err?.response ? 'password' : '');
+      if (err?.response) fail('Usuario o contraseña incorrectos.', 'password');
+      else fail(CONNECTION_ERROR);
     } finally {
       setLoading(false);
     }
   };
 
   const handleOAuth = async (provider) => {
-    const name = { google: 'Google', microsoft: 'Microsoft' }[provider] || provider;
+    if (busy) return;
+    const name = OAUTH_NAMES[provider] || provider;
+    setError('');
+    setBadField('');
+    setOauthProvider(provider);
     try {
       const response = await getOAuthUrl(provider);
       window.location.href = response.data.auth_url;
     } catch (err) {
       const status = err?.response?.status;
-      if (status === 501) setError(`El acceso con ${name} aún no está configurado.`);
-      else if (!err?.response) setError('No se pudo conectar con el servidor. Inténtalo de nuevo en un momento.');
-      else setError(`Error al conectar con ${name}. Inténtalo de nuevo más tarde.`);
-      setBadField('');
+      if (status === 501) fail(`El acceso con ${name} aún no está disponible.`);
+      else if (!err?.response) fail(CONNECTION_ERROR);
+      else fail(`No se pudo abrir ${name}. Inténtalo de nuevo más tarde.`);
+      setOauthProvider('');
     }
   };
 
@@ -64,74 +83,85 @@ function Login() {
     }
   };
 
+  const describedBy = (field) => (error && badField === field ? 'login-error' : undefined);
+
   return (
     <AuthShell>
-      <form className="cj-login-form" onSubmit={handleSubmit} noValidate>
+      <form className="cj-login-form" onSubmit={handleSubmit} noValidate aria-busy={busy}>
         <div className="cj-login-head">
-          <div className="cj-eyebrow">INICIAR SESIÓN</div>
           <h1>Hola de nuevo</h1>
         </div>
 
-        <label className="cj-login-field">
-          <span>Usuario o correo electrónico</span>
+        <div className="cj-login-field">
+          <label htmlFor="login-username">Usuario o correo electrónico</label>
           <input
+            ref={usernameRef}
             id="login-username"
             type="text"
             inputMode="email"
             autoComplete="username"
             autoCapitalize="none"
             spellCheck={false}
-            placeholder="martina@correo.com"
+            placeholder="tu usuario o correo"
             value={credentials.username}
             onChange={handleInputChange('username')}
             aria-invalid={badField === 'username'}
-            disabled={loading}
+            aria-describedby={describedBy('username')}
+            readOnly={busy}
           />
-        </label>
+        </div>
 
-        <label className="cj-login-field">
-          <span className="cj-login-label-row">
-            Contraseña
-            <Link to="/forgot-password">¿La olvidaste?</Link>
-          </span>
+        <div className="cj-login-field">
+          <label htmlFor="login-password">Contraseña</label>
           <span className="cj-login-pw">
             <input
+              ref={passwordRef}
               id="login-password"
               type={showPassword ? 'text' : 'password'}
               autoComplete="current-password"
               value={credentials.password}
               onChange={handleInputChange('password')}
               aria-invalid={badField === 'password'}
-              disabled={loading}
+              aria-describedby={describedBy('password')}
+              readOnly={busy}
             />
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              aria-label="Mostrar contraseña"
+              aria-pressed={showPassword}
             >
               <i className={`ph ph-${showPassword ? 'eye-slash' : 'eye'}`} aria-hidden="true" />
             </button>
           </span>
-        </label>
+          <Link className="cj-login-forgot" to="/forgot-password">¿Olvidaste tu contraseña?</Link>
+        </div>
 
         {error && (
-          <div className="cj-login-error" role="alert">
-            <i className="ph ph-warning" aria-hidden="true" />{error}
+          <div id="login-error" className="cj-login-error" role="alert">
+            <i className="ph ph-warning" aria-hidden="true" />
+            <span>{error}</span>
           </div>
         )}
 
-        <button className="cj-login-submit" type="submit" disabled={loading}>
+        <button className="cj-login-submit" type="submit" disabled={busy}>
           {loading ? 'Entrando…' : 'Entrar'}
         </button>
 
         <div className="cj-login-or"><span>o continúa con</span></div>
         <div className="cj-login-oauth">
-          <button type="button" className="cj-btn-secondary" onClick={() => handleOAuth('google')} disabled={loading}>
-            <GoogleIcon /><span>Google</span>
-          </button>
-          <button type="button" className="cj-btn-secondary" onClick={() => handleOAuth('microsoft')} disabled={loading}>
-            <MicrosoftIcon /><span>Microsoft</span>
-          </button>
+          {['google', 'microsoft'].map((provider) => (
+            <button
+              key={provider}
+              type="button"
+              className="cj-btn-secondary"
+              onClick={() => handleOAuth(provider)}
+              disabled={busy}
+            >
+              {provider === 'google' ? <GoogleIcon /> : <MicrosoftIcon />}
+              <span>{oauthProvider === provider ? `Abriendo ${OAUTH_NAMES[provider]}…` : OAUTH_NAMES[provider]}</span>
+            </button>
+          ))}
         </div>
 
         <p className="cj-login-alt">
