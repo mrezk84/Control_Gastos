@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-03T00:00:00Z",
+  "title": "Design System: Control Gastos",
+  "extensions": {
+    "colorMeta": {
+      "copper": {
+        "role": "primary",
+        "displayName": "Cobre de caja",
+        "canonical": "oklch(0.68 0.13 58)",
+        "tonalRamp": ["oklch(0.2 0.04 55)", "oklch(0.3 0.06 55)", "oklch(0.4 0.09 54)", "oklch(0.5 0.11 56)", "oklch(0.68 0.13 58)", "oklch(0.78 0.14 58)", "oklch(0.87 0.09 60)", "oklch(0.95 0.04 62)"]
+      },
+      "graphite-bg": {
+        "role": "neutral",
+        "displayName": "Grafito de fondo",
+        "canonical": "#0e0f11",
+        "tonalRamp": ["#0b0c0d", "#0e0f11", "#16171a", "#1d1f22", "#34373b", "#575953", "#a8aaa7", "#ededea"]
+      },
+      "paper-bg": {
+        "role": "neutral",
+        "displayName": "Hueso de fondo (tema claro)",
+        "canonical": "#f1f1ec",
+        "tonalRamp": ["#141513", "#575953", "#9d9c95", "#c9c9c0", "#d9d9d1", "#e9e8e1", "#f1f1ec", "#ffffff"]
+      },
+      "ok-dark": { "role": "semantic", "displayName": "Saldo sano", "canonical": "oklch(0.8 0.17 150)" },
+      "warn-dark": { "role": "semantic", "displayName": "Saldo en alerta", "canonical": "oklch(0.87 0.16 95)" },
+      "bad-dark": { "role": "semantic", "displayName": "Saldo en rojo", "canonical": "oklch(0.7 0.19 25)" }
+    },
+    "typographyMeta": {
+      "greeting": { "displayName": "Saludo", "purpose": "Saludo del Dashboard; 42px escritorio, 28px móvil." },
+      "figure-hero": { "displayName": "Cifra hero", "purpose": "Saldo principal; Geist Mono, 64px / 46px." },
+      "display-amount": { "displayName": "Monto del visor", "purpose": "Cifra del monto en el visor del registro." },
+      "label": { "displayName": "Etiqueta", "purpose": "Metadatos, cinta y etiquetas en mayúsculas." }
+    },
+    "shadows": [
+      { "name": "key-relief", "value": "0 3px 0 var(--key)", "purpose": "Relieve de teclas y botones; baja a 0 1px 0 al presionar." },
+      { "name": "accent-relief", "value": "0 4px 0 var(--acc-edge)", "purpose": "Botón principal de envío; baja a 0 1px 0 al presionar." },
+      { "name": "display-inset", "value": "inset 0 2px 8px rgba(0,0,0,0.5)", "purpose": "Visor del monto hundido." },
+      { "name": "display-glow", "value": "0 0 18px oklch(0.78 0.14 58 / 0.35)", "purpose": "Halo de la cifra del visor (text-shadow)." }
+    ],
+    "motion": [
+      { "name": "ticker", "value": "translateX(0 → -50%) lineal infinita 40s", "purpose": "Cinta superior; se detiene con prefers-reduced-motion." },
+      { "name": "theme-transition", "value": "background .25s, color .25s", "purpose": "Cambio de tema oscuro/claro." },
+      { "name": "key-press", "value": "translateY(2px) con sombra 0 1px 0", "purpose": "Hundimiento de tecla al presionar." }
+    ],
+    "breakpoints": [
+      { "name": "tablet", "value": "1023px" },
+      { "name": "mobile", "value": "759px" },
+      { "name": "small", "value": "479px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Key Button",
+      "kind": "button",
+      "refersTo": "button-key",
+      "description": "Botón secundario con relieve de tecla.",
+      "html": "<button class=\"ds-btn-key\">Cancelar</button>",
+      "css": ".ds-btn-key { height: 52px; padding: 0 20px; border-radius: 12px; border: 1px solid #34373b; background: #1d1f22; color: #ededea; font: 600 15px 'Geist Variable', system-ui, sans-serif; cursor: pointer; box-shadow: 0 3px 0 #08090a; } .ds-btn-key:active { transform: translateY(2px); box-shadow: 0 1px 0 #08090a; } .ds-btn-key:focus-visible { outline: 3px solid oklch(0.85 0.13 215); outline-offset: 2px; }"
+    },
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Envío principal; cobre con canto sólido.",
+      "html": "<button class=\"ds-btn-primary\">Guardar gasto</button>",
+      "css": ".ds-btn-primary { height: 52px; padding: 0 24px; border-radius: 12px; border: 0; background: oklch(0.68 0.13 58); color: #0e0f11; font: 600 15px 'Geist Variable', system-ui, sans-serif; cursor: pointer; box-shadow: 0 4px 0 oklch(0.46 0.1 52); } .ds-btn-primary:active { transform: translateY(3px); box-shadow: 0 1px 0 oklch(0.46 0.1 52); } .ds-btn-primary:focus-visible { outline: 3px solid oklch(0.85 0.13 215); outline-offset: 2px; }"
+    },
+    {
+      "name": "Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Campo de texto; el borde pasa a cobre al enfocar.",
+      "html": "<input class=\"ds-field\" placeholder=\"Descripción\" />",
+      "css": ".ds-field { height: 46px; width: 100%; padding: 0 14px; border-radius: 11px; border: 1px solid #34373b; background: #1d1f22; color: #ededea; font: 15px 'Geist Variable', system-ui, sans-serif; outline: none; } .ds-field:focus { border-color: oklch(0.68 0.13 58); }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Tarjeta de contenido plana, sin sombra.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-title\">Resumen del mes</div><div class=\"ds-card-meta\">NOVIEMBRE</div></div>",
+      "css": ".ds-card { background: #16171a; border: 1px solid #34373b; border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 16px; color: #ededea; font-family: 'Geist Variable', system-ui, sans-serif; } .ds-card-title { font-size: 16px; font-weight: 600; } .ds-card-meta { font: 11px 'Geist Mono Variable', ui-monospace, monospace; letter-spacing: 0.06em; color: #a8aaa7; }"
+    },
+    {
+      "name": "Amount Display",
+      "kind": "custom",
+      "refersTo": "display",
+      "description": "Visor hundido con la cifra en cobre brillante.",
+      "html": "<div class=\"ds-display\"><div class=\"ds-display-top\">MONTO</div><div class=\"ds-display-amt\">$ 1.250,00</div></div>",
+      "css": ".ds-display { background: #0b0c0d; border: 1px solid #1a1c1e; border-radius: 14px; padding: 14px 16px 12px; display: flex; flex-direction: column; gap: 6px; box-shadow: inset 0 2px 8px rgba(0,0,0,0.5); } .ds-display-top { font: 10.5px 'Geist Mono Variable', ui-monospace, monospace; letter-spacing: 0.08em; color: #a8aaa7; } .ds-display-amt { font: 600 44px/1.1 'Geist Mono Variable', ui-monospace, monospace; letter-spacing: -0.02em; text-align: right; color: oklch(0.78 0.14 58); text-shadow: 0 0 18px oklch(0.78 0.14 58 / 0.35); }"
+    },
+    {
+      "name": "Numeric Key",
+      "kind": "custom",
+      "refersTo": "button-key",
+      "description": "Tecla del teclado numérico.",
+      "html": "<button class=\"ds-key\">7</button>",
+      "css": ".ds-key { width: 72px; height: 52px; border-radius: 12px; border: 1px solid #34373b; background: #1d1f22; color: #ededea; font: 500 19px 'Geist Mono Variable', ui-monospace, monospace; cursor: pointer; box-shadow: 0 3px 0 #08090a; } .ds-key:active { transform: translateY(2px); box-shadow: 0 1px 0 #08090a; } .ds-key:focus-visible { outline: 3px solid oklch(0.85 0.13 215); outline-offset: 2px; }"
+    },
+    {
+      "name": "Paper Receipt",
+      "kind": "custom",
+      "refersTo": "receipt",
+      "description": "Recibo de papel con borde inferior dentado.",
+      "html": "<div class=\"ds-paper\"><div class=\"ds-paper-line\"><span>Café</span><span class=\"ds-dots\"></span><b>3,50</b></div><div class=\"ds-paper-line\"><span>TOTAL</span><span class=\"ds-dots\"></span><b>3,50</b></div></div>",
+      "css": ".ds-paper { background: #e9e8e1; color: #1b1c1a; border-radius: 6px 6px 0 0; padding: 18px 20px 28px; font-family: 'Geist Mono Variable', ui-monospace, monospace; display: flex; flex-direction: column; gap: 10px; -webkit-mask: radial-gradient(circle at 6px 100%, transparent 5px, #000 5.5px) 0 0 / 12px 100% repeat-x; mask: radial-gradient(circle at 6px 100%, transparent 5px, #000 5.5px) 0 0 / 12px 100% repeat-x; } .ds-paper-line { display: flex; align-items: baseline; gap: 8px; font-size: 14px; } .ds-dots { flex: 1; border-bottom: 1px dotted #9d9c95; min-width: 16px; } .ds-paper-line b { font-weight: 600; }"
+    },
+    {
+      "name": "Nav Link",
+      "kind": "nav",
+      "refersTo": "card",
+      "description": "Enlace de navegación con estado activo.",
+      "html": "<nav class=\"ds-nav\"><a>Dashboard</a><a class=\"active\">Gastos</a></nav>",
+      "css": ".ds-nav { display: flex; gap: 4px; font-family: 'Geist Variable', system-ui, sans-serif; } .ds-nav a { font-size: 14px; font-weight: 500; padding: 8px 12px; min-height: 36px; border-radius: 10px; color: #a8aaa7; display: inline-flex; align-items: center; cursor: pointer; } .ds-nav a:hover { color: #ededea; } .ds-nav a.active { color: #ededea; background: #1d1f22; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El libro de contabilidad",
+    "overview": "Un libro mayor con un gesto de caja registradora a la entrada. La interfaz ordena cifras: el monto manda, el color nunca es la única señal, y todo lo demás se aparta. La caja registradora (visor, teclado, recibo de papel) es el momento de registrar un gasto; alrededor, el sistema es sobrio, de paneles planos y tipografía técnica.\n\nEl carácter es táctil, técnico y sobrio: una sola nota cálida (cobre) sobre grafito neutro, números en monoespaciada, teclas que se hunden. Rechaza el vidrio esmerilado, los degradados de malla y los brillos difusos del estilo \"esmeralda fintech\" anterior.",
+    "keyCharacteristics": [
+      "Un único acento (cobre); el resto es neutro más el semáforo del saldo y la paleta de categorías.",
+      "Cifras de máquina (Geist Mono) para montos, etiquetas, cinta y teclas.",
+      "Relieve sólido en lo accionable; tarjetas planas.",
+      "Dos temas (oscuro por defecto, claro) con el mismo conjunto de variables.",
+      "Cada barra o segmento lleva su valor en texto: señal redundante al color."
+    ],
+    "rules": [
+      { "name": "The One Copper Rule", "body": "El cobre es el único acento. Si algo necesita otro color de marca, el diseño está mal; los colores restantes son semáforo o categoría.", "section": "colors" },
+      { "name": "The Not-Only-Color Rule", "body": "Ninguna barra, segmento o estado depende solo del color: lleva monto, porcentaje o icono.", "section": "colors" },
+      { "name": "The Light-Text Swap Rule", "body": "En tema claro el cobre no se usa como texto; se usa Cobre de tinta.", "section": "colors" },
+      { "name": "The Machine Figures Rule", "body": "Todo monto y dato numérico va en Geist Mono; el texto corrido, en Geist.", "section": "typography" },
+      { "name": "The Raised-Actions-Only Rule", "body": "Solo lo que se pulsa tiene relieve; las tarjetas de contenido son planas.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do usar cobre solo como acento (botón principal, cinta, marca); texto cobre en claro con oklch(0.44 0.1 52).",
+      "Do poner todo monto en Geist Mono y acompañar cada barra con su valor.",
+      "Do dar relieve de 3 px solo a lo accionable y hundirlo al presionar.",
+      "Do mantener contraste de texto ≥ 4,5:1 y objetivos táctiles ≥ 44 px en móvil.",
+      "Do respetar prefers-reduced-motion y el teclado físico en el monto."
+    ],
+    "donts": [
+      "Don't usar vidrio esmerilado, degradados de malla, brillos difusos ni la paleta esmeralda del estilo anterior.",
+      "Don't introducir un segundo color de marca.",
+      "Don't usar emojis en la interfaz; iconos Phosphor (regular y duotone).",
+      "Don't sombrear las tarjetas de contenido ni depender solo del color para transmitir estado."
+    ]
+  }
+}
