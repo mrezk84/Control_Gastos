@@ -49,7 +49,7 @@ pycparser==3.12
 pydantic==2.14.2
 pydantic-core==2.50.2
 pypdfium2==5.14.0
-python-dateutil==3.0.0
+python-dateutil==4.0.0
 python-dotenv==1.2.4
 python-jose[cryptography]==3.5.0
 python-multipart==0.0.33
