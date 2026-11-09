@@ -13,9 +13,11 @@ on:
       - main
   workflow_dispatch:
 
+# Los jobs usan una imagen fija (ubuntu-24.04) y no ubuntu-latest: GitHub está migrando esa etiqueta a Ubuntu 26 y un cambio de
+# imagen no debe romper el CI sin que lo decidamos. Para actualizar, cambia las tres líneas runs-on y comprueba que el CI pase.
 jobs:
   backend-build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: backend
@@ -40,7 +42,7 @@ jobs:
         run: pytest -q
 
   frontend-build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: frontend
@@ -67,7 +69,7 @@ jobs:
 
   # Bloquea el PR si aparece un aviso de severidad alta o crítica en las dependencias de producción.
   dependency-audit:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
 
