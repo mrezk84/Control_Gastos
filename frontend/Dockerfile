@@ -1,5 +1,5 @@
-# Frontend Dockerfile for React (nginx)
-FROM node:18-alpine as build
+# Frontend Dockerfile for React (Vite)
+FROM node:22-alpine as build
 
 WORKDIR /app
 
@@ -9,7 +9,8 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci
 
-# Copy source code and public folder
+# Copy source code, public folder and Vite entry/config
+COPY index.html vite.config.mjs ./
 COPY src ./src
 COPY public ./public
 
@@ -17,7 +18,7 @@ COPY public ./public
 RUN npm run build
 
 # Production stage - use simpler approach
-FROM node:18-alpine
+FROM node:22-alpine
 
 # Install serve
 RUN npm install -g serve

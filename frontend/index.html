@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0e0f11" />
+    <meta
+      name="description"
+      content="Control de Gastos - Controla tus gastos, administra tus presupuestos y toma el control de tus finanzas personales de manera elegante y sencilla."
+    />
+    <link rel="apple-touch-icon" href="/logo192.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <title>Control de Gastos</title>
+  </head>
+  <body class="cj cj-legacy">
+    <script>
+      // Tema inicial antes de pintar (evita el destello): elección guardada o preferencia del sistema
+      (function () {
+        var t = 'dark';
+        try {
+          var s = localStorage.getItem('theme');
+          if (s === 'dark' || s === 'light') t = s;
+          else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) t = 'light';
+        } catch (e) {}
+        document.documentElement.setAttribute('data-theme', t);
+      })();
+    </script>
+    <noscript>Necesitas activar JavaScript para usar Control de Gastos.</noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

@@ -138,7 +138,7 @@ Rama `fix/auditoria-seguridad`. Pruebas del backend: 193 satisfactorias (las 109
 | 6 | Token en la URL del callback | **Corregido** | La URL solo lleva un código de un solo uso y 60 s de vida; el JWT se obtiene por `POST /auth/oauth/exchange`. |
 | 7 | Fórmulas en CSV y Excel | **Corregido** | Excel fuerza tipo texto; CSV antepone `'` a `=`, `+`, `-`, `@`, tabulación y retorno de carro; la importación revierte esa comilla para que exportar e importar no la acumule. |
 | 8 | Cuotas y procesamiento | **Corregido, con límites residuales** | Lectura acotada, importación máx. 1 MB y 5000 filas, listados con `limit`/`offset`, cuota de recibos por persona (200 y 50 MB), 40 escaneos por hora, PDF máx. 10 páginas con hilo y tiempo máximo, tope de píxeles, tope de 5 MB por petición. |
-| 9 | Dependencias | **Parcial** | Python: `python-jose` y `ecdsa` sustituidos por PyJWT (desaparecen los dos avisos). Frontend: los 69 paquetes afectados vienen de `react-scripts` y se resuelven al migrar a Vite (Fase 0 del spec de educación financiera); no se ejecutó `npm audit fix --force`. CI ahora ejecuta `pip-audit` y `npm audit` de forma informativa. |
+| 9 | Dependencias | **Corregido** | Python: `python-jose` y `ecdsa` sustituidos por PyJWT (`pip-audit` sin avisos). Frontend: se migró de Create React App a Vite y Vitest (los 69 paquetes afectados venían de `react-scripts`) y `react-router-dom` pasó a 7.x por un aviso de redirección abierta; `npm audit` queda en 0. No se ejecutó `npm audit fix --force`. CI ejecuta ambas auditorías y bloquea el PR ante avisos altos o críticos. |
 
 ### Pendiente y límites
 

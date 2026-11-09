@@ -75,9 +75,9 @@ Límites de Vercel: cuerpo de petición de 4,5 MB (por eso los recibos admiten 4
 
 ## 3. Frontend en Vercel
 1. Segundo proyecto con **Root Directory = `frontend`**. Se despliega en cada fusión a `main`.
-2. La URL del backend va en `frontend/.env.production` (`REACT_APP_API_URL`, sin barra final). Es pública, no un secreto, y Create React App la incorpora al compilar.
-   **Nunca pongas un secreto en una variable `REACT_APP_`**: todo lo que lleva ese prefijo queda a la vista de cualquiera que abra la web.
-3. ⚠️ **Una variable de Vercel con el mismo nombre tiene prioridad sobre el archivo.** Si la app apunta a un backend equivocado (por ejemplo uno antiguo), revisa *Settings → Environment Variables* del frontend y **elimina** `REACT_APP_API_URL` si existe. Si Vercel no te deja editarla o cambiarla a *Config* (le pasó al autor de esta guía), simplemente elimínala: sin ella se usa el archivo. Luego redespliega sin caché.
+2. La URL del backend va en `frontend/.env.production` (`VITE_API_URL`, sin barra final). Es pública, no un secreto, y Vite la incorpora al compilar.
+   **Nunca pongas un secreto en una variable `VITE_`**: todo lo que lleva ese prefijo queda a la vista de cualquiera que abra la web.
+3. ⚠️ **Una variable de Vercel con el mismo nombre tiene prioridad sobre el archivo.** Si la app apunta a un backend equivocado (por ejemplo uno antiguo), revisa *Settings → Environment Variables* del frontend y **elimina** `VITE_API_URL` (y la antigua `REACT_APP_API_URL`, que ya no se usa) si existe. Si Vercel no te deja editarla o cambiarla a *Config* (le pasó al autor de esta guía), simplemente elimínala: sin ella se usa el archivo. Luego redespliega sin caché.
 
 ## 4. Comprobación de punta a punta
 Sustituye las dos URLs por las tuyas. No necesitan credenciales ni crean datos.
@@ -104,7 +104,7 @@ Después, en el navegador, crea una cuenta y registra un gasto.
 |---|---|---|
 | El backend responde `500 FUNCTION_INVOCATION_FAILED` en todas las rutas | La función se cae al arrancar | Mira el motivo real en el proyecto → **Logs** (filtra por *Error*). Casos vistos: variable de entorno que falta (`SECRET_KEY`/`DATABASE_URL`), o dependencias sin fijar que cambiaron el controlador de la base (ver §6) |
 | `500` justo tras añadir variables | Se añadieron después del despliegue | *Redeploy* sin caché |
-| El formulario se queda en "Creando cuenta…" / "Iniciando sesión…" | El frontend apunta a otro backend, o el CORS lo rechaza | Comprueba el punto 1 y 2 de §4. Causa real que ocurrió: `REACT_APP_API_URL` en Vercel apuntaba a un backend antiguo |
+| El formulario se queda en "Creando cuenta…" / "Iniciando sesión…" | El frontend apunta a otro backend, o el CORS lo rechaza | Comprueba el punto 1 y 2 de §4. Causa real que ocurrió: `REACT_APP_API_URL` (nombre anterior de `VITE_API_URL`) en Vercel apuntaba a un backend antiguo |
 | El preflight (`OPTIONS`) devuelve `400` | `FRONTEND_URL` no coincide con el dominio real del frontend | Corrígela (con `https://`, sin barra final) y redespliega el backend |
 | Vercel pide iniciar sesión al abrir la web | *Vercel Authentication* activa en producción | §2 punto 3 |
 | `DEPLOYMENT_NOT_FOUND` | El nombre `*.vercel.app` no existe (o es otro proyecto) | Usa la URL exacta que muestra tu proyecto |

@@ -49,7 +49,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "22"  # Vitest 5 y Vite 8 la requieren (frontend/package.json "engines")
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
@@ -59,20 +59,15 @@ jobs:
       - name: Tests
         # TZ al oeste de UTC: es donde las fechas YYYY-MM-DD se mostraban un día antes
         env:
-          CI: true
           TZ: America/Argentina/Buenos_Aires
-        run: npm test -- --watchAll=false
+        run: npm test
 
       - name: Build
-        env:
-          CI: false
         run: npm run build
 
-  # Informativo: no bloquea el PR. Hoy el frontend (react-scripts) arrastra avisos que se resuelven al migrar
-  # a Vite (docs/specs/educacion-financiera.md, Fase 0); el informe queda visible en cada ejecución.
+  # Bloquea el PR si aparece un aviso de severidad alta o crítica en las dependencias de producción.
   dependency-audit:
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v7
 
@@ -87,7 +82,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "22"
 
       - name: npm audit (frontend)
         working-directory: frontend

@@ -48,7 +48,7 @@ npm install
 
 **Variables de entorno** (crear `.env`):
 ```env
-REACT_APP_API_URL=http://localhost:8000
+VITE_API_URL=http://localhost:8000
 ```
 
 **Ejecutar**:
@@ -66,9 +66,9 @@ cd backend
 pip install -r requirements.txt -r requirements-dev.txt
 pytest
 
-# Frontend (Jest, incluido en react-scripts)
+# Frontend (Vitest)
 cd frontend
-npm test -- --watchAll=false
+npm test
 ```
 
 ## 📸 Escaneo de Recibos
@@ -94,7 +94,7 @@ La aplicación permite escanear recibos y facturas automáticamente:
 - Passlib (bcrypt)
 
 ### Frontend
-- React 18 (Create React App)
+- React 18 con Vite (Vitest para las pruebas)
 - React Router
 - Axios
 - Chart.js (pantallas heredadas)
