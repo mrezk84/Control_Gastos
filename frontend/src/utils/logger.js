@@ -18,7 +18,7 @@ const LogLevel = {
 
 // Set log level from environment or default to INFO in production, DEBUG in development
 const currentLevel =
-  process.env.NODE_ENV === 'production' ? LogLevel.ERROR : LogLevel.DEBUG;
+  import.meta.env.PROD ? LogLevel.ERROR : LogLevel.DEBUG;
 
 const isLevelEnabled = (level) => level >= currentLevel;
 
@@ -26,7 +26,7 @@ const logger = {
   debug: (message, ...args) => {
     if (isLevelEnabled(LogLevel.DEBUG)) {
       // Only log debug in development
-      if (process.env.NODE_ENV !== 'production') {
+      if (!import.meta.env.PROD) {
         console.debug(`[DEBUG] ${message}`, ...args);
       }
     }
