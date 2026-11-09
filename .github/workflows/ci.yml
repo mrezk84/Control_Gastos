@@ -59,7 +59,7 @@ jobs:
       - name: Tests
         # TZ al oeste de UTC: es donde las fechas YYYY-MM-DD se mostraban un día antes
         env:
-          TZ: America/Argentina/Buenos_Aires
+          TZ: America/Uruguay/Montevideo
         run: npm test
 
       - name: Build
