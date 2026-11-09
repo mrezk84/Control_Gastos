@@ -10,6 +10,8 @@ web
 Personas que llevan el control de sus gastos personales. Situación principal: registran un gasto en el momento, desde el móvil, a menudo con el recibo en la mano. El análisis y la revisión (resumen del mes, categorías, tendencia) son secundarios y también ocurren en escritorio.
 
 ## Product Purpose
+Dirección en curso: evolucionar hacia una app de **educación financiera** para principiantes adultos, con un chat tutor y app móvil (Capacitor). Spec: `docs/specs/educacion-financiera.md`. Lo que sigue describe el producto actual, que sigue siendo la base.
+
 Control Gastos permite registrar, categorizar y analizar gastos personales con el mínimo de pasos, y mantener el gasto bajo control mediante presupuestos y recordatorios. Éxito: registrar un gasto en pocos toques y entender de un vistazo cómo va el mes.
 
 ## Positioning
@@ -39,6 +41,7 @@ Aplicación funcional con documentación (`README.md`, `MANUAL_USUARIO.md`, `doc
 2. El monto manda: las cifras son lo primero y nunca dependen solo del color.
 3. Escanear antes que teclear: el OCR es un camino de primera clase, no un extra.
 4. Sobriedad al servicio del dato: una interfaz tranquila que no compite con los números.
+5. Educar sin asesorar: el tutor explica conceptos con los datos de la persona, sin recomendar productos ni activos concretos.
 
 ## Accessibility & Inclusion
 Contraste de texto ≥ 4,5:1 y objetivos táctiles ≥ 44 px en móvil. Respetar `prefers-reduced-motion`. Teclado físico utilizable en el teclado numérico del monto.

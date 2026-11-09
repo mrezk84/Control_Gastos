@@ -143,3 +143,4 @@ Todo corre en capas gratuitas sin tarjeta: **Vercel** (frontend y backend), **Ne
 - [Guía de despliegue](./DEPLOY.md)
 - [Manual de Usuario](./MANUAL_USUARIO.md)
 - [Spec de diseño](./docs/design/SPEC.md)
+- [Spec de educación financiera, chat tutor y app móvil](./docs/specs/educacion-financiera.md)
