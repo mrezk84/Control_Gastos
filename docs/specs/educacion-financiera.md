@@ -40,6 +40,13 @@ concretas, pagos, escritura de datos desde el chat (el tutor solo lee), idiomas 
 | 4 | Retención (simuladores, logros, analíticas) | 2 |
 | 5 | App móvil con Capacitor | 0 (Vite); en paralelo a 2–4 |
 
+### Estado de la implementación
+- **Hecho:** Fase 0, punto 4 (limitador de intentos, PR #42) y punto 5 (Vite y Vitest, PR #43). Además, las correcciones de la
+  auditoría de seguridad (`docs/security/AUDITORIA.md`, PR #42), que cambian el acceso social, la recuperación de contraseña,
+  Web Push y las cuotas; las fases siguientes parten de ese estado.
+- **Pendiente:** Fase 0, puntos 1 a 3 (montos en `Decimal`, Alembic, recibos fuera de la base) y las fases 1 a 5.
+- **Decisiones tomadas al implementar:** el limitador usa la base de datos y no Redis; el frontend usa Vite 8 con Node 22.
+
 ## Fase 0: saneamiento técnico
 1. **Montos en `Decimal`.** `amount` pasa de `Float` a `Numeric(12,2)` en `Expense`, `Budget` y
    `PaymentReminder` (`backend/app/models.py`), con `Decimal` en `schemas.py`. El JSON sigue
@@ -49,10 +56,16 @@ concretas, pagos, escritura de datos desde el chat (el tutor solo lee), idiomas 
 3. **Recibos fuera de la base.** `ReceiptImage.content` (`LargeBinary`) pasa a almacenamiento de
    objetos (Cloudflare R2, compatible con S3). Se migran los recibos existentes y se conserva
    la lectura del campo antiguo hasta terminar.
-4. **Rate limiting distribuido.** `backend/app/rate_limiter.py` usa memoria; con varias instancias
-   no limita bien. Se pasa a Upstash Redis, manteniendo la interfaz actual. Es obligatorio antes del chat.
-5. **Frontend con Vite.** Se migra de Create React App (deprecado) a Vite. Las variables
-   `REACT_APP_*` pasan a `VITE_*`. Sin TypeScript por ahora.
+4. **Rate limiting distribuido. Hecho (PR #42).** El limitador en memoria no servía con varias instancias. Se reescribió
+   `backend/app/rate_limiter.py` sobre la base de datos (tabla `rate_limit_hits`, migración `003_seguridad.sql`) en lugar de
+   Upstash Redis: la base ya la comparten todas las instancias y no suma infraestructura. Cada intento se registra antes de
+   contarse; la API es `rate_limiter.hit(db, ámbito, identificador, límite, ventana)`. La IP del cliente solo se toma de
+   cabeceras de proxy si la infraestructura lo garantiza (Vercel o `TRUST_PROXY_HEADERS`). El chat lo reutiliza para su
+   tope por persona. Si el tráfico crece, se revisará el coste de una escritura por intento y se valorará Redis.
+5. **Frontend con Vite. Hecho (PR #43).** Se migró de Create React App (deprecado) a Vite 8, con Vitest 5 para las pruebas.
+   Los 24 componentes con JSX pasaron a `.jsx`, `src/index.js` a `src/main.jsx`, y `REACT_APP_*` a `VITE_*`
+   (`VITE_API_URL`). La carpeta de salida sigue siendo `build/`. Requiere Node 22.12 o superior (CI y Dockerfile ya lo usan).
+   Con esto `npm audit` pasó de 69 avisos a 0. Sigue sin TypeScript.
 
 ## Fase 1: MVP del chat tutor
 
@@ -97,8 +110,8 @@ rutas exigen sesión (`auth/utils.py:get_current_user`).
 ### Límites y configuración
 - Variables nuevas: `ANTHROPIC_API_KEY`, `CHAT_MODEL`, `CHAT_DAILY_LIMIT` (mensajes por persona y
   día), `CHAT_MAX_INPUT_CHARS`. Se documentan en `backend/.env.example` y en `config.py`.
-- Rate limiting por persona (Fase 0) y tope diario de mensajes; al superarlo la API responde 429
-  con un mensaje claro.
+- Rate limiting por persona con `rate_limiter.hit` (ya implementado, Fase 0) y tope diario de mensajes; al superarlo la API
+  responde 429 con un mensaje claro.
 
 ### Salvaguardas
 - Aviso visible en el panel: "Educación financiera, no asesoría profesional".
@@ -156,10 +169,12 @@ Depende de la migración a Vite (Fase 0) y puede avanzar en paralelo a las Fases
   `https://localhost` a los orígenes permitidos por CORS (`backend/app/main.py`, `frontend_url.py`).
 - **Token:** en móvil pasa de `localStorage` a `@capacitor/preferences` (o almacenamiento seguro),
   encapsulado en `utils/storage.js`; en web sigue usando `localStorage`. `services/api.js` lo consume.
-- **OAuth (Google y Microsoft):** se abre con `@capacitor/browser` y vuelve por deep link
-  `controlgastos://oauth-callback?token=…`. `routes/oauth_routes.py` elige el destino según un campo
-  `platform` incluido en el `state` firmado, de modo que se conserva la protección CSRF.
-  Universal Links y App Links quedan como mejora.
+- **OAuth (Google y Microsoft):** el flujo web ya usa un `state` aleatorio de un solo uso, PKCE con el proveedor y un código
+  de canje de 60 s atado al navegador (`OAuthFlow`, `POST /auth/oauth/exchange`; el JWT no viaja por la URL). En móvil se abre
+  con `@capacitor/browser` y vuelve por deep link `controlgastos://oauth-callback?code=…`; la app canjea el código con el
+  verificador que guardó al empezar (hoy en `sessionStorage`, `utils/oauthPkce.js`; en la app irá en su almacenamiento).
+  `routes/oauth_routes.py` elige el destino según un campo `platform` guardado en la transacción `OAuthFlow`, que se consume
+  una sola vez. Universal Links y App Links quedan como mejora.
 - **Cámara y archivos:** `@capacitor/camera` y selector nativo. La lectura de QR con `jsQR` y los
   endpoints `/receipts/scan` y `/receipts/qr` no cambian.
 - **Push nativo:** `@capacitor/push-notifications` con FCM (en iOS entrega vía APNs). Backend:
@@ -173,9 +188,12 @@ Depende de la migración a Vite (Fase 0) y puede avanzar en paralelo a las Fases
   política de privacidad pública, declaración de datos financieros en Play, capturas y fichas.
   Builds en GitHub Actions, primero en TestFlight y en prueba interna de Play.
 - **Pruebas:** manuales en un iPhone y un Android reales (login, OAuth, escaneo, push, chat) y tests
-  unitarios de `utils/storage.js` y de la elección de destino en OAuth.
+  unitarios de `utils/storage.js`, del guardado del verificador y de la elección de destino en OAuth.
 
 ## Seguridad y privacidad
+- Base ya aplicada (PR #42, `docs/security/AUDITORIA.md`): identidad social por sujeto del proveedor (sin vincular por correo),
+  recuperación de contraseña de un solo uso con revocación de sesiones, limitador de intentos, lista de hosts para Web Push,
+  neutralización de fórmulas en exportaciones y cuotas de carga. El chat y la app móvil deben respetarla.
 - Datos financieros: el tutor solo lee, siempre acotado a la persona autenticada.
 - Minimización: datos agregados al modelo; sin contenido de mensajes en logs ni en analíticas.
 - Permitir borrar conversaciones y, con la cuenta, todo el contenido asociado.
@@ -189,3 +207,4 @@ Depende de la migración a Vite (Fase 0) y puede avanzar en paralelo a las Fases
   se mueve el chat a otro servicio.
 - **Tiendas:** Apple puede rechazar un WebView sin valor nativo; conviene destacar cámara, push y chat.
 - **iOS:** compilar requiere un Mac con Xcode.
+- **Verificación de correo:** las cuentas locales aún no verifican su correo; depende de un dominio propio en Resend.

@@ -22,7 +22,7 @@ Combinación de cuatro mecanismos confirmados:
 - Login propio (usuario/email y contraseña) además de Google y Microsoft.
 
 ## Operating Context
-Uso frecuente, breve y móvil; la cámara y la subida de archivos forman parte del flujo. Backend FastAPI + PostgreSQL (Neon); frontend React (Create React App) con Chart.js. Documentación de usuario en `MANUAL_USUARIO.md`, despliegue en `DEPLOY.md`.
+Uso frecuente, breve y móvil; la cámara y la subida de archivos forman parte del flujo. Backend FastAPI + PostgreSQL (Neon); frontend React (Vite) con Chart.js. Documentación de usuario en `MANUAL_USUARIO.md`, despliegue en `DEPLOY.md`.
 
 ## Capabilities and Constraints
 - Páginas: Dashboard (con registro integrado), Gastos, Presupuestos, Analíticas, autenticación (login, registro, recuperar y restablecer contraseña).
