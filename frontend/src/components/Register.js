@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { register, getOAuthUrl } from '../services/api';
+import { startOAuthChallenge } from '../utils/oauthPkce';
 import { GoogleIcon, MicrosoftIcon } from './ui/icons';
 import AuthShell from './auth/AuthShell';
 import { passwordStrength, validateRegister } from '../utils/authForm';
@@ -66,7 +67,7 @@ function Register() {
     setBadField('');
     setOauthProvider(provider);
     try {
-      const response = await getOAuthUrl(provider);
+      const response = await getOAuthUrl(provider, await startOAuthChallenge());
       window.location.href = response.data.auth_url;
     } catch (err) {
       const status = err?.response?.status;

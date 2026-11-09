@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile, File, Form
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from ..database import get_db
-from .. import schemas, models
+from .. import schemas, models, rate_limiter
 from ..auth.utils import get_current_user
 from ..services.ocr_service import OCRService
 from ..services.qr_parser import parse_qr
@@ -12,6 +13,11 @@ router = APIRouter(tags=["Receipts"])
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".pdf"}
 # Vercel rechaza cuerpos de petición mayores a 4,5 MB
 MAX_FILE_SIZE = 4 * 1024 * 1024  # 4MB
+# Cuotas acumuladas por persona (los recibos viven en la base de datos)
+MAX_RECEIPTS_PER_USER = 200
+MAX_STORAGE_PER_USER = 50 * 1024 * 1024  # 50MB
+# Escaneos (OCR externo con cuota propia y PDF costosos) por persona y hora
+SCANS_PER_HOUR = 40
 
 
 def _validate_upload(file: UploadFile) -> str:
@@ -25,21 +31,37 @@ def _validate_upload(file: UploadFile) -> str:
 
 
 async def _read_limited(file: UploadFile) -> bytes:
-    content = await file.read()
+    content = await file.read(MAX_FILE_SIZE + 1)  # lectura acotada: no se materializa un archivo enorme
     if len(content) > MAX_FILE_SIZE:
         raise HTTPException(status_code=400, detail="Archivo demasiado grande (máx 4MB)")
     return content
 
 
+def _check_storage_quota(db: Session, user_id: int, incoming_bytes: int) -> None:
+    count, used = db.query(
+        func.count(models.ReceiptImage.id),
+        func.coalesce(func.sum(func.length(models.ReceiptImage.content)), 0),
+    ).join(models.Expense, models.Expense.id == models.ReceiptImage.expense_id).filter(
+        models.Expense.user_id == user_id
+    ).one()
+    if count >= MAX_RECEIPTS_PER_USER or used + incoming_bytes > MAX_STORAGE_PER_USER:
+        raise HTTPException(
+            status_code=413,
+            detail="Alcanzaste el límite de recibos guardados. Elimina alguno para subir otro.",
+        )
+
+
 @router.post("/scan", response_model=schemas.ReceiptScanResult)
 async def scan_receipt(
     file: UploadFile = File(...),
+    db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
     """
     Escanea una imagen o PDF de recibo y extrae datos usando OCR.
     No guarda el archivo: para conservarlo, súbelo con /receipts/upload una vez creado el gasto.
     """
+    rate_limiter.hit(db, "scan:user", current_user.id, SCANS_PER_HOUR, 60 * 60)
     file_ext = _validate_upload(file)
     content = await _read_limited(file)
 
@@ -113,6 +135,8 @@ async def upload_receipt(
             content = OCRService.prepare_image(content)
         except Exception:
             raise HTTPException(status_code=400, detail="La imagen no es válida")
+
+    _check_storage_quota(db, current_user.id, len(content))
 
     receipt = models.ReceiptImage(
         expense_id=expense_id,

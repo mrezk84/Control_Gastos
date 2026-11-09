@@ -121,6 +121,7 @@ def get_expenses(
     end_date: Optional[date] = None,
     category: Optional[str] = None,
     limit: Optional[int] = None,
+    offset: int = 0,
 ) -> List[models.Expense]:
     """
     Get expenses for a user, newest first, with optional date/category filters.
@@ -132,6 +133,7 @@ def get_expenses(
         end_date: Only expenses on/before this date
         category: Only expenses in this category
         limit: Optional limit on number of results
+        offset: Number of results to skip (with limit, for pagination)
 
     Returns:
         List of Expense objects ordered by date descending
@@ -144,7 +146,9 @@ def get_expenses(
             query = query.filter(models.Expense.date <= end_date)
         if category:
             query = query.filter(models.Expense.category == category)
-        query = query.order_by(models.Expense.date.desc())
+        query = query.order_by(models.Expense.date.desc(), models.Expense.id.desc())  # orden estable para paginar
+        if offset:
+            query = query.offset(offset)
         if limit:
             query = query.limit(limit)
         expenses = query.all()

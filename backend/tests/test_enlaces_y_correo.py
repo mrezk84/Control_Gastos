@@ -121,6 +121,6 @@ class TestUrlsSinEsquema:
         monkeypatch.setitem(oauth_routes.PROVIDERS["google"], "client_id", "id-de-prueba")
         monkeypatch.setenv("BACKEND_URL", "mi-api.vercel.app")  # sin esquema, como estaba en Vercel
         monkeypatch.delenv("GOOGLE_REDIRECT_URI", raising=False)  # un backend/.env local podría definirla
-        url = client.get("/auth/google").json()["auth_url"]
+        url = client.get("/auth/google", params={"challenge": "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"}).json()["auth_url"]
         redirect = parse_qs(urlparse(url).query)["redirect_uri"][0]
         assert redirect == "https://mi-api.vercel.app/auth/google/callback"

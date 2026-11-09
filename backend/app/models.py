@@ -17,8 +17,53 @@ class User(Base):
     country = Column(String(2), nullable=True)       # ISO 3166-1 alfa-2; si falta, UY
     currency = Column(String(3), nullable=True)      # ISO 4217; si falta, UYU
     timezone = Column(String(64), nullable=True)     # IANA; si falta, America/Montevideo
+    # Se incrementa al restablecer la contraseña: los tokens de sesión con otra versión dejan de valer
+    token_version = Column(Integer, nullable=False, default=0, server_default="0")
 
     expenses = relationship("Expense", back_populates="owner")
+
+
+class PasswordResetToken(Base):
+    """Enlace de recuperación de un solo uso. Solo se guarda el hash SHA-256 del token."""
+    __tablename__ = "password_reset_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True)
+    token_hash = Column(String(64), unique=True, index=True)
+    expires_at = Column(DateTime)
+    used_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class OAuthFlow(Base):
+    """Una transacción de acceso social: state de un solo uso + código de canje de un solo uso.
+
+    `challenge` es el SHA-256 del verificador que el navegador que inició el flujo guarda en su
+    sessionStorage; solo ese navegador puede canjear el código por una sesión.
+    """
+    __tablename__ = "oauth_flows"
+
+    id = Column(Integer, primary_key=True, index=True)
+    state_hash = Column(String(64), unique=True, index=True)
+    provider = Column(String(20))
+    challenge = Column(String(64))
+    provider_verifier = Column(String(128))  # PKCE con el proveedor (RFC 7636 / RFC 9700)
+    expires_at = Column(DateTime)
+    state_used_at = Column(DateTime, nullable=True)
+    code_hash = Column(String(64), unique=True, index=True, nullable=True)
+    code_expires_at = Column(DateTime, nullable=True)
+    code_used_at = Column(DateTime, nullable=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class RateLimitHit(Base):
+    """Un intento contado por el limitador; vive en la base para compartirse entre instancias."""
+    __tablename__ = "rate_limit_hits"
+
+    id = Column(Integer, primary_key=True, index=True)
+    key = Column(String(255), index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
 class Expense(Base):
     __tablename__ = "expenses"

@@ -67,3 +67,28 @@ jobs:
         env:
           CI: false
         run: npm run build
+
+  # Informativo: no bloquea el PR. Hoy el frontend (react-scripts) arrastra avisos que se resuelven al migrar
+  # a Vite (docs/specs/educacion-financiera.md, Fase 0); el informe queda visible en cada ejecución.
+  dependency-audit:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: pip-audit (backend)
+        run: |
+          pip install pip-audit
+          pip-audit -r backend/requirements.txt --no-deps --disable-pip
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "20"
+
+      - name: npm audit (frontend)
+        working-directory: frontend
+        run: npm audit --package-lock-only --omit=dev --audit-level=high

@@ -6,13 +6,22 @@ from .. import schemas, models, crud
 from ..auth.utils import get_current_user
 from datetime import date
 from ..services.notify import notify, format_money, month_total, user_currency
+from ..services.export_safety import neutralize_for_csv, restore_from_csv, write_text_cell
 from typing import Optional
 from dateutil import parser as date_parser
 import csv
 import io
+import math
+from itertools import islice
 from openpyxl import Workbook
 
 router = APIRouter(tags=["Expenses"])
+
+# Tope de la importación: se rechaza antes de procesar, no a mitad de camino
+MAX_IMPORT_BYTES = 1 * 1024 * 1024
+MAX_IMPORT_ROWS = 5000
+MAX_LIST_LIMIT = 5000
+MAX_AMOUNT = 1e12
 
 
 @router.post("/", response_model=schemas.Expense)
@@ -37,12 +46,15 @@ def get_expenses(
     startDate: Optional[date] = Query(None),
     endDate: Optional[date] = Query(None),
     category: Optional[str] = Query(None),
+    limit: int = Query(MAX_LIST_LIMIT, ge=1, le=MAX_LIST_LIMIT),
+    offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
     return crud.get_expenses(
         db, current_user.id,
         start_date=startDate, end_date=endDate, category=category,
+        limit=limit, offset=offset,
     )
 
 @router.put("/{expense_id}", response_model=schemas.Expense)
@@ -141,7 +153,9 @@ def export_expenses_csv(
     writer = csv.writer(output)
     writer.writerow(_EXPORT_HEADERS)
     for e in expenses:
-        writer.writerow([e.date.isoformat(), e.description, e.category, e.amount])
+        writer.writerow([
+            e.date.isoformat(), neutralize_for_csv(e.description), neutralize_for_csv(e.category), e.amount,
+        ])
 
     # BOM so Excel opens UTF-8 (accents) correctly.
     content = "﻿" + output.getvalue()
@@ -168,9 +182,11 @@ def export_expenses_excel(
     wb = Workbook()
     ws = wb.active
     ws.title = "Gastos"
-    ws.append(_EXPORT_HEADERS)
-    for e in expenses:
-        ws.append([e.date.isoformat(), e.description, e.category, e.amount])
+    for col, header in enumerate(_EXPORT_HEADERS, start=1):
+        write_text_cell(ws, 1, col, header)
+    for row, e in enumerate(expenses, start=2):
+        for col, value in enumerate([e.date.isoformat(), e.description, e.category, e.amount], start=1):
+            write_text_cell(ws, row, col, value)
 
     buffer = io.BytesIO()
     wb.save(buffer)
@@ -194,13 +210,18 @@ async def import_expenses_csv(
     Accepts the columns produced by the CSV export (Fecha, Descripción,
     Categoría, Monto) and is tolerant of common English/lowercase variants.
     """
-    raw = await file.read()
+    raw = await file.read(MAX_IMPORT_BYTES + 1)  # lectura acotada: nunca se materializa un cuerpo enorme
+    if len(raw) > MAX_IMPORT_BYTES:
+        raise HTTPException(status_code=413, detail="El archivo es demasiado grande (máx 1 MB)")
     try:
         text = raw.decode("utf-8-sig")
     except UnicodeDecodeError:
         text = raw.decode("latin-1")
 
     reader = csv.DictReader(io.StringIO(text))
+    rows = list(islice(reader, MAX_IMPORT_ROWS + 1))
+    if len(rows) > MAX_IMPORT_ROWS:
+        raise HTTPException(status_code=413, detail=f"Demasiadas filas (máx {MAX_IMPORT_ROWS} por importación)")
 
     def pick(row, *keys):
         for key in keys:
@@ -213,7 +234,7 @@ async def import_expenses_csv(
     total_rows = 0
     errors = []
 
-    for i, row in enumerate(reader, start=2):  # line 1 is the header
+    for i, row in enumerate(rows, start=2):  # line 1 is the header
         total_rows += 1
         try:
             raw_date = pick(row, "Fecha", "Date", "fecha")
@@ -226,11 +247,17 @@ async def import_expenses_csv(
 
             parsed_date = date_parser.parse(raw_date).date() if raw_date else date.today()
             amount = float(str(raw_amount).replace(",", "."))
+            if not math.isfinite(amount) or abs(amount) > MAX_AMOUNT:
+                raise ValueError("Monto fuera de rango")
+            description = restore_from_csv(str(description).strip())
+            category = restore_from_csv(str(category).strip()) if category else "Otros"
+            if len(description) > 255 or len(category) > 100:
+                raise ValueError("Descripción o categoría demasiado larga")
 
             db.add(models.Expense(
-                description=str(description).strip(),
+                description=description,
                 amount=amount,
-                category=str(category).strip() if category else "Otros",
+                category=category,
                 date=parsed_date,
                 user_id=current_user.id,
             ))

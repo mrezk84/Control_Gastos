@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from .routes import expenses, auth, budgets, oauth
 from .routes import receipts, reminders, notifications, push, cron
 from .database import Base, engine
@@ -16,6 +17,18 @@ app = FastAPI(
     description="API moderna para control de gastos personales con autenticación JWT y escaneo de recibos",
     version="2.1.0"
 )
+
+# Tope del cuerpo de cualquier petición (Vercel ya rechaza más de 4,5 MB; esto cubre otros despliegues)
+MAX_BODY_BYTES = 5 * 1024 * 1024
+
+
+@app.middleware("http")
+async def limit_body_size(request: Request, call_next):
+    declared = request.headers.get("content-length")
+    if declared and declared.isdigit() and int(declared) > MAX_BODY_BYTES:
+        return JSONResponse(status_code=413, content={"detail": "La petición es demasiado grande"})
+    return await call_next(request)
+
 
 # Configuración de CORS
 # FRONTEND_URL admite varias URLs separadas por coma (producción y previews)

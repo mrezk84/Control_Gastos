@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from datetime import date, datetime
 import datetime as dt  # alias: un campo llamado "date" sombrea el tipo "date" dentro de la clase
 from typing import Optional, List
@@ -6,9 +6,9 @@ from typing import Optional, List
 # --- Auth Schemas ---
 
 class UserCreate(BaseModel):
-    username: str
-    email: str
-    password: str
+    username: str = Field(..., max_length=150)
+    email: str = Field(..., max_length=255)
+    password: str = Field(..., max_length=128)  # el mínimo lo valida hash_password (400 con mensaje)
 
 class User(BaseModel):
     id: int

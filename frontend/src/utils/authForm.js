@@ -8,7 +8,7 @@ export function validateLogin({ username, password }) {
 }
 
 const EMAIL = /^\S+@\S+\.\S+$/;
-export const MIN_PASSWORD = 6;
+export const MIN_PASSWORD = 8;
 
 /** Fuerza de una contraseña: score 0-4 (largo ≥ 8, mayúsculas y minúsculas, número, símbolo) y su etiqueta. */
 export function passwordStrength(password) {

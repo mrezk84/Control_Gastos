@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { login, setAuthToken, getOAuthUrl } from '../services/api';
+import { startOAuthChallenge } from '../utils/oauthPkce';
 import { GoogleIcon, MicrosoftIcon } from './ui/icons';
 import AuthShell from './auth/AuthShell';
 import { validateLogin } from '../utils/authForm';
@@ -50,7 +51,8 @@ function Login() {
       localStorage.setItem('token', token);
       navigate('/dashboard');
     } catch (err) {
-      if (err?.response) fail('Usuario o contraseña incorrectos.', 'password');
+      if (err?.response?.status === 429) fail('Demasiados intentos. Espera unos minutos antes de volver a probar.');
+      else if (err?.response) fail('Usuario o contraseña incorrectos.', 'password');
       else fail(CONNECTION_ERROR);
     } finally {
       setLoading(false);
@@ -64,7 +66,7 @@ function Login() {
     setBadField('');
     setOauthProvider(provider);
     try {
-      const response = await getOAuthUrl(provider);
+      const response = await getOAuthUrl(provider, await startOAuthChallenge());
       window.location.href = response.data.auth_url;
     } catch (err) {
       const status = err?.response?.status;
