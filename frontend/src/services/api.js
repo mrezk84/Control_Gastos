@@ -56,8 +56,13 @@ export const logout = () => {
 };
 
 // OAuth
-export const getOAuthUrl = (provider) => {
-  return api.get(`/auth/${provider}`);
+export const getOAuthUrl = (provider, challenge) => {
+  return api.get(`/auth/${provider}`, { params: { challenge } });
+};
+
+// Canjea el código de un solo uso del acceso social por la sesión (exige el verificador del navegador)
+export const exchangeOAuthCode = (code, verifier) => {
+  return api.post('/auth/oauth/exchange', { code, verifier });
 };
 
 // Password Reset

@@ -37,6 +37,7 @@ describe('validación del registro', () => {
     expect(validateRegister({ ...ok, name: '  ' }).field).toBe('name');
     expect(validateRegister({ ...ok, email: 'no-es-correo' }).field).toBe('email');
     expect(validateRegister({ ...ok, password: 'abc', confirm: 'abc' }).field).toBe('password');
+    expect(validateRegister({ ...ok, password: 'abcdefg', confirm: 'abcdefg' }).field).toBe('password'); // 7 < 8
     expect(validateRegister({ ...ok, confirm: 'otra' })).toEqual({ field: 'confirm', message: 'Las contraseñas no coinciden' });
   });
 });

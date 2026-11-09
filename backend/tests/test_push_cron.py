@@ -5,8 +5,14 @@ import pytest
 
 from app.services import push as push_service
 
-SUB = {"endpoint": "https://push.example.com/abc", "keys": {"p256dh": "BPk", "auth": "sec"}}
+SUB = {"endpoint": "https://fcm.googleapis.com/fcm/send/abc", "keys": {"p256dh": "BPk", "auth": "sec"}}
 SECRETO = "secreto-del-cron"
+
+
+@pytest.fixture(autouse=True)
+def dns_publico(monkeypatch):
+    """Sin red en las pruebas: el DNS de cualquier servicio push resuelve a una dirección pública."""
+    monkeypatch.setattr(push_service, "_resolve", lambda host: ["142.250.0.1"])
 
 
 @pytest.fixture()
@@ -137,20 +143,25 @@ class TestFirmaVapid:
             status_code = 201
             ok = True
 
-        import pywebpush
-        monkeypatch.setattr(pywebpush.requests, "post", lambda *a, **k: llamadas.append((a, k)) or Resp())
+        import requests
+        monkeypatch.setattr(
+            requests.sessions.Session, "request",
+            lambda self, method, url, **k: llamadas.append((url, k)) or Resp(),
+        )
         # Suscripción con claves de navegador válidas (p256dh = punto EC, auth = 16 bytes)
         from cryptography.hazmat.primitives.asymmetric import ec
         cliente = ec.generate_private_key(ec.SECP256R1())
         p256dh = base64.urlsafe_b64encode(cliente.public_key().public_bytes(
             serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint)).decode().rstrip("=")
-        sub = {"endpoint": "https://push.example.com/real", "keys": {
+        sub = {"endpoint": "https://fcm.googleapis.com/fcm/send/real", "keys": {
             "p256dh": p256dh, "auth": base64.urlsafe_b64encode(b"0123456789abcdef").decode().rstrip("=")}}
         client.post("/push/subscribe", headers=auth, json=sub)
         client.post("/expenses/", headers=auth, json={
             "description": "x", "amount": 5, "category": "Otros", "date": hoy().isoformat(), "from_scan": True})
         assert len(llamadas) == 1
         assert "vapid" in llamadas[0][1]["headers"]["authorization"].lower()
+        assert llamadas[0][1]["allow_redirects"] is False  # un servicio push no puede redirigirnos
+        assert llamadas[0][1]["timeout"] == push_service.PUSH_TIMEOUT_SECONDS
 
 
 class TestCron:

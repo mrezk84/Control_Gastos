@@ -1,116 +1,89 @@
 """
-Rate limiting middleware for API endpoints.
+Limitación de intentos compartida entre instancias.
 
-Implements a simple in-memory rate limiter using the sliding window algorithm.
-For production, consider using Redis for distributed rate limiting.
+Los contadores viven en la tabla `rate_limit_hits` (la base de datos ya es compartida por todas las
+instancias serverless; un diccionario en memoria no lo es). Cada intento se REGISTRA primero y se
+cuenta después, así una ráfaga paralela no puede colarse entre la comprobación y el registro.
+
+La IP del cliente solo se toma de cabeceras de proxy cuando la infraestructura las garantiza:
+- en Vercel (variable VERCEL) la plataforma sobrescribe `x-vercel-forwarded-for` / `x-forwarded-for`;
+- en cualquier otro proxy propio, activa TRUST_PROXY_HEADERS=1 y se usa la ÚLTIMA entrada de
+  `X-Forwarded-For` (la que añadió el proxy más cercano, no la que escribió el cliente).
+Sin ninguna de las dos se usa la dirección de la conexión.
 """
 
-from fastapi import Request, HTTPException, status
-from typing import Dict, Tuple
-from time import time
-from collections import defaultdict
-from .config import get_settings
+import os
+import random
+from datetime import datetime, timedelta
+from typing import Iterable
 
-settings = get_settings()
+from fastapi import HTTPException, Request, status
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
+from . import models
+
+_MAX_KEY = 255
 
 
-class RateLimiter:
-    """
-    Simple in-memory rate limiter using sliding window.
-
-    For production with multiple workers, use Redis-based rate limiting.
-    """
-
-    def __init__(self, requests: int = None, window_seconds: int = None):
-        """
-        Initialize rate limiter.
-
-        Args:
-            requests: Maximum number of requests allowed in the time window
-            window_seconds: Time window in seconds
-        """
-        self.requests = requests or settings.rate_limit_requests
-        self.window_seconds = window_seconds or settings.rate_limit_period_seconds
-        # Structure: {identifier: [(timestamp, count), ...]}
-        self._requests: Dict[str, list] = defaultdict(list)
-
-    def _get_identifier(self, request: Request) -> str:
-        """
-        Get identifier for rate limiting.
-
-        Uses authenticated user ID if available, otherwise uses IP address.
-        """
-        # Try to get user ID from request state (set by auth dependency)
-        if hasattr(request.state, "user_id"):
-            return f"user:{request.state.user_id}"
-
-        # Fall back to IP address
-        forwarded = request.headers.get("X-Forwarded-For")
+def client_ip(request: Request) -> str:
+    if os.getenv("VERCEL"):
+        forwarded = request.headers.get("x-vercel-forwarded-for") or request.headers.get("x-forwarded-for")
         if forwarded:
-            return f"ip:{forwarded.split(',')[0].strip()}"
-        return f"ip:{request.client.host}"
-
-    def _clean_old_requests(self, identifier: str, current_time: float) -> None:
-        """Remove requests outside the time window."""
-        window_start = current_time - self.window_seconds
-        self._requests[identifier] = [
-            (ts, count) for ts, count in self._requests[identifier]
-            if ts > window_start
-        ]
-
-    def check_rate_limit(self, request: Request) -> None:
-        """
-        Check if request should be rate limited.
-
-        Raises HTTPException if rate limit is exceeded.
-        """
-        identifier = self._get_identifier(request)
-        current_time = time()
-
-        # Clean old requests
-        self._clean_old_requests(identifier, current_time)
-
-        # Check if limit exceeded
-        request_count = sum(count for _, count in self._requests[identifier])
-        if request_count >= self.requests:
-            raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail={
-                    "error": "Rate limit exceeded",
-                    "limit": self.requests,
-                    "window_seconds": self.window_seconds,
-                    "retry_after": int(self.window_seconds - (current_time - self._requests[identifier][0][0]))
-                },
-                headers={
-                    "Retry-After": str(int(self.window_seconds - (current_time - self._requests[identifier][0][0])))
-                }
-            )
-
-        # Add current request
-        self._requests[identifier].append((current_time, 1))
-
-    def reset(self, identifier: str = None) -> None:
-        """
-        Reset rate limit for identifier or all identifiers.
-
-        Useful for testing or administrative purposes.
-        """
-        if identifier:
-            self._requests.pop(identifier, None)
-        else:
-            self._requests.clear()
+            return forwarded.split(",")[0].strip()
+    elif os.getenv("TRUST_PROXY_HEADERS", "").lower() in ("1", "true", "yes"):
+        forwarded = request.headers.get("x-forwarded-for")
+        if forwarded:
+            return forwarded.split(",")[-1].strip()
+    return request.client.host if request.client else "desconocida"
 
 
-# Global rate limiter instances for different endpoints
-auth_rate_limiter = RateLimiter(requests=5, window_seconds=60)  # 5 requests per minute for auth
-standard_rate_limiter = RateLimiter(requests=30, window_seconds=60)  # 30 requests per minute standard
+def _key(*parts: object) -> str:
+    return ":".join(str(p).strip().lower() for p in parts)[:_MAX_KEY]
 
 
-async def check_auth_rate_limit(request: Request) -> None:
-    """Dependency to check auth rate limit."""
-    auth_rate_limiter.check_rate_limit(request)
+def _prune(db: Session) -> None:
+    """Borra intentos de más de un día; se ejecuta de vez en cuando para no engordar la tabla."""
+    if random.random() < 0.02:
+        db.query(models.RateLimitHit).filter(
+            models.RateLimitHit.created_at < datetime.utcnow() - timedelta(days=1)
+        ).delete(synchronize_session=False)
+        db.commit()
 
 
-async def check_standard_rate_limit(request: Request) -> None:
-    """Dependency to check standard rate limit."""
-    standard_rate_limiter.check_rate_limit(request)
+def hit(db: Session, scope: str, identifier: object, limit: int, window_seconds: int) -> None:
+    """Registra un intento de `identifier` en `scope` y lanza 429 si supera `limit` en la ventana."""
+    hit_many(db, [(scope, identifier, limit, window_seconds)])
+
+
+def hit_many(db: Session, rules: Iterable[tuple[str, object, int, int]]) -> None:
+    """Como `hit`, para varias reglas a la vez (p. ej. por cuenta y por IP). Registra todas y evalúa todas."""
+    now = datetime.utcnow()
+    prepared = [(_key(scope, ident), limit, window) for scope, ident, limit, window in rules]
+    db.add_all([models.RateLimitHit(key=k, created_at=now) for k, _, _ in prepared])
+    db.commit()
+
+    worst_wait = 0
+    for k, limit, window in prepared:
+        since = now - timedelta(seconds=window)
+        count, oldest = db.query(func.count(models.RateLimitHit.id), func.min(models.RateLimitHit.created_at)).filter(
+            models.RateLimitHit.key == k, models.RateLimitHit.created_at > since
+        ).one()
+        if count > limit:
+            wait = max(1, int(window - (now - oldest).total_seconds()))
+            worst_wait = max(worst_wait, wait)
+    _prune(db)
+    if worst_wait:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Demasiados intentos. Espera unos minutos antes de volver a probar.",
+            headers={"Retry-After": str(worst_wait)},
+        )
+
+
+def clear(db: Session, scope: str, identifier: object) -> None:
+    """Olvida los intentos de `identifier` en `scope` (p. ej. tras un inicio de sesión correcto)."""
+    db.query(models.RateLimitHit).filter(models.RateLimitHit.key == _key(scope, identifier)).delete(
+        synchronize_session=False
+    )
+    db.commit()

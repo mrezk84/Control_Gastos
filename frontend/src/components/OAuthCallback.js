@@ -1,25 +1,63 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { setAuthToken } from '../services/api';
+import { setAuthToken, exchangeOAuthCode } from '../services/api';
+import { takeOAuthVerifier } from '../utils/oauthPkce';
 import AuthShell from './auth/AuthShell';
 
-/** Retorno del acceso con Google o Microsoft: guarda el token y entra, o vuelve al login con un aviso. */
+const GENERIC = 'No recibimos una respuesta válida del proveedor. Inténtalo de nuevo.';
+
+// Códigos que devuelve el backend en /oauth-callback?error=...
+const ERRORS = {
+  sesion_expirada: 'El intento de acceso expiró o ya se usó. Inténtalo de nuevo.',
+  cancelado: 'Cancelaste el acceso con tu cuenta externa.',
+  proveedor: 'No pudimos completar el acceso con tu cuenta externa. Inténtalo de nuevo más tarde.',
+  sin_correo: 'Tu cuenta externa no compartió un correo electrónico, así que no podemos crear la cuenta.',
+  correo_no_verificado: 'El correo de tu cuenta de Google no está verificado.',
+  correo_en_uso:
+    'Ya existe una cuenta con ese correo. Inicia sesión con tu contraseña; por seguridad no unimos cuentas automáticamente.',
+};
+
+/**
+ * Retorno del acceso con Google o Microsoft. Recibe un código de un solo uso (nunca el token en la URL) y lo
+ * canjea por la sesión con el verificador que este navegador guardó al empezar; si falta o no coincide, no hay sesión.
+ */
 function OAuthCallback() {
   const [searchParams] = useSearchParams();
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const started = useRef(false); // el código solo se puede canjear una vez (React StrictMode monta dos veces)
 
   useEffect(() => {
-    const token = searchParams.get('token');
-    if (token) {
-      setAuthToken(token);
-      localStorage.setItem('token', token);
-      navigate('/dashboard', { replace: true });
-      return undefined;
+    if (started.current) return undefined;
+    started.current = true;
+
+    const code = searchParams.get('code');
+    const errorCode = searchParams.get('error');
+    const verifier = takeOAuthVerifier();
+    // Quita el código de la barra de direcciones y del historial cuanto antes
+    window.history.replaceState(null, '', window.location.pathname);
+
+    let timer;
+    const fail = (message) => {
+      setError(message);
+      timer = setTimeout(() => navigate('/login', { replace: true }), errorCode === 'correo_en_uso' ? 8000 : 4000);
+    };
+
+    if (errorCode) {
+      fail(ERRORS[errorCode] || GENERIC);
+    } else if (!code || !verifier) {
+      fail(GENERIC);
+    } else {
+      exchangeOAuthCode(code, verifier)
+        .then((response) => {
+          const token = response.data.access_token;
+          setAuthToken(token);
+          localStorage.setItem('token', token);
+          navigate('/dashboard', { replace: true });
+        })
+        .catch(() => fail(ERRORS.sesion_expirada));
     }
-    setError('No recibimos una respuesta válida del proveedor. Inténtalo de nuevo.');
-    const id = setTimeout(() => navigate('/login', { replace: true }), 3000);
-    return () => clearTimeout(id);
+    return () => clearTimeout(timer);
   }, [searchParams, navigate]);
 
   return (

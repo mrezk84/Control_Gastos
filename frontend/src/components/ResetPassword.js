@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { resetPassword } from '../services/api';
 import AuthShell from './auth/AuthShell';
 
-const MIN_LENGTH = 6;
+const MIN_LENGTH = 8;
 
 /** Nueva contraseña: mismo marco «Caja registradora» que el inicio de sesión. */
 function ResetPassword() {

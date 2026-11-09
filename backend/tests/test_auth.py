@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
-from jose import jwt
+import jwt
 
 from app.auth.utils import ALGORITHM, SECRET_KEY
 from .conftest import login, register
@@ -117,28 +117,43 @@ class TestRecuperacionDeContrasena:
         assert client.post("/auth/reset-password", json={"token": token_for("ana", purpose="reset"), "new_password": "123"}).status_code == 422
 
 
+# SHA-256 en base64url (43 caracteres): lo que enviaría el navegador como "challenge"
+CHALLENGE = "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"
+
+
 class TestOAuth:
     def test_sin_credenciales_responde_501(self, client):
-        assert client.get("/auth/google").status_code == 501
-        assert client.get("/auth/microsoft").status_code == 501
+        assert client.get("/auth/google", params={"challenge": CHALLENGE}).status_code == 501
+        assert client.get("/auth/microsoft", params={"challenge": CHALLENGE}).status_code == 501
 
     def test_el_callback_rechaza_un_state_invalido(self, client, monkeypatch, sin_red):
-        # Con credenciales configuradas, un state forjado o ausente no debe aceptarse (CSRF)
+        # Con credenciales configuradas, un state forjado no debe aceptarse (CSRF): vuelve al frontend con error
         from app.routes import oauth_routes
         monkeypatch.setitem(oauth_routes.PROVIDERS["google"], "client_id", "id-de-prueba")
-        assert client.get("/auth/google/callback", params={"code": "x", "state": "forjado"}).status_code == 400
+        r = client.get("/auth/google/callback", params={"code": "x", "state": "forjado"}, follow_redirects=False)
+        assert r.status_code == 307 and "error=sesion_expirada" in r.headers["location"]
         assert client.get("/auth/google/callback", params={"code": "x"}).status_code == 422
 
     def test_un_state_de_otro_proveedor_no_vale(self, client, monkeypatch, sin_red):
         from app.routes import oauth_routes
         monkeypatch.setitem(oauth_routes.PROVIDERS["google"], "client_id", "id-de-prueba")
-        state_microsoft = oauth_routes._make_state("microsoft")
-        assert client.get("/auth/google/callback", params={"code": "x", "state": state_microsoft}).status_code == 400
+        monkeypatch.setitem(oauth_routes.PROVIDERS["microsoft"], "client_id", "id-de-prueba")
+        url = client.get("/auth/microsoft", params={"challenge": CHALLENGE}).json()["auth_url"]
+        state_microsoft = url.split("state=")[1].split("&")[0]
+        r = client.get("/auth/google/callback", params={"code": "x", "state": state_microsoft}, follow_redirects=False)
+        assert r.status_code == 307 and "error=sesion_expirada" in r.headers["location"]
 
-    def test_la_url_de_login_lleva_un_state_firmado(self, client, monkeypatch):
+    def test_la_url_de_login_lleva_state_y_pkce(self, client, monkeypatch):
         from app.routes import oauth_routes
         monkeypatch.setitem(oauth_routes.PROVIDERS["google"], "client_id", "id-de-prueba")
-        url = client.get("/auth/google").json()["auth_url"]
+        url = client.get("/auth/google", params={"challenge": CHALLENGE}).json()["auth_url"]
         assert url.startswith("https://accounts.google.com/")
-        state = url.split("state=")[1].split("&")[0]
-        oauth_routes._check_state(state, "google")  # no lanza
+        assert "code_challenge_method=S256" in url and "code_challenge=" in url
+        assert len(url.split("state=")[1].split("&")[0]) >= 40
+
+    def test_el_challenge_es_obligatorio_y_se_valida(self, client, monkeypatch):
+        from app.routes import oauth_routes
+        monkeypatch.setitem(oauth_routes.PROVIDERS["google"], "client_id", "id-de-prueba")
+        assert client.get("/auth/google").status_code == 422
+        assert client.get("/auth/google", params={"challenge": "corto"}).status_code == 422
+

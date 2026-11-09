@@ -16,6 +16,7 @@ de quien los registra primero, y un frontend que apunte a un backend inexistente
 2. Crea las tablas: en el *SQL Editor* pega `backend/migrations/001_initial_schema.sql` y pulsa **Run**
    (o `psql "$DATABASE_URL" -f backend/migrations/001_initial_schema.sql`). Es idempotente. El backend también crea las tablas que falten al arrancar, pero no añade columnas a tablas existentes.
    Después ejecuta también `backend/migrations/002_recordatorios.sql` (recordatorios, notificaciones y las columnas regionales de `users`): sin ella, las bases ya creadas fallan al leer usuarios.
+   Y `backend/migrations/003_seguridad.sql` (correcciones de la auditoría de seguridad: columna `users.token_version`, enlaces de recuperación de un solo uso, transacciones de acceso social y limitador de intentos). **Ejecútala ANTES de desplegar el backend nuevo**: sin la columna nueva fallan todas las lecturas de usuarios. Después de desplegar, las sesiones existentes siguen valiendo, pero los enlaces de recuperación enviados antes del cambio dejan de funcionar (hay que pedir uno nuevo).
 3. Comprueba que están las 4 tablas:
    ```sql
    select table_name, count(*) as columnas from information_schema.columns

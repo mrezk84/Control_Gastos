@@ -1,25 +1,40 @@
 """
 Inicio de sesión social (Google, Microsoft) con el flujo de código de autorización.
 
-El frontend pide `GET /auth/{provider}` y redirige al `auth_url` devuelto. El proveedor vuelve a
-`/auth/{provider}/callback`, el backend intercambia el código, crea o vincula el usuario y redirige
-al frontend con nuestro propio JWT en `/oauth-callback?token=...`.
+Flujo (cada paso se consume una sola vez y queda atado al navegador que lo inició):
+
+1. El frontend genera un verificador aleatorio, lo guarda en su sessionStorage y pide
+   `GET /auth/{provider}?challenge=<SHA-256 del verificador>`. El backend guarda una transacción
+   (`OAuthFlow`) con un `state` aleatorio de un solo uso y un PKCE propio con el proveedor.
+2. El proveedor vuelve a `/auth/{provider}/callback`. El backend consume el state, intercambia el
+   código, identifica a la persona por (proveedor, sujeto estable) y redirige al frontend con un
+   código de canje de un solo uso y 60 s de vida: `/oauth-callback?code=...`. Nunca viaja el JWT por la URL.
+3. El frontend canjea el código con `POST /auth/oauth/exchange {code, verifier}`; solo el navegador
+   que conoce el verificador obtiene la sesión. Un enlace con el código de otra persona no sirve.
+
+Un correo ya registrado NO se vincula automáticamente a una identidad social: se rechaza con un aviso.
 """
 
-from datetime import datetime, timedelta, timezone
-from urllib.parse import urlencode
+import base64
+import hashlib
+import hmac
 import logging
 import os
+import re
+import secrets
+from datetime import datetime, timedelta
+from typing import Optional
+from urllib.parse import urlencode
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
-from jose import JWTError, jwt
+from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from .. import models
-from ..auth.utils import SECRET_KEY, create_access_token
+from .. import models, rate_limiter
+from ..auth.utils import issue_session_token
 from ..database import get_db
 from ..frontend_url import primary_frontend_url, with_scheme
 
@@ -57,33 +72,83 @@ def _redirect_uri(provider: str) -> str:
     return with_scheme(explicit) if explicit else f"{backend_url()}/auth/{provider}/callback"
 
 
-def _make_state(provider: str) -> str:
-    """State firmado y con vencimiento: evita callbacks forjados (CSRF)."""
-    expire = datetime.now(timezone.utc) + timedelta(minutes=10)
-    return jwt.encode({"purpose": "oauth_state", "provider": provider, "exp": expire}, SECRET_KEY, algorithm="HS256")
+STATE_MINUTES = 10
+CODE_SECONDS = 60
+EXCHANGE_IP_LIMIT = (30, 10 * 60)
+START_IP_LIMIT = (30, 10 * 60)
+_CHALLENGE_RE = re.compile(r"^[A-Za-z0-9_-]{43}$")  # base64url sin relleno de un SHA-256
 
 
-def _check_state(state: str, provider: str) -> None:
-    try:
-        payload = jwt.decode(state, SECRET_KEY, algorithms=["HS256"])
-    except JWTError:
-        raise HTTPException(status_code=400, detail="Estado de OAuth inválido o vencido")
-    if payload.get("purpose") != "oauth_state" or payload.get("provider") != provider:
-        raise HTTPException(status_code=400, detail="Estado de OAuth inválido")
+def _sha256_hex(value: str) -> str:
+    return hashlib.sha256(value.encode()).hexdigest()
+
+
+def _b64url_sha256(value: str) -> str:
+    return base64.urlsafe_b64encode(hashlib.sha256(value.encode()).digest()).rstrip(b"=").decode()
+
+
+def _start_flow(db: Session, provider: str, challenge: str) -> tuple[str, str]:
+    """Crea la transacción y devuelve (state, challenge PKCE para el proveedor)."""
+    state = secrets.token_urlsafe(32)
+    provider_verifier = secrets.token_urlsafe(64)  # 86 caracteres: dentro de 43..128 (RFC 7636)
+    db.add(models.OAuthFlow(
+        state_hash=_sha256_hex(state),
+        provider=provider,
+        challenge=challenge,
+        provider_verifier=provider_verifier,
+        expires_at=datetime.utcnow() + timedelta(minutes=STATE_MINUTES),
+    ))
+    db.commit()
+    return state, _b64url_sha256(provider_verifier)
+
+
+def _consume_state(db: Session, state: str, provider: str) -> Optional[models.OAuthFlow]:
+    """Devuelve la transacción si el state es válido y la marca usada (un solo uso, atómico); si no, None."""
+    flow = db.query(models.OAuthFlow).filter(models.OAuthFlow.state_hash == _sha256_hex(state)).first()
+    now = datetime.utcnow()
+    if not flow or flow.provider != provider or flow.state_used_at is not None or flow.expires_at < now:
+        return None
+    claimed = db.query(models.OAuthFlow).filter(
+        models.OAuthFlow.id == flow.id, models.OAuthFlow.state_used_at.is_(None)
+    ).update({"state_used_at": now}, synchronize_session=False)
+    db.commit()
+    return flow if claimed == 1 else None
+
+
+class EmailInUse(Exception):
+    """Ya existe una cuenta con ese correo que no pertenece a esta identidad social."""
 
 
 def _get_or_create_oauth_user(db: Session, email: str, provider: str, provider_id: str, avatar_url: str = None):
-    """Busca el usuario por correo o crea uno nuevo para el login social."""
-    user = db.query(models.User).filter(func.lower(models.User.email) == email.lower()).first()
+    """Identifica a la persona por (proveedor, sujeto estable). El correo NUNCA basta para entrar a una cuenta.
+
+    - Si la identidad ya existe, se usa esa cuenta.
+    - Si no existe pero el correo ya está registrado, se lanza `EmailInUse` (sin fusionar cuentas):
+      quien registró antes ese correo con una contraseña no puede heredar el acceso social de otra persona.
+      Única excepción: una cuenta sin contraseña y sin identidad social (huérfana) puede reclamarse.
+    - Si no, se crea una cuenta nueva.
+    """
+    user = db.query(models.User).filter(
+        models.User.auth_provider == provider, models.User.provider_id == provider_id
+    ).first()
     if user:
-        if not user.provider_id and not user.hashed_password:
-            user.auth_provider = provider
-            user.provider_id = provider_id
         if avatar_url and not user.avatar_url:
             user.avatar_url = avatar_url
-        db.commit()
-        db.refresh(user)
+            db.commit()
+            db.refresh(user)
         return user
+
+    existing = db.query(models.User).filter(func.lower(models.User.email) == email.lower()).first()
+    if existing:
+        if existing.hashed_password or existing.provider_id:
+            raise EmailInUse()
+        existing.auth_provider = provider
+        existing.provider_id = provider_id
+        if avatar_url and not existing.avatar_url:
+            existing.avatar_url = avatar_url
+        db.commit()
+        db.refresh(existing)
+        return existing
 
     base_username = email.split("@")[0]
     username = base_username
@@ -106,25 +171,40 @@ def _get_or_create_oauth_user(db: Session, email: str, provider: str, provider_i
     return new_user
 
 
-def _login_url(provider: str) -> dict:
+def _login_url(db: Session, provider: str, challenge: str) -> dict:
     cfg = PROVIDERS[provider]
     if not cfg["client_id"]:
         raise HTTPException(status_code=501, detail=f"{provider.capitalize()} OAuth no está configurado")
+    if not _CHALLENGE_RE.match(challenge):
+        raise HTTPException(status_code=422, detail="challenge inválido")
+    state, code_challenge = _start_flow(db, provider, challenge)
     params = {
         "client_id": cfg["client_id"],
         "redirect_uri": _redirect_uri(provider),
         "response_type": "code",
         "scope": cfg["scope"],
-        "state": _make_state(provider),
+        "state": state,
+        "code_challenge": code_challenge,
+        "code_challenge_method": "S256",
     }
     return {"auth_url": f"{cfg['authorize_url']}?{urlencode(params)}"}
 
 
-async def _callback(provider: str, code: str, state: str, db: Session) -> RedirectResponse:
+def _back_to_frontend(error: str) -> RedirectResponse:
+    return RedirectResponse(url=f"{primary_frontend_url()}/oauth-callback?{urlencode({'error': error})}")
+
+
+async def _callback(
+    provider: str, code: Optional[str], state: str, error: Optional[str], db: Session
+) -> RedirectResponse:
     cfg = PROVIDERS[provider]
     if not cfg["client_id"]:
         raise HTTPException(status_code=501, detail=f"{provider.capitalize()} OAuth no está configurado")
-    _check_state(state, provider)
+    flow = _consume_state(db, state, provider)
+    if flow is None:
+        return _back_to_frontend("sesion_expirada")
+    if error or not code:  # la persona canceló o el proveedor rechazó la solicitud
+        return _back_to_frontend("cancelado")
 
     async with httpx.AsyncClient(timeout=10) as client:
         token_resp = await client.post(
@@ -135,53 +215,106 @@ async def _callback(provider: str, code: str, state: str, db: Session) -> Redire
                 "client_secret": cfg["client_secret"],
                 "redirect_uri": _redirect_uri(provider),
                 "grant_type": "authorization_code",
+                "code_verifier": flow.provider_verifier,
             },
         )
         if token_resp.status_code != 200:
             logger.warning(f"{provider} token exchange failed: {token_resp.text}")
-            raise HTTPException(status_code=400, detail="No se pudo completar el inicio de sesión")
+            return _back_to_frontend("proveedor")
 
         userinfo_resp = await client.get(
             cfg["userinfo_url"],
             headers={"Authorization": f"Bearer {token_resp.json()['access_token']}"},
         )
         if userinfo_resp.status_code != 200:
-            raise HTTPException(status_code=400, detail="No se pudo obtener el perfil del usuario")
+            return _back_to_frontend("proveedor")
         info = userinfo_resp.json()
 
     email = info.get("email")
-    if not email:
-        raise HTTPException(status_code=400, detail="El proveedor no devolvió un correo electrónico")
-    # Google marca explícitamente si verificó el correo; no vincular cuentas por un correo sin verificar
-    if provider == "google" and info.get("verified_email") is False:
-        raise HTTPException(status_code=400, detail="El correo de Google no está verificado")
+    subject = info.get("id") or info.get("sub")
+    if not email or not subject:
+        return _back_to_frontend("sin_correo")
+    # Google informa si verificó el correo; sin verificar no se acepta
+    if provider == "google" and info.get("verified_email") is not True:
+        return _back_to_frontend("correo_no_verificado")
 
-    user = _get_or_create_oauth_user(
-        db,
-        email=email,
-        provider=provider,
-        provider_id=str(info.get("id") or info.get("sub")),
-        avatar_url=info.get("picture"),
-    )
-    access_token = create_access_token(data={"sub": user.username})
-    return RedirectResponse(url=f"{primary_frontend_url()}/oauth-callback?token={access_token}")
+    try:
+        user = _get_or_create_oauth_user(
+            db,
+            email=email,
+            provider=provider,
+            provider_id=str(subject),
+            avatar_url=info.get("picture"),
+        )
+    except EmailInUse:
+        logger.warning(f"{provider} login rejected: email already registered to another account")
+        return _back_to_frontend("correo_en_uso")
+
+    # Código de canje de un solo uso: solo lo puede cambiar por sesión el navegador que inició el flujo
+    exchange_code = secrets.token_urlsafe(32)
+    flow.code_hash = _sha256_hex(exchange_code)
+    flow.code_expires_at = datetime.utcnow() + timedelta(seconds=CODE_SECONDS)
+    flow.user_id = user.id
+    db.commit()
+    return RedirectResponse(url=f"{primary_frontend_url()}/oauth-callback?{urlencode({'code': exchange_code})}")
+
+
+class ExchangeRequest(BaseModel):
+    code: str
+    verifier: str
+
+
+@router.post("/oauth/exchange")
+def oauth_exchange(payload: ExchangeRequest, request: Request, db: Session = Depends(get_db)):
+    """Canjea el código de un solo uso por la sesión; exige el verificador del navegador que inició el flujo."""
+    rate_limiter.hit(db, "oauth_exchange:ip", rate_limiter.client_ip(request), *EXCHANGE_IP_LIMIT)
+    invalid = HTTPException(status_code=400, detail="Código inválido o vencido")
+    if len(payload.code) > 200 or len(payload.verifier) > 200:
+        raise invalid
+
+    now = datetime.utcnow()
+    flow = db.query(models.OAuthFlow).filter(models.OAuthFlow.code_hash == _sha256_hex(payload.code)).first()
+    if not flow or flow.code_used_at is not None or not flow.code_expires_at or flow.code_expires_at < now:
+        raise invalid
+
+    # Se quema en cualquier caso: un intento fallido (verificador ajeno) también invalida el código
+    claimed = db.query(models.OAuthFlow).filter(
+        models.OAuthFlow.id == flow.id, models.OAuthFlow.code_used_at.is_(None)
+    ).update({"code_used_at": now}, synchronize_session=False)
+    db.commit()
+    if claimed != 1:
+        raise invalid
+    if not hmac.compare_digest(_b64url_sha256(payload.verifier), flow.challenge or ""):
+        logger.warning("OAuth exchange with a verifier that does not match the flow")
+        raise invalid
+
+    user = db.query(models.User).filter(models.User.id == flow.user_id).first()
+    if not user:
+        raise invalid
+    return {"access_token": issue_session_token(user), "token_type": "bearer"}
 
 
 @router.get("/google")
-def google_login():
-    return _login_url("google")
+def google_login(request: Request, challenge: str = Query(...), db: Session = Depends(get_db)):
+    rate_limiter.hit(db, "oauth_start:ip", rate_limiter.client_ip(request), *START_IP_LIMIT)
+    return _login_url(db, "google", challenge)
 
 
 @router.get("/google/callback")
-async def google_callback(code: str, state: str, db: Session = Depends(get_db)):
-    return await _callback("google", code, state, db)
+async def google_callback(
+    state: str, code: Optional[str] = None, error: Optional[str] = None, db: Session = Depends(get_db)
+):
+    return await _callback("google", code, state, error, db)
 
 
 @router.get("/microsoft")
-def microsoft_login():
-    return _login_url("microsoft")
+def microsoft_login(request: Request, challenge: str = Query(...), db: Session = Depends(get_db)):
+    rate_limiter.hit(db, "oauth_start:ip", rate_limiter.client_ip(request), *START_IP_LIMIT)
+    return _login_url(db, "microsoft", challenge)
 
 
 @router.get("/microsoft/callback")
-async def microsoft_callback(code: str, state: str, db: Session = Depends(get_db)):
-    return await _callback("microsoft", code, state, db)
+async def microsoft_callback(
+    state: str, code: Optional[str] = None, error: Optional[str] = None, db: Session = Depends(get_db)
+):
+    return await _callback("microsoft", code, state, error, db)

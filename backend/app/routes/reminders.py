@@ -25,13 +25,15 @@ def _own(db: Session, reminder_id: int, user: models.User) -> models.PaymentRemi
 @router.get("/", response_model=list[schemas.Reminder])
 def list_reminders(
     status_: Optional[str] = Query(None, alias="status"),
+    limit: int = Query(1000, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
     q = db.query(models.PaymentReminder).filter(models.PaymentReminder.user_id == current_user.id)
     if status_:
         q = q.filter(models.PaymentReminder.status == status_)
-    return q.order_by(models.PaymentReminder.due_date, models.PaymentReminder.id).all()
+    return q.order_by(models.PaymentReminder.due_date, models.PaymentReminder.id).offset(offset).limit(limit).all()
 
 
 @router.post("/", response_model=schemas.Reminder, status_code=status.HTTP_201_CREATED)

@@ -4,7 +4,8 @@ Handles password hashing, JWT token creation, and user authentication.
 """
 
 from datetime import datetime, timedelta, timezone
-from jose import JWTError, jwt
+import jwt
+from jwt import PyJWTError
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -27,7 +28,12 @@ if not SECRET_KEY:
     logger.error("SECRET_KEY environment variable is not set")
     raise ValueError("SECRET_KEY must be set in environment variables")
 
+if len(SECRET_KEY) < 32:
+    logger.warning("SECRET_KEY tiene menos de 32 caracteres; usa uno aleatorio más largo (openssl rand -hex 32)")
+
 ALGORITHM = "HS256"
+MIN_PASSWORD_LENGTH = 8
+MAX_PASSWORD_LENGTH = 128
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("TOKEN_EXPIRATION", str(60 * 24)))
 
 # Password hashing context
@@ -68,8 +74,8 @@ def hash_password(password: str) -> str:
     Raises:
         ValueError: If password is empty or too short
     """
-    if not password or len(password) < 6:
-        raise ValueError("Password must be at least 6 characters long")
+    if not password or len(password) < MIN_PASSWORD_LENGTH:
+        raise ValueError(f"La contraseña debe tener al menos {MIN_PASSWORD_LENGTH} caracteres")
 
     try:
         return pwd_context.hash(password)
@@ -106,6 +112,11 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
         raise ValueError("Failed to create access token")
 
 
+def issue_session_token(user) -> str:
+    """Token de sesión de `user`, con su versión de sesión (`tv`) para poder revocarlo en bloque."""
+    return create_access_token(data={"sub": user.username, "tv": user.token_version or 0})
+
+
 def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
@@ -133,7 +144,7 @@ def get_current_user(
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    except JWTError as e:
+    except PyJWTError as e:
         logger.warning(f"JWT decode error: {e}")
         raise credentials_exception
 
@@ -150,6 +161,11 @@ def get_current_user(
     user = db.query(User).filter(User.username == username).first()
     if user is None:
         logger.warning(f"User not found: {username}")
+        raise credentials_exception
+
+    # Restablecer la contraseña sube token_version: las sesiones anteriores quedan revocadas
+    if int(payload.get("tv", 0)) != (user.token_version or 0):
+        logger.warning(f"Revoked session token used for user: {username}")
         raise credentials_exception
 
     return user

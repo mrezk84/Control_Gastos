@@ -1,3 +1,4 @@
+import asyncio
 import os
 import re
 import json
@@ -8,6 +9,7 @@ from datetime import datetime
 import httpx
 from PIL import Image
 import pdfplumber
+from starlette.concurrency import run_in_threadpool
 
 from .text_utils import extract_due_date
 
@@ -17,6 +19,12 @@ OCR_API_KEY = os.getenv("OCR_SPACE_API_KEY", "")
 # El plan gratuito de OCR.space acepta archivos de hasta 1 MB
 MAX_IMAGE_SIDE = 1600
 JPEG_QUALITY = 75
+
+# Límites contra archivos pequeños pero costosos de procesar (bombas de descompresión, PDF enormes)
+Image.MAX_IMAGE_PIXELS = 40_000_000  # por encima, Pillow lanza DecompressionBombError
+MAX_PDF_PAGES = 10
+MAX_PDF_TEXT_CHARS = 200_000
+PDF_TIMEOUT_SECONDS = 20
 
 class OCRService:
     """Servicio para escanear recibos y extraer información usando OCR"""
@@ -28,6 +36,9 @@ class OCRService:
         OCR.space y evita guardar fotos de varios MB en la base de datos.
         """
         image = Image.open(BytesIO(image_bytes))
+        # Pillow solo falla al doblar MAX_IMAGE_PIXELS (por debajo avisa); aquí el tope es estricto, antes de decodificar
+        if image.width * image.height > Image.MAX_IMAGE_PIXELS:
+            raise ValueError("La imagen tiene demasiados píxeles")
         if image.mode != "RGB":
             image = image.convert("RGB")
         image.thumbnail((MAX_IMAGE_SIDE, MAX_IMAGE_SIDE))
@@ -51,14 +62,27 @@ class OCRService:
         Extrae datos de un PDF de factura/receipt (en memoria: el disco de Vercel es efímero)
         """
         try:
-            text = ""
-            with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
-                for page in pdf.pages:
-                    text += page.extract_text() or ""
-
+            # El trabajo es síncrono y costoso: va a un hilo para no bloquear el bucle de eventos, con tiempo máximo
+            text = await asyncio.wait_for(
+                run_in_threadpool(OCRService._pdf_text, pdf_bytes), timeout=PDF_TIMEOUT_SECONDS
+            )
             return OCRService._parse_receipt_text(text)
+        except asyncio.TimeoutError:
+            return {"success": False, "error": "El PDF tardó demasiado en procesarse"}
         except Exception as e:
             return {"success": False, "error": str(e)}
+
+    @staticmethod
+    def _pdf_text(pdf_bytes: bytes) -> str:
+        text = ""
+        with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
+            if len(pdf.pages) > MAX_PDF_PAGES:
+                raise ValueError(f"El PDF tiene demasiadas páginas (máx {MAX_PDF_PAGES})")
+            for page in pdf.pages:
+                text += page.extract_text() or ""
+                if len(text) > MAX_PDF_TEXT_CHARS:
+                    break
+        return text[:MAX_PDF_TEXT_CHARS]
 
     @staticmethod
     def _parse_receipt_text(text: str) -> Dict[str, Any]:
