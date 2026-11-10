@@ -13,6 +13,7 @@ import { missingRegional } from '../../utils/regional';
 import { EXPENSE_CREATED_EVENT, FOCUS_REGISTER_EVENT } from '../../utils/events';
 import logger from '../../utils/logger';
 import PageLoader from '../ui/PageLoader';
+import AyudaChat from '../ayuda/AyudaChat';
 import { PageTransition } from '../ui/PageTransition';
 
 const NAV_ITEMS = [
@@ -33,6 +34,7 @@ function AppLayout({ children }) {
   const [loading, setLoading] = useState(true);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const menuRef = useRef(null);
   const { theme, setTheme, toggle } = useTheme();
   const navigate = useNavigate();
@@ -247,6 +249,16 @@ function AppLayout({ children }) {
           </nav>
 
           <div className="cj-actions">
+            <button
+              type="button"
+              className="cj-helpbtn"
+              onClick={() => setHelpOpen((o) => !o)}
+              aria-label="Ayuda"
+              aria-expanded={helpOpen}
+              title="Ayuda"
+            >
+              <i className="ph ph-question" aria-hidden="true" />
+            </button>
             <NotificationBell />
             <div className="cj-seg" role="group" aria-label="Tema">
               <button type="button" aria-pressed={theme === 'dark'} onClick={() => setTheme('dark')}>
@@ -307,6 +319,8 @@ function AppLayout({ children }) {
         <main className="cj-main" id="main-content" tabIndex={-1}>
           <PageTransition>{children}</PageTransition>
         </main>
+
+        <AyudaChat open={helpOpen} onClose={() => setHelpOpen(false)} />
 
         <nav className="cj-tabbar" aria-label="Principal (móvil)">
           {NAV_ITEMS.map((item) => (
