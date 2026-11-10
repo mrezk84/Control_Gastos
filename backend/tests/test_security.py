@@ -281,7 +281,8 @@ class TestAccesoSocial:
         register(client, "atacante", "ana@example.com", "clave-del-atacante")
         state, _ = iniciar(client)  # la víctima entra con Google
         params, _ = volver(client, state)
-        assert params == {"error": ["correo_en_uso"]}
+        assert "code" not in params  # no se abre sesión: solo se ofrece vincular, y eso exige la contraseña
+        assert "link" in params
         with db_session() as db:
             cuenta = db.query(models.User).filter(models.User.username == "atacante").one()
             assert cuenta.provider_id is None and cuenta.auth_provider == "local"  # sin vincular
@@ -293,7 +294,8 @@ class TestAccesoSocial:
         volver(client, state)  # Google crea la cuenta de ana@example.com
         proveedor["info"] = {"sub": "ms-9", "email": "ana@example.com"}
         state, _ = iniciar(client, "microsoft")
-        assert volver(client, state, "microsoft")[0] == {"error": ["correo_en_uso"]}
+        # esa cuenta es solo de Google (sin contraseña): no hay forma segura de unirla a Microsoft
+        assert volver(client, state, "microsoft")[0] == {"error": ["otro_proveedor"]}
 
     def test_la_identidad_estable_gana_aunque_cambie_el_correo(self, client, proveedor):
         state, _ = iniciar(client)
@@ -317,6 +319,130 @@ class TestAccesoSocial:
     def test_el_challenge_debe_ser_un_sha256_en_base64url(self, client, proveedor):
         assert client.get("/auth/google", params={"challenge": "x" * 43 + "!"}).status_code == 422
         assert client.get("/auth/google", params={"challenge": "corto"}).status_code == 422
+
+
+# --------------------------------------------------------------------------------------------------
+# 1 (continuación). Vincular una identidad social a una cuenta con contraseña
+# --------------------------------------------------------------------------------------------------
+def iniciar_vinculacion(client, proveedor, verificador=VERIFICADOR, provider="google"):
+    """Recorre el flujo hasta la oferta de vincular y devuelve el código de vinculación."""
+    state, _ = iniciar(client, provider, verificador)
+    params, _ = volver(client, state, provider)
+    assert params["provider"] == [provider]
+    return params["link"][0]
+
+
+def vincular(client, code, password, verifier=VERIFICADOR):
+    return client.post("/auth/oauth/link", json={"code": code, "verifier": verifier, "password": password})
+
+
+class TestVincularCuenta:
+    def test_con_la_contrasena_correcta_vincula_y_abre_sesion(self, client, proveedor):
+        register(client)  # ana@example.com con contraseña "secreto1"
+        r = vincular(client, iniciar_vinculacion(client, proveedor), "secreto1")
+        assert r.status_code == 200
+        me = client.get("/auth/me", headers={"Authorization": f"Bearer {r.json()['access_token']}"}).json()
+        assert me["username"] == "ana" and me["auth_provider"] == "google"
+        with db_session() as db:
+            assert db.query(models.User).count() == 1  # la misma cuenta, no una nueva
+        assert login(client).status_code == 200  # la contraseña sigue sirviendo
+
+    def test_despues_de_vincular_google_entra_directo(self, client, proveedor):
+        register(client)
+        vincular(client, iniciar_vinculacion(client, proveedor), "secreto1")
+        state, _ = iniciar(client)
+        params, _ = volver(client, state)
+        assert "code" in params and "link" not in params  # ya no pide contraseña
+        token = client.post("/auth/oauth/exchange", json={"code": params["code"][0], "verifier": VERIFICADOR}).json()["access_token"]
+        assert client.get("/auth/me", headers={"Authorization": f"Bearer {token}"}).json()["username"] == "ana"
+
+    def test_con_contrasena_incorrecta_no_vincula_ni_abre_sesion(self, client, proveedor):
+        register(client)
+        code = iniciar_vinculacion(client, proveedor)
+        r = vincular(client, code, "no-es-la-clave")
+        assert r.status_code == 401 and "access_token" not in r.json()
+        with db_session() as db:
+            assert db.query(models.User).one().provider_id is None
+        # el código sigue valiendo para reintentar con la contraseña correcta
+        assert vincular(client, code, "secreto1").status_code == 200
+
+    def test_los_intentos_de_contrasena_estan_limitados(self, client, proveedor):
+        register(client)
+        code = iniciar_vinculacion(client, proveedor)
+        codigos = [vincular(client, code, f"mala-{i}").status_code for i in range(6)]
+        assert codigos == [401] * 5 + [429]
+        assert vincular(client, code, "secreto1").status_code == 429  # bloqueada: ni la correcta sirve
+        with db_session() as db:
+            assert db.query(models.User).one().provider_id is None
+
+    def test_el_atacante_que_registro_el_correo_no_puede_vincular_a_la_victima(self, client, proveedor):
+        """La víctima (dueña del correo en Google) no conoce la contraseña que puso el atacante: no completa la vinculación."""
+        register(client, "atacante", "ana@example.com", "clave-del-atacante")
+        code = iniciar_vinculacion(client, proveedor)
+        assert vincular(client, code, "lo-que-la-victima-adivine").status_code == 401
+        with db_session() as db:
+            assert db.query(models.User).filter(models.User.username == "atacante").one().provider_id is None
+
+    def test_el_codigo_de_vinculacion_no_abre_sesion_por_el_canje(self, client, proveedor):
+        register(client)
+        code = iniciar_vinculacion(client, proveedor)
+        r = client.post("/auth/oauth/exchange", json={"code": code, "verifier": VERIFICADOR})
+        assert r.status_code == 400 and "access_token" not in r.json()
+        assert vincular(client, code, "secreto1").status_code == 200  # y el código no se quemó
+
+    def test_otro_navegador_no_puede_ni_probar_contrasenas(self, client, proveedor):
+        register(client)
+        code = iniciar_vinculacion(client, proveedor)
+        assert vincular(client, code, "secreto1", verifier="verificador-de-otro-navegador").status_code == 400
+        assert vincular(client, code, "secreto1").status_code == 400  # el código quedó quemado
+        with db_session() as db:
+            assert db.query(models.User).one().provider_id is None
+
+    def test_el_codigo_es_de_un_solo_uso(self, client, proveedor):
+        register(client)
+        code = iniciar_vinculacion(client, proveedor)
+        assert vincular(client, code, "secreto1").status_code == 200
+        assert vincular(client, code, "secreto1").status_code == 400
+
+    def test_el_codigo_de_vinculacion_vence(self, client, proveedor):
+        register(client)
+        code = iniciar_vinculacion(client, proveedor)
+        with db_session() as db:
+            db.query(models.OAuthFlow).update({"code_expires_at": datetime.utcnow() - timedelta(seconds=1)})
+            db.commit()
+        assert vincular(client, code, "secreto1").status_code == 400
+
+    def test_un_codigo_de_login_normal_no_sirve_para_vincular(self, client, proveedor):
+        register(client, "otra", "otra@example.com")
+        proveedor["info"] = {"id": "g-9", "email": "nueva@example.com", "verified_email": True}
+        state, _ = iniciar(client)
+        code = volver(client, state)[0]["code"][0]
+        assert vincular(client, code, "secreto1").status_code == 400
+
+    def test_cuenta_con_otro_metodo_de_acceso_no_ofrece_vincular(self, client, proveedor):
+        """Cuenta con contraseña que ya tiene una identidad social: el modelo guarda una sola, no hay forma segura de unir otra."""
+        register(client)
+        vincular(client, iniciar_vinculacion(client, proveedor), "secreto1")  # ahora vinculada a g-1
+        proveedor["info"] = {"id": "g-OTRO", "email": "ana@example.com", "verified_email": True}
+        state, _ = iniciar(client)
+        assert volver(client, state)[0] == {"error": ["otro_proveedor"]}
+
+    def test_microsoft_tambien_se_puede_vincular(self, client, proveedor):
+        register(client)
+        proveedor["info"] = {"sub": "ms-1", "email": "ana@example.com"}
+        r = vincular(client, iniciar_vinculacion(client, proveedor, provider="microsoft"), "secreto1")
+        assert r.status_code == 200
+        with db_session() as db:
+            u = db.query(models.User).one()
+            assert (u.auth_provider, u.provider_id) == ("microsoft", "ms-1")
+
+    def test_una_identidad_ya_usada_por_otra_cuenta_no_se_puede_vincular(self, client, proveedor):
+        register(client)
+        code = iniciar_vinculacion(client, proveedor)  # oferta para ana con el sujeto g-1
+        with db_session() as db:  # mientras tanto otra cuenta toma esa identidad
+            db.add(models.User(username="otra", email="otra@example.com", auth_provider="google", provider_id="g-1"))
+            db.commit()
+        assert vincular(client, code, "secreto1").status_code == 400
 
 
 # --------------------------------------------------------------------------------------------------

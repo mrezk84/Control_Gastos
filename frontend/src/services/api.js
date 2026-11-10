@@ -65,6 +65,11 @@ export const exchangeOAuthCode = (code, verifier) => {
   return api.post('/auth/oauth/exchange', { code, verifier });
 };
 
+// Vincula la identidad de Google/Microsoft a la cuenta con contraseña que ya existe con ese correo y abre la sesión
+export const linkOAuthAccount = (code, verifier, password) => {
+  return api.post('/auth/oauth/link', { code, verifier, password });
+};
+
 // Password Reset
 export const requestPasswordReset = (email) => {
   return api.post('/auth/forgot-password', { email });

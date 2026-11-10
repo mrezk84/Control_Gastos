@@ -12,7 +12,10 @@ Flujo (cada paso se consume una sola vez y queda atado al navegador que lo inici
 3. El frontend canjea el código con `POST /auth/oauth/exchange {code, verifier}`; solo el navegador
    que conoce el verificador obtiene la sesión. Un enlace con el código de otra persona no sirve.
 
-Un correo ya registrado NO se vincula automáticamente a una identidad social: se rechaza con un aviso.
+Un correo ya registrado NO se vincula automáticamente a una identidad social. Si esa cuenta tiene contraseña, se ofrece
+vincularla: el callback devuelve `?link=<código>` y `POST /auth/oauth/link {code, verifier, password}` exige el verificador del
+navegador Y la contraseña de la cuenta. Quien registró antes un correo ajeno no puede completarlo (no tiene la identidad del
+proveedor) y el dueño del correo tampoco (no conoce esa contraseña); solo quien tiene ambas cosas vincula.
 """
 
 import base64
@@ -29,12 +32,12 @@ from urllib.parse import urlencode
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from .. import models, rate_limiter
-from ..auth.utils import issue_session_token
+from ..auth.utils import MAX_PASSWORD_LENGTH, issue_session_token, verify_password
 from ..database import get_db
 from ..frontend_url import primary_frontend_url, with_scheme
 
@@ -74,8 +77,11 @@ def _redirect_uri(provider: str) -> str:
 
 STATE_MINUTES = 10
 CODE_SECONDS = 60
+LINK_CODE_MINUTES = 5  # da tiempo a escribir la contraseña
 EXCHANGE_IP_LIMIT = (30, 10 * 60)
 START_IP_LIMIT = (30, 10 * 60)
+LINK_IP_LIMIT = (20, 10 * 60)
+LINK_ACCOUNT_LIMIT = (5, 15 * 60)  # intentos de contraseña por cuenta
 _CHALLENGE_RE = re.compile(r"^[A-Za-z0-9_-]{43}$")  # base64url sin relleno de un SHA-256
 
 
@@ -118,6 +124,10 @@ def _consume_state(db: Session, state: str, provider: str) -> Optional[models.OA
 class EmailInUse(Exception):
     """Ya existe una cuenta con ese correo que no pertenece a esta identidad social."""
 
+    def __init__(self, account: "models.User"):
+        super().__init__("email in use")
+        self.account = account
+
 
 def _get_or_create_oauth_user(db: Session, email: str, provider: str, provider_id: str, avatar_url: str = None):
     """Identifica a la persona por (proveedor, sujeto estable). El correo NUNCA basta para entrar a una cuenta.
@@ -141,7 +151,7 @@ def _get_or_create_oauth_user(db: Session, email: str, provider: str, provider_i
     existing = db.query(models.User).filter(func.lower(models.User.email) == email.lower()).first()
     if existing:
         if existing.hashed_password or existing.provider_id:
-            raise EmailInUse()
+            raise EmailInUse(existing)
         existing.auth_provider = provider
         existing.provider_id = provider_id
         if avatar_url and not existing.avatar_url:
@@ -246,9 +256,23 @@ async def _callback(
             provider_id=str(subject),
             avatar_url=info.get("picture"),
         )
-    except EmailInUse:
-        logger.warning(f"{provider} login rejected: email already registered to another account")
-        return _back_to_frontend("correo_en_uso")
+    except EmailInUse as conflict:
+        account = conflict.account
+        # Solo se ofrece vincular a una cuenta con contraseña (para confirmarla) y sin otra identidad social
+        # (el modelo guarda una sola); en cualquier otro caso no hay forma segura de unirlas.
+        if not account.hashed_password or account.provider_id:
+            logger.warning(f"{provider} login rejected: email registered with another sign-in method")
+            return _back_to_frontend("otro_proveedor")
+        logger.info(f"{provider} login: offering to link to an existing account with password")
+        link_code = secrets.token_urlsafe(32)
+        flow.code_hash = _sha256_hex(link_code)
+        flow.code_expires_at = datetime.utcnow() + timedelta(minutes=LINK_CODE_MINUTES)
+        flow.link_user_id = account.id
+        flow.link_subject = str(subject)
+        db.commit()
+        return RedirectResponse(
+            url=f"{primary_frontend_url()}/oauth-callback?{urlencode({'link': link_code, 'provider': provider})}"
+        )
 
     # Código de canje de un solo uso: solo lo puede cambiar por sesión el navegador que inició el flujo
     exchange_code = secrets.token_urlsafe(32)
@@ -276,6 +300,8 @@ def oauth_exchange(payload: ExchangeRequest, request: Request, db: Session = Dep
     flow = db.query(models.OAuthFlow).filter(models.OAuthFlow.code_hash == _sha256_hex(payload.code)).first()
     if not flow or flow.code_used_at is not None or not flow.code_expires_at or flow.code_expires_at < now:
         raise invalid
+    if flow.link_user_id is not None:  # un código de vinculación exige la contraseña: no abre sesión por sí solo
+        raise invalid
 
     # Se quema en cualquier caso: un intento fallido (verificador ajeno) también invalida el código
     claimed = db.query(models.OAuthFlow).filter(
@@ -291,6 +317,69 @@ def oauth_exchange(payload: ExchangeRequest, request: Request, db: Session = Dep
     user = db.query(models.User).filter(models.User.id == flow.user_id).first()
     if not user:
         raise invalid
+    return {"access_token": issue_session_token(user), "token_type": "bearer"}
+
+
+class LinkRequest(BaseModel):
+    code: str
+    verifier: str
+    password: str = Field(..., max_length=MAX_PASSWORD_LENGTH)
+
+
+@router.post("/oauth/link")
+def oauth_link(payload: LinkRequest, request: Request, db: Session = Depends(get_db)):
+    """Vincula la identidad social a una cuenta con contraseña y abre la sesión.
+
+    Exige TODO: el código de un solo uso, el verificador del navegador que inició el flujo y la contraseña de la cuenta.
+    """
+    rate_limiter.hit(db, "oauth_link:ip", rate_limiter.client_ip(request), *LINK_IP_LIMIT)
+    invalid = HTTPException(status_code=400, detail="Código inválido o vencido")
+    if len(payload.code) > 200 or len(payload.verifier) > 200:
+        raise invalid
+
+    now = datetime.utcnow()
+    flow = db.query(models.OAuthFlow).filter(models.OAuthFlow.code_hash == _sha256_hex(payload.code)).first()
+    if (not flow or flow.link_user_id is None or not flow.link_subject or flow.code_used_at is not None
+            or not flow.code_expires_at or flow.code_expires_at < now):
+        raise invalid
+
+    # Sin el verificador del navegador ni siquiera se admiten intentos de contraseña; el código se quema
+    if not hmac.compare_digest(_b64url_sha256(payload.verifier), flow.challenge or ""):
+        db.query(models.OAuthFlow).filter(models.OAuthFlow.id == flow.id).update({"code_used_at": now})
+        db.commit()
+        logger.warning("OAuth link with a verifier that does not match the flow")
+        raise invalid
+
+    user = db.query(models.User).filter(models.User.id == flow.link_user_id).first()
+    if not user or not user.hashed_password or user.provider_id:
+        raise invalid
+
+    # Cada intento de contraseña cuenta (5 cada 15 min por cuenta); pasado el límite ni la correcta sirve
+    rate_limiter.hit(db, "oauth_link:account", user.id, *LINK_ACCOUNT_LIMIT)
+    if not verify_password(payload.password, user.hashed_password):
+        logger.warning(f"OAuth link: wrong password for user {user.username}")
+        raise HTTPException(status_code=401, detail="Contraseña incorrecta")
+
+    # Un solo uso, atómico
+    claimed = db.query(models.OAuthFlow).filter(
+        models.OAuthFlow.id == flow.id, models.OAuthFlow.code_used_at.is_(None)
+    ).update({"code_used_at": now}, synchronize_session=False)
+    if claimed != 1:
+        db.rollback()
+        raise invalid
+    taken = db.query(models.User).filter(
+        models.User.auth_provider == flow.provider, models.User.provider_id == flow.link_subject,
+        models.User.id != user.id,
+    ).first()
+    if taken:  # esa identidad ya pertenece a otra cuenta
+        db.rollback()
+        raise invalid
+
+    user.auth_provider = flow.provider
+    user.provider_id = flow.link_subject
+    db.commit()
+    rate_limiter.clear(db, "oauth_link:account", user.id)
+    logger.info(f"OAuth identity linked ({flow.provider}) to user {user.username}")
     return {"access_token": issue_session_token(user), "token_type": "bearer"}
 
 

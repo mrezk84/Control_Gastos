@@ -54,6 +54,10 @@ class OAuthFlow(Base):
     code_expires_at = Column(DateTime, nullable=True)
     code_used_at = Column(DateTime, nullable=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    # Vinculación: el correo del proveedor ya tenía una cuenta con contraseña. El código de este flujo NO abre sesión;
+    # solo permite vincular `link_subject` a la cuenta `link_user_id` si además se confirma su contraseña.
+    link_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    link_subject = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 

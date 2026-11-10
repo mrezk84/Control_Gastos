@@ -1,4 +1,4 @@
-import { base64url, takeOAuthVerifier } from './oauthPkce';
+import { base64url, takeOAuthVerifier, peekOAuthVerifier, clearOAuthVerifier } from './oauthPkce';
 
 describe('base64url', () => {
   test('usa el alfabeto seguro para URL y sin relleno', () => {
@@ -16,5 +16,15 @@ describe('takeOAuthVerifier', () => {
     sessionStorage.setItem('oauth_verifier', 'abc');
     expect(takeOAuthVerifier()).toBe('abc');
     expect(takeOAuthVerifier()).toBeNull();
+  });
+});
+
+describe('peekOAuthVerifier y clearOAuthVerifier', () => {
+  test('peek lee sin borrar y clear lo borra', () => {
+    sessionStorage.setItem('oauth_verifier', 'xyz');
+    expect(peekOAuthVerifier()).toBe('xyz');
+    expect(peekOAuthVerifier()).toBe('xyz'); // se puede leer varias veces: la vinculación admite reintentos
+    clearOAuthVerifier();
+    expect(peekOAuthVerifier()).toBeNull();
   });
 });
