@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAppData, useMoney } from '../context/ExpensesContext';
+import { useToast } from '../components/ui/ToastContainer';
 import Icon from '../components/ui/Icon';
 import Modal from '../components/ui/Modal';
 import Welcome from '../components/hormiga/Welcome';
@@ -8,9 +9,8 @@ import Chat from '../components/hormiga/Chat';
 import { categoryIconClass } from '../utils/categoryIcons';
 import { formatShare } from '../utils/formatters';
 import {
-  antIcon, antStatus, buildHormiga, CHALLENGE_DAYS, LESSONS, loadAntLimit, loadChallenge, loadGoals,
-  loadThreshold, previousMonth, recoveredByChallenge, saveAntLimit, saveChallenge, saveGoals,
-  saveThreshold, simulate, simulatorHint, wasWelcomed,
+  antIcon, antStatus, buildHormiga, CHALLENGE_DAYS, DEFAULT_ANT_LIMIT, DEFAULT_THRESHOLD, LESSONS, loadChallenge,
+  loadGoals, previousMonth, recoveredByChallenge, saveChallenge, saveGoals, simulate, simulatorHint, wasWelcomed,
 } from '../utils/hormiga';
 
 const LEVELS = [
@@ -42,7 +42,7 @@ function MoneyField({ label, value, onCommit, format }) {
   );
 }
 
-function Panel({ data, threshold, setThreshold, limit, setLimit, goChat }) {
+function Panel({ data, config, save, limit, goChat }) {
   const { formatPesos } = useMoney();
   const status = antStatus(data.total, limit);
   const level = LEVELS[status.level];
@@ -76,8 +76,32 @@ function Panel({ data, threshold, setThreshold, limit, setLimit, goChat }) {
           <div className="cj-meter" style={{ '--w': `${status.widthPct}%` }}><div /></div>
           <div className="cj-sema-scale"><span>{formatShare(status.ratio * 100)}</span><span>AVISO AL 80 %</span></div>
         </div>
-        <MoneyField label="Tope del mes" value={limit} onCommit={setLimit} format={formatPesos} />
-        <MoneyField label="Es hormiga si cuesta menos de" value={threshold} onCommit={setThreshold} format={formatPesos} />
+        <MoneyField label="Tope del mes" value={limit} onCommit={(n) => save({ limit: n })} format={formatPesos} />
+        {config.limit ? null : <p className="cj-hz-hint">Fija el tope para que te avise al llegar al 80 %.</p>}
+
+        <div className="cj-hz-threshold">
+          <span className="cj-hz-label">Es hormiga si cuesta menos de</span>
+          <div className="cj-seg" role="group" aria-label="Cómo se calcula el umbral">
+            <button type="button" aria-pressed={config.mode === 'auto'} onClick={() => save({ threshold: null })}>Automático</button>
+            <button type="button" aria-pressed={config.mode === 'manual'} onClick={() => save({ threshold: config.threshold })}>Manual</button>
+          </div>
+          {config.mode === 'manual' ? (
+            <MoneyField label="Monto" value={config.threshold} onCommit={(n) => save({ threshold: n })} format={formatPesos} />
+          ) : (
+            <p className="cj-hz-hint">
+              <b className="cj-mono">{formatPesos(config.threshold)}</b>{' '}
+              {config.sample_size >= 15
+                ? `según tus últimas ${config.sample_size} compras: se ajusta solo a tu bolsillo.`
+                : 'mientras juntas más compras: después se ajusta solo a tu bolsillo.'}
+            </p>
+          )}
+        </div>
+
+        <button type="button" className="cj-hz-switch" aria-pressed={config.notify} onClick={() => save({ notify: !config.notify })}>
+          <Icon name={config.notify ? 'bell-ringing' : 'bell-slash'} duotone />
+          <span>Avisarme cuando vea un patrón<small>Como máximo 1 por día y 2 por semana.</small></span>
+          <span className="cj-hz-switch-dot" aria-hidden="true" />
+        </button>
       </section>
 
       <section className="cj-card" aria-label="Dónde se va">
@@ -96,8 +120,21 @@ function Panel({ data, threshold, setThreshold, limit, setLimit, goChat }) {
                 <span className="cj-row-cat">{t.count} {t.count === 1 ? 'compra' : 'compras'}</span>
               </div>
               <span className="cj-row-amt">{formatPesos(t.amount)}</span>
+              <button type="button" className="cj-hz-skip" onClick={() => save({ excluded: [...config.excluded, t.name] })} aria-label={`${t.name} no es hormiga`} title="No es hormiga">
+                <Icon name="eye-slash" />
+              </button>
             </div>
           ))
+        )}
+        {config.excluded.length > 0 && (
+          <div className="cj-hz-excluded">
+            <span>Excluidas, no las cuento:</span>
+            {config.excluded.map((name) => (
+              <button key={name} type="button" className="cj-hz-chip" onClick={() => save({ excluded: config.excluded.filter((x) => x !== name) })} aria-label={`Volver a contar ${name}`}>
+                {name}<Icon name="x" />
+              </button>
+            ))}
+          </div>
         )}
       </section>
 
@@ -193,18 +230,26 @@ const TITLES = {
 };
 
 function Hormiga() {
-  const { user, expenses } = useAppData();
+  const { user, expenses, hormigaConfig, saveHormigaConfig } = useAppData();
   const { formatPesos } = useMoney();
+  const { error } = useToast();
   const [view, setView] = useState('inicio');
   const [welcomed, setWelcomed] = useState(wasWelcomed);
-  const [threshold, setThresholdState] = useState(loadThreshold);
-  const [limit, setLimitState] = useState(loadAntLimit);
-  const data = useMemo(() => buildHormiga(expenses, threshold), [expenses, threshold]);
-  const prev = useMemo(() => buildHormiga(expenses, threshold, previousMonth(new Date())), [expenses, threshold]);
+  // Mientras llega la configuración del servidor, valores por defecto
+  const config = hormigaConfig || { threshold: DEFAULT_THRESHOLD, mode: 'auto', sample_size: 0, limit: null, notify: true, excluded: [] };
+  const threshold = config.threshold;
+  const limit = config.limit || DEFAULT_ANT_LIMIT;
+  const data = useMemo(() => buildHormiga(expenses, threshold, new Date(), config.excluded), [expenses, threshold, config.excluded]);
+  const prev = useMemo(() => buildHormiga(expenses, threshold, previousMonth(new Date()), config.excluded), [expenses, threshold, config.excluded]);
   const name = user?.username ? user.username.charAt(0).toUpperCase() + user.username.slice(1) : 'usuario';
 
-  const setThreshold = (n) => { setThresholdState(n); saveThreshold(n); };
-  const setLimit = (n) => { setLimitState(n); saveAntLimit(n); };
+  const save = async (patch) => {
+    try {
+      await saveHormigaConfig(patch);
+    } catch {
+      error('No se pudo guardar. Inténtalo de nuevo en un momento.');
+    }
+  };
 
   if (!welcomed) {
     return (
@@ -229,7 +274,7 @@ function Hormiga() {
         </div>
       </div>
       {view === 'inicio' && (
-        <Panel data={data} threshold={threshold} setThreshold={setThreshold} limit={limit} setLimit={setLimit} goChat={() => setView('asistente')} />
+        <Panel data={data} config={config} save={save} limit={limit} goChat={() => setView('asistente')} />
       )}
       {view === 'asistente' && (
         <Chat ctx={{ data, prev, threshold, money: formatPesos }} onPlan={() => setView('plan')} />

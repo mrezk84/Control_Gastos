@@ -6,6 +6,7 @@ from .. import schemas, models, crud
 from ..auth.utils import get_current_user
 from datetime import date
 from ..services.notify import notify, format_money, month_total, user_currency
+from ..services import hormiga as ant
 from ..services.export_safety import neutralize_for_csv, restore_from_csv, write_text_cell
 from typing import Optional
 from dateutil import parser as date_parser
@@ -39,6 +40,8 @@ def create_expense(
             f"Total del mes: {format_money(month_total(db, current_user.id, created.date), cur)}",
             link="/expenses",
         )
+    if created:
+        ant.maybe_notify(db, current_user, created)  # patrón de gastos hormiga; nunca rompe el registro
     return created
 
 @router.get("/", response_model=list[schemas.Expense])

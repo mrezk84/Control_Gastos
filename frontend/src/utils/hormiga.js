@@ -4,7 +4,7 @@ import { parseLocalDate } from './dashboardStats';
 export const DEFAULT_THRESHOLD = 300;
 export const DEFAULT_ANT_LIMIT = 3000;
 export const CHALLENGE_DAYS = 7;
-const KEYS = { threshold: 'hormiga.umbral', limit: 'hormiga.tope', days: 'hormiga.reto', welcome: 'hormiga.bienvenida', goals: 'hormiga.metas' };
+const KEYS = { days: 'hormiga.reto', welcome: 'hormiga.bienvenida', goals: 'hormiga.metas' };
 
 /** Nivel 0 = dentro del tope, 1 = cerca (desde `warnPct` %), 2 = tope superado. */
 export function antStatus(total, limit, warnPct = 80) {
@@ -15,13 +15,14 @@ export function antStatus(total, limit, warnPct = 80) {
   return { level, ratio, left: cap - spent, widthPct: Math.min(100, ratio * 100) };
 }
 
-const normalize = (text) => String(text || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+export const normalize = (text) => String(text || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 /**
  * Resumen del mes de `now`: total y cantidad de compras chicas, su peso sobre el gasto del mes,
  * gasto por semana del mes (4 tramos) y las tres descripciones que más suman ("dónde se va").
  */
-export function buildHormiga(expenses, threshold, now = new Date()) {
+export function buildHormiga(expenses, threshold, now = new Date(), excluded = []) {
+  const skip = new Set(excluded.map(normalize));
   const month = now.getMonth();
   const year = now.getFullYear();
   const inMonth = expenses.filter((e) => {
@@ -29,7 +30,7 @@ export function buildHormiga(expenses, threshold, now = new Date()) {
     return d.getMonth() === month && d.getFullYear() === year;
   });
   const monthTotal = inMonth.reduce((sum, e) => sum + e.amount, 0);
-  const small = inMonth.filter((e) => e.amount > 0 && e.amount < threshold);
+  const small = inMonth.filter((e) => e.amount > 0 && e.amount < threshold && !skip.has(normalize(e.description)));
   const total = Math.round(small.reduce((sum, e) => sum + e.amount, 0) * 100) / 100;
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -79,14 +80,6 @@ export function simulatorHint(pct, hasData) {
   return 'Un cambio pequeño, pero sumado todo el año ya cuenta.';
 }
 
-const readNumber = (key, fallback) => {
-  try {
-    const n = parseFloat(localStorage.getItem(key));
-    return n > 0 ? n : fallback;
-  } catch {
-    return fallback;
-  }
-};
 const writeValue = (key, value) => {
   try {
     localStorage.setItem(key, String(value));
@@ -95,10 +88,6 @@ const writeValue = (key, value) => {
   }
 };
 
-export const loadThreshold = () => readNumber(KEYS.threshold, DEFAULT_THRESHOLD);
-export const saveThreshold = (n) => writeValue(KEYS.threshold, n);
-export const loadAntLimit = () => readNumber(KEYS.limit, DEFAULT_ANT_LIMIT);
-export const saveAntLimit = (n) => writeValue(KEYS.limit, n);
 
 /** Días del reto cumplidos: arreglo de CHALLENGE_DAYS booleanos. */
 export function loadChallenge() {

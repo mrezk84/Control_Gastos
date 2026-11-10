@@ -33,6 +33,21 @@ class ProfileUpdate(BaseModel):
     currency: Optional[str] = None
     timezone: Optional[str] = None
 
+class HormigaConfig(BaseModel):
+    threshold: float                       # umbral efectivo: menor a este monto es compra chica
+    mode: str                              # "auto" | "manual"
+    manual_threshold: Optional[float] = None
+    sample_size: int = 0                   # compras que usó el modo automático
+    limit: Optional[float] = None
+    notify: bool = True
+    excluded: List[str] = []
+
+class HormigaConfigUpdate(BaseModel):
+    threshold: Optional[float] = None      # null = automático
+    limit: Optional[float] = None          # null = sin tope
+    notify: Optional[bool] = None
+    excluded: Optional[List[str]] = None
+
 class Token(BaseModel):
     access_token: str
     token_type: str

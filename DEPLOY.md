@@ -18,6 +18,7 @@ de quien los registra primero, y un frontend que apunte a un backend inexistente
    Después ejecuta también `backend/migrations/002_recordatorios.sql` (recordatorios, notificaciones y las columnas regionales de `users`): sin ella, las bases ya creadas fallan al leer usuarios.
    Y `backend/migrations/003_seguridad.sql` (correcciones de la auditoría de seguridad: columna `users.token_version`, enlaces de recuperación de un solo uso, transacciones de acceso social y limitador de intentos). **Ejecútala ANTES de desplegar el backend nuevo**: sin la columna nueva fallan todas las lecturas de usuarios. Después de desplegar, las sesiones existentes siguen valiendo, pero los enlaces de recuperación enviados antes del cambio dejan de funcionar (hay que pedir uno nuevo).
    Y `backend/migrations/004_vincular_cuenta_social.sql` (columnas `link_user_id` y `link_subject` de `oauth_flows`, para vincular Google o Microsoft a una cuenta con contraseña). **Ejecútala ANTES de desplegar**: sin ellas fallan todas las rutas del acceso social (el inicio de sesión con usuario y contraseña no se ve afectado).
+   Y `backend/migrations/005_avisos_hormiga.sql` (columnas `ant_threshold`, `ant_limit`, `ant_notify` y `ant_excluded` de `users`, para los avisos de gastos hormiga). **Ejecútala ANTES de desplegar**: sin ellas fallan todas las lecturas de usuarios.
 3. Comprueba que están las 4 tablas:
    ```sql
    select table_name, count(*) as columnas from information_schema.columns

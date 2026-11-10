@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from .routes import expenses, auth, budgets, oauth
-from .routes import receipts, reminders, notifications, push, cron
+from .routes import receipts, reminders, notifications, push, cron, hormiga
 from .database import Base, engine
 from .frontend_url import frontend_urls
 from dotenv import load_dotenv
@@ -57,6 +57,7 @@ app.include_router(reminders, prefix="/reminders")
 app.include_router(notifications, prefix="/notifications")
 app.include_router(push, prefix="/push")
 app.include_router(cron, prefix="/cron")
+app.include_router(hormiga, prefix="/hormiga")
 
 @app.get("/")
 def root():

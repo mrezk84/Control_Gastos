@@ -192,6 +192,10 @@ export const scanQr = (text) => api.post('/receipts/qr', { text });
 // Perfil regional (país, moneda, zona horaria)
 export const updateProfile = (profile) => api.put('/auth/me', profile);
 
+// Gastos hormiga: umbral (automático o manual), tope, avisos y compras excluidas
+export const getHormigaConfig = () => api.get('/hormiga/config');
+export const updateHormigaConfig = (patch) => api.put('/hormiga/config', patch);
+
 // Recordatorios de pago
 export const getReminders = (status = 'pending') => api.get('/reminders/', { params: { status } });
 export const createReminder = (reminder) => api.post('/reminders/', reminder);
