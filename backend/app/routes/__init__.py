@@ -7,3 +7,4 @@ from .reminders import router as reminders
 from .notifications import router as notifications
 from .push import router as push
 from .cron import router as cron
+from .hormiga import router as hormiga

@@ -33,6 +33,12 @@ describe('buildHormiga', () => {
     expect(r.weeks.filter((w) => w.current)).toHaveLength(1);
   });
 
+  test('las descripciones excluidas no cuentan (sin importar tildes)', () => {
+    const r2 = buildHormiga(expenses, 300, NOW, ['cafe']);
+    expect(r2.count).toBe(1);
+    expect(r2.top.map((t) => t.name)).toEqual(['Delivery']);
+  });
+
   test('sin gastos no rompe', () => {
     const empty = buildHormiga([], 300, NOW);
     expect(empty).toMatchObject({ total: 0, count: 0, sharePct: 0, top: [] });

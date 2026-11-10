@@ -8,6 +8,8 @@ export const AppDataContext = createContext({
   loading: true,
   refresh: () => {},
   saveProfile: async () => {},
+  hormigaConfig: null,
+  saveHormigaConfig: async () => {},
   notifications: [],
   unreadCount: 0,
   reminders: [],

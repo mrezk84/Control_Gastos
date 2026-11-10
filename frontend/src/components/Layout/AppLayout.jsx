@@ -4,11 +4,11 @@ import NotificationBell from '../caja/NotificationBell';
 import Ticker from '../caja/Ticker';
 import QuickAddExpense from '../QuickAddExpense';
 import { AppDataContext } from '../../context/ExpensesContext';
-import { getCurrentUser, getExpenses, getNotifications, getReminders, logout, updateProfile } from '../../services/api';
+import { getCurrentUser, getExpenses, getHormigaConfig, getNotifications, getReminders, logout, updateHormigaConfig, updateProfile } from '../../services/api';
 import { useTheme } from '../../hooks/useTheme';
 import { buildDashboard } from '../../utils/dashboardStats';
 import { formatMoney } from '../../utils/formatters';
-import { buildHormiga, loadThreshold } from '../../utils/hormiga';
+import { buildHormiga, DEFAULT_THRESHOLD } from '../../utils/hormiga';
 import { missingRegional } from '../../utils/regional';
 import { EXPENSE_CREATED_EVENT, FOCUS_REGISTER_EVENT } from '../../utils/events';
 import logger from '../../utils/logger';
@@ -29,6 +29,7 @@ function AppLayout({ children }) {
   const [expenses, setExpenses] = useState([]);
   const [notifications, setNotifications] = useState({ unread_count: 0, notifications: [] });
   const [reminders, setReminders] = useState([]);
+  const [hormigaConfig, setHormigaConfig] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -99,6 +100,7 @@ function AppLayout({ children }) {
     if (!signedIn) return undefined;
     refreshNotifications();
     refreshReminders();
+    getHormigaConfig().then((res) => setHormigaConfig(res.data)).catch(() => {});
     const onVisible = () => {
       if (document.visibilityState === 'visible') {
         refreshNotifications();
@@ -159,7 +161,7 @@ function AppLayout({ children }) {
 
   const tickerItems = useMemo(() => {
     if (pathname === '/hormiga') {
-      const ant = buildHormiga(expenses, loadThreshold());
+      const ant = buildHormiga(expenses, hormigaConfig?.threshold ?? DEFAULT_THRESHOLD, new Date(), hormigaConfig?.excluded || []);
       return [
         ['Gastos hormiga', formatMoney(ant.total, user?.currency)],
         ['Compras chicas', String(ant.count)],
@@ -174,7 +176,7 @@ function AppLayout({ children }) {
       ['Categoría top', stats.topCategory],
       ['Actualizado', stats.todayLong],
     ];
-  }, [stats, expenses, pathname, user?.currency]);
+  }, [stats, expenses, pathname, user?.currency, hormigaConfig]);
 
   const handleLogout = () => {
     logout();
@@ -191,6 +193,12 @@ function AppLayout({ children }) {
     setUser(res.data);
   }, []);
 
+  // Preferencias de gastos hormiga (umbral, tope, avisos, excluidas): viven en el servidor
+  const saveHormigaConfig = useCallback(async (patch) => {
+    const res = await updateHormigaConfig(patch);
+    setHormigaConfig(res.data);
+  }, []);
+
   const contextValue = useMemo(
     () => ({
       user,
@@ -203,8 +211,10 @@ function AppLayout({ children }) {
       refreshNotifications,
       refreshReminders,
       saveProfile,
+      hormigaConfig,
+      saveHormigaConfig,
     }),
-    [user, expenses, loading, refreshAll, notifications, reminders, refreshNotifications, refreshReminders, saveProfile]
+    [user, expenses, loading, refreshAll, notifications, reminders, refreshNotifications, refreshReminders, saveProfile, hormigaConfig, saveHormigaConfig]
   );
 
   if (loading) {

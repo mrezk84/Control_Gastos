@@ -19,6 +19,11 @@ class User(Base):
     timezone = Column(String(64), nullable=True)     # IANA; si falta, America/Montevideo
     # Se incrementa al restablecer la contraseña: los tokens de sesión con otra versión dejan de valer
     token_version = Column(Integer, nullable=False, default=0, server_default="0")
+    # Gastos hormiga (ver services/hormiga.py y migrations/005_avisos_hormiga.sql)
+    ant_threshold = Column(Float, nullable=True)      # umbral manual; si falta, es automático
+    ant_limit = Column(Float, nullable=True)          # tope mensual de compras chicas
+    ant_notify = Column(Boolean, nullable=False, default=True, server_default="1")
+    ant_excluded = Column(String, nullable=True)      # lista JSON de descripciones normalizadas
 
     expenses = relationship("Expense", back_populates="owner")
 
@@ -135,7 +140,7 @@ class Notification(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), index=True)
-    kind = Column(String(20))  # due_soon | due_today | overdue | payment_registered
+    kind = Column(String(20))  # due_soon | due_today | overdue | payment_registered | ant_repeat | ant_limit
     title = Column(String(255))
     body = Column(String(500))
     link = Column(String(255), nullable=True)
