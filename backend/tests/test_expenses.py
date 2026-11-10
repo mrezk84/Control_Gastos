@@ -14,6 +14,18 @@ class TestCrud:
         lista = client.get("/expenses/", headers=auth).json()
         assert [e["id"] for e in lista] == [g["id"]]
 
+    def test_conserva_los_centavos(self, client, auth):
+        g = crear(client, auth, amount=125.50)
+        assert g["amount"] == 125.5
+        r = client.put(f"/expenses/{g['id']}", headers=auth, json={"amount": 10.126})
+        assert r.json()["amount"] == 10.13
+
+    def test_informa_el_total_sin_paginar(self, client, auth):
+        for _ in range(3):
+            crear(client, auth)
+        r = client.get("/expenses/?limit=2", headers=auth)
+        assert len(r.json()) == 2 and r.headers["X-Total-Count"] == "3"
+
     def test_requiere_sesion(self, client):
         assert client.get("/expenses/").status_code == 401
         assert client.post("/expenses/", json=GASTO).status_code == 401

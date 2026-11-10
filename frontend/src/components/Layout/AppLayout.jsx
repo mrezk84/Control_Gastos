@@ -8,7 +8,7 @@ import { AppDataContext } from '../../context/ExpensesContext';
 import { getCurrentUser, getExpenses, getNotifications, getReminders, logout, updateProfile } from '../../services/api';
 import { useTheme } from '../../hooks/useTheme';
 import { buildDashboard } from '../../utils/dashboardStats';
-import { formatPesos } from '../../utils/formatters';
+import { formatMoney } from '../../utils/formatters';
 import { missingRegional } from '../../utils/regional';
 import { EXPENSE_CREATED_EVENT, FOCUS_REGISTER_EVENT } from '../../utils/events';
 import logger from '../../utils/logger';
@@ -158,11 +158,11 @@ function AppLayout({ children }) {
     () => [
       ['Tu control financiero', null],
       ['Gastos registrados', String(stats.count)],
-      ['Total', formatPesos(stats.total)],
+      ['Total', formatMoney(stats.total, user?.currency)],
       ['Categoría top', stats.topCategory],
       ['Actualizado', stats.todayLong],
     ],
-    [stats]
+    [stats, user?.currency]
   );
 
   const handleLogout = () => {

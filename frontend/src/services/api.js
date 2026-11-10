@@ -84,14 +84,27 @@ export const createExpense = (expense) => {
   return api.post('/expenses/', expense);
 };
 
-export const getExpenses = (params = {}) => {
-  return api.get('/expenses/', { params });
+const EXPENSES_PAGE_SIZE = 5000; // máximo por pedido del backend
+
+/**
+ * Todos los gastos que cumplen los filtros. El backend entrega a lo sumo 5.000 por pedido y
+ * avisa el total real en X-Total-Count: se piden las tandas que falten para no calcular
+ * totales y estadísticas con una lista incompleta. Si una tanda falla, falla todo (nunca parcial).
+ */
+export const getExpenses = async (params = {}) => {
+  const first = await api.get('/expenses/', { params: { ...params, limit: EXPENSES_PAGE_SIZE } });
+  const total = Number(first.headers?.['x-total-count']) || first.data.length;
+  let all = first.data;
+  while (all.length < total) {
+    const next = await api.get('/expenses/', { params: { ...params, limit: EXPENSES_PAGE_SIZE, offset: all.length } });
+    if (!next.data.length) break;
+    all = all.concat(next.data);
+  }
+  return { ...first, data: all };
 };
 
 // Alias used by pages that pass optional { startDate, endDate, category } filters
-export const getAllExpenses = (params = {}) => {
-  return api.get('/expenses/', { params });
-};
+export const getAllExpenses = getExpenses;
 
 export const getExpensesSummary = () => {
   return api.get('/expenses/summary');

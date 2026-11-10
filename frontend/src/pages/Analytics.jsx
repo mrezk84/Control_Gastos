@@ -14,7 +14,8 @@ import {
 } from 'chart.js';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 import { getAllExpenses, getExpensesSummary } from '../services/api';
-import { CHART_COLORS, formatCurrency } from '../utils';
+import { CHART_COLORS } from '../utils';
+import { useMoney } from '../context/ExpensesContext';
 import logger from '../utils/logger';
 import { useCountUp } from '../hooks/useCountUp';
 import { EXPENSE_CREATED_EVENT } from '../utils/events';
@@ -42,6 +43,7 @@ const PERIOD_OPTIONS = [
 ];
 
 function Analytics() {
+  const { formatCurrency } = useMoney();
   const [expenses, setExpenses] = useState([]);
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -316,7 +318,7 @@ function Analytics() {
     }
 
     return insightsList;
-  }, [analytics, summary]);
+  }, [analytics, summary, formatCurrency]);
 
   // Chart data
   const categoryChartData = useMemo(() => ({

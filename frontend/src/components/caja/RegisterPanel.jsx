@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createExpense, createReminder, updateExpense, uploadReceipt, scanQr, scanReceipt } from '../../services/api';
-import { useAppData } from '../../context/ExpensesContext';
+import { useAppData, useMoney } from '../../context/ExpensesContext';
 import { decodeQrFromFile } from '../../utils/qrFromImage';
 import { classifyScan, shortDate } from '../../utils/scanFlow';
 import { useToast } from '../ui/ToastContainer';
@@ -12,11 +12,6 @@ import { pressKey } from '../../utils/amountKeypad';
 const CATEGORIES = Object.keys(CATEGORY_ICON);
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '000', '0', '⌫'];
 const MAX_RECEIPT_BYTES = 4 * 1024 * 1024; // límite del backend (Vercel acepta hasta 4,5 MB)
-
-// "$3.000": sin espacio, como el resto del Dashboard; admite hasta 2 decimales (gastos editados)
-const money = {
-  format: (n) => `$${Number(n).toLocaleString('es-AR', { maximumFractionDigits: 2 })}`,
-};
 
 const todayLocal = () => {
   const d = new Date();
@@ -35,6 +30,7 @@ function RegisterPanel({ editing, onSaved, onCancelEdit }) {
   // Datos del último escaneo: { source: 'qr' | 'ocr', dueDate: 'aaaa-mm-dd' | null }; dueDate solo si la factura vence en el futuro
   const [scan, setScan] = useState(null);
   const { user } = useAppData();
+  const { formatMoney } = useMoney();
   const descRef = useRef(null);
   const formRef = useRef(null);
   const attachRef = useRef(null);
@@ -142,7 +138,7 @@ function RegisterPanel({ editing, onSaved, onCancelEdit }) {
       const data = res.data?.data || {};
       setForm((f) => {
         const next = { ...f };
-        if (data.amount) next.amount = String(Math.round(data.amount));
+        if (data.amount) next.amount = String(Math.round(Number(data.amount) * 100) / 100);
         if (data.description) next.description = data.description;
         if (data.date && /^\d{4}-\d{2}-\d{2}$/.test(data.date)) next.date = data.date;
         if (!categoryTouched) {
@@ -265,7 +261,7 @@ function RegisterPanel({ editing, onSaved, onCancelEdit }) {
             <i className={categoryIconClass(form.category || 'Otros')} aria-hidden="true" /> {catLabel}
           </span>
         </div>
-        <div className="cj-display-amt" aria-live="polite">{money.format(Number(form.amount || 0))}</div>
+        <div className="cj-display-amt" aria-live="polite">{formatMoney(Number(form.amount || 0))}</div>
       </div>
 
       <div className="cj-keys">

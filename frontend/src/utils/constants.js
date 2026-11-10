@@ -42,14 +42,6 @@ export const CHART_COLORS = [
   '#f0f0ff', // white
 ];
 
-// Configuración de moneda
-export const CURRENCY_CONFIG = {
-  style: 'currency',
-  currency: 'ARS',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
-};
-
 // Configuración de fecha
 export const DATE_CONFIG = {
   year: 'numeric',

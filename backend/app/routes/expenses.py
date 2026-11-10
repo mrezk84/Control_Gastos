@@ -43,6 +43,7 @@ def create_expense(
 
 @router.get("/", response_model=list[schemas.Expense])
 def get_expenses(
+    response: Response,
     startDate: Optional[date] = Query(None),
     endDate: Optional[date] = Query(None),
     category: Optional[str] = Query(None),
@@ -51,6 +52,10 @@ def get_expenses(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
+    # Total sin paginar: permite al cliente detectar que la lista vino incompleta y pedir el resto
+    response.headers["X-Total-Count"] = str(
+        crud.count_expenses(db, current_user.id, start_date=startDate, end_date=endDate, category=category)
+    )
     return crud.get_expenses(
         db, current_user.id,
         start_date=startDate, end_date=endDate, category=category,
@@ -95,7 +100,7 @@ def get_expense_summary(
             monthly_trends=[]
         )
     
-    total = sum(e.amount for e in expenses)
+    total = round(sum(e.amount for e in expenses), 2)
     avg = total / len(expenses)
     
     # Category breakdown

@@ -3,11 +3,12 @@ import { useToast } from '../ui/ToastContainer';
 import { useAppData } from '../../context/ExpensesContext';
 import { payReminder, updateReminder } from '../../services/api';
 import { categoryIconClass } from '../../utils/categoryIcons';
-import { formatPesos } from '../../utils/formatters';
+import { useMoney } from '../../context/ExpensesContext';
 import { daysUntil, dueText, shortDate } from '../../utils/scanFlow';
 
 /** Panel «Pendientes de pago» del Dashboard. Si no hay recordatorios pendientes, no se muestra. */
 function PendingPayments() {
+  const { formatPesos } = useMoney();
   const { reminders, refresh } = useAppData();
   const { success, error } = useToast();
   const [busyId, setBusyId] = useState(null);

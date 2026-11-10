@@ -3,7 +3,8 @@ import { getExpenses, deleteExpense, exportExpensesCSV, exportExpensesExcel, imp
 import ExpenseFilters from '../components/Filters/ExpenseFilters';
 import EmptyState from '../components/ui/EmptyState';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
-import { CATEGORY_EMOJIS, CATEGORY_COLORS, formatCurrency, formatDate } from '../utils';
+import { CATEGORY_EMOJIS, CATEGORY_COLORS, formatDate } from '../utils';
+import { useMoney } from '../context/ExpensesContext';
 import logger from '../utils/logger';
 import { useToast } from '../components/ui/ToastContainer';
 import { EXPENSE_CREATED_EVENT } from '../utils/events';
@@ -16,6 +17,7 @@ const PAGE_SIZE = 25;
  * rendering the whole (potentially long) list up front.
  */
 function ExpensesTable({ expenses, sortBy, sortOrder, onSort, onDeleteClick }) {
+  const { formatCurrency } = useMoney();
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const sentinelRef = useRef(null);
 
@@ -108,6 +110,7 @@ function ExpensesTable({ expenses, sortBy, sortOrder, onSort, onDeleteClick }) {
 }
 
 function Expenses() {
+  const { formatCurrency } = useMoney();
   const [allExpenses, setAllExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
