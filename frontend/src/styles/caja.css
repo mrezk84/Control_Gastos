@@ -299,56 +299,64 @@
 .cj-login-ticker .cj-ticker { background: #0e0f11; color: var(--display-amt); }
 .cj-login-ticker .cj-ticker-dot { background: var(--display-amt); }
 .cj-login-aside {
-  flex: 1 1 min(420px, 100%); min-height: 260px; background: var(--acc); color: var(--ink-on-acc);
-  padding: clamp(24px, 4vw, 48px); display: flex; flex-direction: column; justify-content: space-between; gap: 32px;
+  flex: 1 1 min(420px, 100%); min-height: 260px; color: var(--tx); position: relative; overflow: hidden;
+  background:
+    radial-gradient(ellipse 560px 420px at 85% 8%, rgba(215, 245, 74, 0.16), rgba(215, 245, 74, 0) 100%),
+    var(--panel);
+  border-right: 1px solid var(--line);
+  padding: clamp(24px, 4vw, 56px); display: flex; flex-direction: column; justify-content: space-between; gap: 32px;
 }
 .cj-login-brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 16px; }
 .cj-login-mark {
-  width: 36px; height: 36px; border-radius: 10px; background: #0e0f11; color: var(--display-amt);
+  width: 36px; height: 36px; border-radius: 11px; background: var(--acc); color: var(--ink-on-acc);
   display: grid; place-items: center; font: 600 18px/1 'Geist Mono Variable', 'Geist Mono', monospace;
 }
-.cj-login-pitch { display: flex; flex-direction: column; gap: 20px; max-width: 440px; }
-.cj-login-pitch h2 { font-size: clamp(30px, 4vw, 48px); font-weight: 500; letter-spacing: -0.025em; line-height: 1.05; text-wrap: balance; }
-.cj-login-receipt {
-  background: #e9e8e1; color: #1b1c1a; border-radius: 6px 6px 0 0; padding: 18px 20px 28px; transform: rotate(-1.5deg);
-  font-family: 'Geist Mono Variable', 'Geist Mono', monospace; display: flex; flex-direction: column; gap: 8px;
-  -webkit-mask: radial-gradient(circle at 6px 100%, transparent 5px, #000 5.5px) 0 0 / 12px 100% repeat-x;
-  mask: radial-gradient(circle at 6px 100%, transparent 5px, #000 5.5px) 0 0 / 12px 100% repeat-x;
+.cj-login-pitch { display: flex; flex-direction: column; gap: 18px; max-width: 460px; }
+.cj-login-pitch h2 { font-size: clamp(32px, 4.2vw, 54px); font-weight: 600; letter-spacing: -0.035em; line-height: 1.02; text-wrap: balance; }
+.cj-login-pitch h2 em { font-style: normal; color: var(--acct); }
+.cj-login-pitch p { margin: 0; font-size: 17px; line-height: 1.5; color: var(--mu); max-width: 400px; }
+.cj-login-preview {
+  margin-top: 6px; padding: 20px; border-radius: 20px; background: var(--raised); border: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 14px; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
 }
-.cj-login-receipt-row { display: flex; justify-content: space-between; font-size: 12px; letter-spacing: 0.08em; color: #4b4d48; }
-.cj-login-receipt-total { letter-spacing: 0.06em; color: inherit; }
-.cj-login-receipt-rule { border-top: 1px dashed #b9b8b0; }
-.cj-login-receipt-line { display: flex; align-items: baseline; gap: 8px; font-size: 14px; }
-.cj-login-receipt .cj-dots { flex: 1; border-bottom: 1px dotted #9d9c95; }
-.cj-login-lamps { display: flex; gap: 10px; }
-.cj-login-lamps span { width: 16px; height: 16px; border-radius: 50%; background: #0e0f11; }
-.cj-login-lamps span:nth-child(2) { opacity: 0.45; }
-.cj-login-lamps span:nth-child(3) { opacity: 0.2; }
+.cj-login-preview-row, .cj-login-preview-item { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 13px; color: var(--mu); }
+.cj-login-chip { padding: 3px 10px; border-radius: 999px; background: rgba(98, 217, 179, 0.16); color: var(--ok); font-size: 12px; font-weight: 500; }
+.cj-login-preview-amt { font: 500 40px/1 'Geist Mono Variable', 'Geist Mono', monospace; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.cj-login-preview-amt small { font-size: 20px; color: var(--mu); }
+.cj-login-preview-bar { height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.cj-login-preview-bar span { display: block; width: 65%; height: 100%; border-radius: 999px; background: var(--acc); }
+.cj-login-preview-item { padding-top: 12px; border-top: 1px solid var(--line); font-size: 14px; color: var(--tx); }
+.cj-login-preview-item b { font: 500 14px 'Geist Mono Variable', 'Geist Mono', monospace; }
+.cj-login-points { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.cj-login-points li { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); font-size: 13px; color: var(--mu); }
+.cj-login-points i { font-size: 16px; color: var(--acct); }
 
 .cj-login-main { flex: 1 1 min(420px, 100%); display: flex; flex-direction: column; padding: clamp(20px, 4vw, 40px); min-width: 0; }
 .cj-login-top { display: flex; justify-content: flex-end; }
 .cj-login-theme {
   width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--raised); color: var(--tx);
-  display: grid; place-items: center; font-size: 19px; cursor: pointer; box-shadow: 0 3px 0 var(--key);
+  display: grid; place-items: center; font-size: 19px; cursor: pointer;
 }
-.cj-login-theme:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--key); }
+.cj-login-theme { border-radius: 999px; transition: background 0.15s; }
+.cj-login-theme:hover { background: var(--line); }
 .cj-login-center { flex: 1; display: grid; place-items: center; padding: 24px 0; }
 .cj-login-form { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 18px; }
 .cj-login-head { display: flex; flex-direction: column; gap: 8px; }
-.cj-login-head h1 { font-size: clamp(28px, 4vw, 38px); font-weight: 500; letter-spacing: -0.025em; line-height: 1.05; }
+.cj-login-head h1 { font-size: clamp(28px, 4vw, 40px); font-weight: 600; letter-spacing: -0.025em; line-height: 1.05; }
 .cj-login-field { display: flex; flex-direction: column; gap: 8px; }
 .cj-login-field > span, .cj-login-field > label { font-size: 13px; color: var(--mu); }
 .cj-login-alt a { color: var(--acct); font-weight: 500; }
 .cj-login-alt a:hover { text-decoration: underline; }
 .cj-login-field input {
-  height: 52px; width: 100%; border-radius: 12px; border: 1px solid var(--line); background: var(--raised); color: var(--tx);
-  padding: 0 14px; font: 16px 'Geist Variable', 'Geist', system-ui, sans-serif; outline: none;
+  height: 52px; width: 100%; border-radius: 14px; border: 1px solid var(--line); background: var(--raised); color: var(--tx);
+  padding: 0 16px; transition: border-color 0.15s; font: 16px 'Geist Variable', 'Geist', system-ui, sans-serif; outline: none;
 }
 .cj-login-field input[aria-invalid="true"] { border-color: var(--bad); }
 .cj-login-field input::placeholder { color: var(--mu); opacity: 1; }
 .cj-login-forgot { align-self: flex-end; display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px; margin-top: -6px; font-size: 14px; font-weight: 500; color: var(--acct); }
 .cj-login-forgot:hover { text-decoration: underline; }
-.cj-login-field input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.cj-login-field input:hover { border-color: var(--mu); }
+.cj-login-field input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-color: transparent; }
 .cj-login-pw { position: relative; display: block; }
 .cj-login-pw input { padding-right: 56px; }
 .cj-login-pw button[aria-pressed="true"] { color: var(--acct); }
@@ -359,10 +367,11 @@
 .cj-login-error { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; color: var(--bad); }
 .cj-login-error i { font-size: 18px; }
 .cj-login-submit {
-  height: 54px; border-radius: 12px; border: 0; background: var(--acc); color: var(--ink-on-acc); cursor: pointer;
-  font: 600 16px 'Geist Variable', 'Geist', system-ui, sans-serif; box-shadow: 0 4px 0 var(--acc-edge);
+  height: 54px; border-radius: 999px; border: 0; background: var(--acc); color: var(--ink-on-acc); cursor: pointer;
+  font: 600 16px 'Geist Variable', 'Geist', system-ui, sans-serif; transition: filter 0.15s, transform 0.1s;
 }
-.cj-login-submit:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--acc-edge); }
+.cj-login-submit:hover:not(:disabled) { filter: brightness(1.06); }
+.cj-login-submit:active:not(:disabled) { transform: scale(0.985); }
 .cj-login-submit:disabled { opacity: 0.7; cursor: progress; }
 .cj-login-lede { margin: 0; font-size: 15px; line-height: 1.45; color: var(--mu); }
 .cj-login-note { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; color: var(--ok); }
@@ -373,7 +382,7 @@
 .cj-login-or::before, .cj-login-or::after { content: ''; flex: 1; height: 1px; background: var(--line); }
 .cj-login-oauth { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .cj-login-oauth svg { width: 20px; height: 20px; flex: none; }
-.cj-login-oauth button { height: 52px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; }
+.cj-login-oauth button { height: 52px; border-radius: 999px; box-shadow: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; }
 .cj-strength { display: flex; flex-direction: column; gap: 8px; margin-top: -6px; }
 .cj-strength-bars { display: flex; gap: 4px; }
 .cj-strength-bars span { flex: 1; height: 6px; border-radius: 3px; transition: background 0.2s; }
@@ -384,8 +393,8 @@
 /* En pantallas estrechas el panel de acento es solo una franja de marca: el formulario manda */
 @media (max-width: 839px) {
   .cj-login { position: relative; }
-  .cj-login-aside { flex: 1 1 100%; min-height: 0; padding: 14px 72px 14px 16px; gap: 0; flex-direction: row; align-items: center; }
-  .cj-login-pitch, .cj-login-lamps { display: none; }
+  .cj-login-aside { flex: 1 1 100%; min-height: 0; border-right: 0; border-bottom: 1px solid var(--line); padding: 14px 72px 14px 16px; gap: 0; flex-direction: row; align-items: center; }
+  .cj-login-pitch, .cj-login-points { display: none; }
   .cj-login-main { flex: 1 1 100%; padding: 8px 16px 16px; }
   .cj-login-top { position: absolute; top: 10px; right: 12px; z-index: 1; }
   .cj-login-center { padding: 12px 0; place-items: start center; }

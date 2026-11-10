@@ -30,15 +30,23 @@ function AuthShell({ children }) {
             <span>Control de Gastos</span>
           </div>
           <div className="cj-login-pitch">
-            <h2>Cada peso, a la vista.</h2>
-            <div className="cj-login-receipt">
-              <div className="cj-login-receipt-row"><span>ÚLTIMO REGISTRO</span><span>N.º 0042</span></div>
-              <div className="cj-login-receipt-rule" />
-              <div className="cj-login-receipt-line"><span>Supermercado</span><span className="cj-dots" /><b>$38.420</b></div>
-              <div className="cj-login-receipt-row cj-login-receipt-total"><span>TOTAL MES</span><b>$248.700</b></div>
+            <h2>Cada peso, <em>a la vista.</em></h2>
+            <p>Escanea el recibo, registra con centavos y mira cuánto te queda del mes.</p>
+            <div className="cj-login-preview">
+              <div className="cj-login-preview-row">
+                <span>Gastado en el mes</span>
+                <span className="cj-login-chip">−8,4 %</span>
+              </div>
+              <div className="cj-login-preview-amt">$58.420<small>,50</small></div>
+              <div className="cj-login-preview-bar"><span /></div>
+              <div className="cj-login-preview-item"><span>Supermercado</span><b>−$4.250,50</b></div>
             </div>
           </div>
-          <div className="cj-login-lamps"><span /><span /><span /></div>
+          <ul className="cj-login-points">
+            <li><i className="ph ph-qr-code" aria-hidden="true" />Escaneo QR y OCR</li>
+            <li><i className="ph ph-bell" aria-hidden="true" />Avisos de vencimiento</li>
+            <li><i className="ph ph-globe" aria-hidden="true" />Tu moneda</li>
+          </ul>
         </aside>
 
         <main className="cj-login-main">
