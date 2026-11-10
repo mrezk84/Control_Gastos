@@ -6,7 +6,9 @@ describe('explainPushError', () => {
   test('AbortError al suscribirse en Brave explica cómo activar el servicio de Google', () => {
     const msg = explainPushError('subscribe', abort, true);
     expect(msg).toMatch(/Brave/);
-    expect(msg).toMatch(/brave:\/\/settings\/privacy/);
+    expect(msg).toMatch(/brave:\/\/settings/);
+    expect(msg).toMatch(/Chrome, Edge o Firefox/);
+    expect(msg).toMatch(/campana/);
   });
 
   test('AbortError en otro navegador apunta a conexión, extensiones o VPN', () => {

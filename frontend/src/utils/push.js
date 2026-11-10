@@ -24,8 +24,8 @@ export function explainPushError(step, err, brave = false) {
   if (step === 'subscribe') {
     if (err?.name === 'AbortError') {
       return brave
-        ? 'Brave bloquea el servicio de notificaciones de Google. Actívalo en brave://settings/privacy → "Usar servicios de Google para mensajería push", reinicia Brave e inténtalo de nuevo.'
-        : 'Tu navegador no pudo conectarse con su servicio de notificaciones. Revisa tu conexión y que ninguna extensión o VPN bloquee a Google (fcm.googleapis.com), y vuelve a intentarlo.';
+        ? 'Brave bloquea el servicio de notificaciones de Google. Busca "push" en brave://settings y activa "Usar servicios de Google para mensajería push" (si tu versión no la tiene, usa Chrome, Edge o Firefox para recibir avisos del sistema). Los avisos siguen apareciendo en la campana.'
+        : 'Tu navegador no pudo conectarse con su servicio de notificaciones. Revisa tu conexión y que ninguna extensión o VPN bloquee a Google (fcm.googleapis.com), y vuelve a intentarlo. Los avisos siguen apareciendo en la campana.';
     }
     if (err?.name === 'NotAllowedError') {
       return 'El navegador no permitió la suscripción. Revisa que las notificaciones de este sitio estén en "Permitir".';
