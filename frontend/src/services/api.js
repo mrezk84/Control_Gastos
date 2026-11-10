@@ -118,12 +118,16 @@ export const deleteExpense = (id) => {
   return api.delete(`/expenses/${id}`);
 };
 
+// Los filtros vacíos ('' o null) no se envían: el backend rechaza "startDate=" con 422
+const withoutEmpty = (params) =>
+  Object.fromEntries(Object.entries(params).filter(([, v]) => v !== '' && v !== null && v !== undefined));
+
 export const exportExpensesCSV = (params = {}) => {
-  return api.get('/expenses/export/csv', { params, responseType: 'blob' });
+  return api.get('/expenses/export/csv', { params: withoutEmpty(params), responseType: 'blob' });
 };
 
 export const exportExpensesExcel = (params = {}) => {
-  return api.get('/expenses/export/excel', { params, responseType: 'blob' });
+  return api.get('/expenses/export/excel', { params: withoutEmpty(params), responseType: 'blob' });
 };
 
 export const importExpensesCSV = (file) => {
