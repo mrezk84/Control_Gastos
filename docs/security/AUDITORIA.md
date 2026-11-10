@@ -130,7 +130,7 @@ Rama `fix/auditoria-seguridad`. Pruebas del backend: 193 satisfactorias (las 109
 
 | # | Hallazgo | Estado | Qué se hizo |
 | --- | --- | --- | --- |
-| 1 | Apropiación anticipada por correo | **Corregido, con una decisión pendiente** | El acceso social identifica por (proveedor, sujeto estable); un correo ya registrado se rechaza con aviso en lugar de vincularse. Pendiente: verificar el correo de las cuentas locales (ver abajo). |
+| 1 | Apropiación anticipada por correo | **Corregido, con una decisión pendiente** | El acceso social identifica por (proveedor, sujeto estable) y no vincula por correo. Si el correo ya tiene una cuenta con contraseña, se ofrece vincular exigiendo la contraseña de esa cuenta (además de la identidad del proveedor y del verificador del navegador), con 5 intentos por cuenta cada 15 minutos. Pendiente: verificar el correo de las cuentas locales (ver abajo). |
 | 2 | SSRF por Web Push | **Corregido** | Lista de hosts de servicios push (HTTPS, puerto 443, sin IP ni credenciales; ampliable con `PUSH_ALLOWED_HOSTS`), validación al suscribir y al enviar, comprobación de DNS a direcciones públicas, sin redirecciones, timeout de 10 s y tope de 10 suscripciones por persona. |
 | 3 | Sin limitación de intentos | **Corregido** | Limitador compartido en la base de datos (`rate_limit_hits`): login por cuenta (5 en 15 min) y por IP, registro, recuperación y canje OAuth. IP de proxy solo si la infraestructura lo garantiza. Contraseña mínima de 8 caracteres (máx. 128). |
 | 4 | Recuperación reutilizable / sesiones vivas | **Corregido** | Token aleatorio, solo se guarda su hash, un solo uso atómico, 15 min; pedir otro invalida el anterior. Al restablecer sube `users.token_version` y las sesiones anteriores dejan de valer. |

@@ -34,3 +34,21 @@ export function takeOAuthVerifier() {
     return null;
   }
 }
+
+/** Devuelve el verificador guardado SIN borrarlo (la vinculación puede necesitar varios intentos de contraseña). */
+export function peekOAuthVerifier() {
+  try {
+    return sessionStorage.getItem(KEY);
+  } catch (e) {
+    return null;
+  }
+}
+
+/** Borra el verificador guardado. */
+export function clearOAuthVerifier() {
+  try {
+    sessionStorage.removeItem(KEY);
+  } catch (e) {
+    // sin sessionStorage no hay nada que borrar
+  }
+}
