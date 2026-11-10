@@ -185,6 +185,12 @@ function AppLayout({ children }) {
     window.dispatchEvent(new CustomEvent(EXPENSE_CREATED_EVENT, { detail: expense }));
   }, []);
 
+  // Guarda datos del perfil (moneda, país…) y deja el usuario del contexto al día
+  const saveProfile = useCallback(async (patch) => {
+    const res = await updateProfile(patch);
+    setUser(res.data);
+  }, []);
+
   const contextValue = useMemo(
     () => ({
       user,
@@ -196,8 +202,9 @@ function AppLayout({ children }) {
       reminders,
       refreshNotifications,
       refreshReminders,
+      saveProfile,
     }),
-    [user, expenses, loading, refreshAll, notifications, reminders, refreshNotifications, refreshReminders]
+    [user, expenses, loading, refreshAll, notifications, reminders, refreshNotifications, refreshReminders, saveProfile]
   );
 
   if (loading) {

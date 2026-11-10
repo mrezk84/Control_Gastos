@@ -7,6 +7,7 @@ export const AppDataContext = createContext({
   expenses: [],
   loading: true,
   refresh: () => {},
+  saveProfile: async () => {},
   notifications: [],
   unreadCount: 0,
   reminders: [],
