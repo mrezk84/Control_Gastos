@@ -4,66 +4,69 @@
    Se carga al final de index.css; todo el rediseño cuelga de la clase .cj
    ========================================================================== */
 
-/* ---- Tokens: oscuro (predeterminado) y claro ---- */
+/* ---- Tokens: oscuro (predeterminado) y claro ----
+   Paleta "Tinta + Lima": neutros de tinta con un leve tono azul, lima como único acento,
+   menta solo para lo positivo y coral solo para errores. Las categorías van en una rampa
+   de lima a verde (se distinguen por luminosidad, no solo por tono) más un gris para "Otros". */
 :root,
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0e0f11;
-  --panel: #16171a;
-  --raised: #1d1f22;
-  --line: #34373b;
-  --tx: #ededea;
-  --mu: #a8aaa7;
-  --acc: oklch(0.68 0.13 58);
-  --acct: oklch(0.68 0.13 58);
-  --accsoft: oklch(0.68 0.13 58 / 0.12);
-  --acc-edge: oklch(0.46 0.1 52);
-  --key: #08090a;
+  --bg: #0e1013;
+  --panel: #161920;
+  --raised: #1f232b;
+  --line: #272c35;
+  --tx: #eef1f5;
+  --mu: #9aa3b2;
+  --acc: #d7f54a;
+  --acct: #d7f54a;
+  --accsoft: rgba(215, 245, 74, 0.14);
+  --acc-edge: #8aa52a;
+  --key: #080a0d;
   --paper: #e9e8e1;
-  --ink-on-acc: #0e0f11;
-  --display-bg: #0b0c0d;
-  --display-mu: #a8aaa7;
-  --display-amt: oklch(0.78 0.14 58);
-  --display-line: #1a1c1e;
+  --ink-on-acc: #0e1013;
+  --display-bg: #0a0c0f;
+  --display-mu: #9aa3b2;
+  --display-amt: #d7f54a;
+  --display-line: #1a1e26;
   --paper-tx: #1b1c1a;
   --paper-mu: #4b4d48;
-  --danger: #ff8a7d;
-  --focus: oklch(0.85 0.13 215);
-  --ok: oklch(0.8 0.17 150);
-  --warn: oklch(0.87 0.16 95);
-  --bad: oklch(0.7 0.19 25);
-  --cat-1: oklch(0.68 0.13 58);
-  --cat-2: oklch(0.78 0.13 255);
-  --cat-3: oklch(0.84 0.15 125);
-  --cat-4: oklch(0.76 0.14 305);
-  --cat-5: oklch(0.78 0.13 350);
-  --cat-6: #9a9c99;
+  --danger: #ff7b72;
+  --focus: #7cc4ff;
+  --ok: #62d9b3;
+  --warn: #f5c451;
+  --bad: #ff7b72;
+  --cat-1: #d7f54a;
+  --cat-2: #aed23c;
+  --cat-3: #86b03a;
+  --cat-4: #5f8d3c;
+  --cat-5: #62d9b3;
+  --cat-6: #6b7482;
 }
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --bg: #f1f1ec;
+  --bg: #f5f6f8;
   --panel: #ffffff;
-  --raised: #f6f6f1;
-  --line: #c9c9c0;
-  --tx: #141513;
-  --mu: #575953;
-  --acct: oklch(0.44 0.1 52);
-  --accsoft: oklch(0.68 0.13 58 / 0.25);
-  --key: #d9d9d1;
+  --raised: #eef0f4;
+  --line: #dde2ea;
+  --tx: #121419;
+  --mu: #5b6472;
+  --acct: #4f7000; /* la lima pura no contrasta sobre blanco: como texto va en verde oscuro */
+  --accsoft: rgba(215, 245, 74, 0.35);
+  --key: #d5dae3;
   --paper: #f7f6ef;
-  --danger: #b3261e;
-  --display-amt: oklch(0.78 0.14 58);
-  --focus: oklch(0.45 0.15 250);
-  --ok: oklch(0.5 0.14 150);
-  --warn: oklch(0.55 0.13 80);
-  --bad: oklch(0.5 0.2 25);
-  --cat-1: oklch(0.5 0.12 55);
-  --cat-2: oklch(0.5 0.15 255);
-  --cat-3: oklch(0.55 0.13 125);
-  --cat-4: oklch(0.5 0.17 305);
-  --cat-5: oklch(0.52 0.18 350);
-  --cat-6: #6b6d68;
+  --danger: #c62828;
+  --display-amt: #d7f54a;
+  --focus: #1d6fd6;
+  --ok: #1f8f5f;
+  --warn: #9a6b00;
+  --bad: #c62828;
+  --cat-1: #4f7000;
+  --cat-2: #6b8f1f;
+  --cat-3: #3f7f45;
+  --cat-4: #2b6b45;
+  --cat-5: #1f8f5f;
+  --cat-6: #6b7280;
 }
 
 /* ---- Base ---- */
