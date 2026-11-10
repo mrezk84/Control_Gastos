@@ -964,3 +964,25 @@
 .cj-hz-lesson small { font: 11px/1.2 'Geist Mono Variable', 'Geist Mono', monospace; letter-spacing: 0.06em; color: var(--mu); }
 .cj-hz-lesson-body { display: flex; flex-direction: column; gap: 12px; line-height: 1.55; font-size: 15px; }
 .cj-hz-lesson-body p { margin: 0; }
+
+/* Asistente guía de datos generales */
+.cj-guia { background: var(--panel); border: 1px solid var(--line); border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.cj-guia-head { display: flex; align-items: center; gap: 12px; }
+.cj-guia-title { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; font-family: var(--font-display); font-size: 17px; }
+.cj-guia-title small { font: 11px/1.2 'Geist Mono Variable', 'Geist Mono', monospace; letter-spacing: 0.06em; color: var(--mu); }
+.cj-guia-hide { width: 44px; height: 44px; border: 0; border-radius: 999px; background: transparent; color: var(--mu); font-size: 18px; cursor: pointer; display: grid; place-items: center; }
+.cj-guia-hide:hover { background: var(--raised); color: var(--tx); }
+.cj-guia-bubble { background: var(--raised); border-radius: 6px 20px 20px 20px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; line-height: 1.45; }
+.cj-guia-bubble p { margin: 0; color: var(--mu); }
+.cj-guia-bubble > b { font-size: 16px; }
+.cj-guia-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.cj-guia-row select { flex: 1 1 220px; min-width: 0; height: 48px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--tx); padding: 0 16px; font: 15px 'Geist Variable', 'Geist', sans-serif; }
+.cj-guia-go { align-self: flex-start; min-height: 48px; padding: 0 22px; border: 0; border-radius: 999px; background: var(--acc); color: var(--ink-on-acc); font: 600 15px 'Geist Variable', 'Geist', sans-serif; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.cj-guia-go:hover:not(:disabled) { filter: brightness(1.06); }
+.cj-guia-go:disabled { opacity: 0.6; cursor: progress; }
+.cj-guia-problem { color: var(--bad) !important; font-size: 13.5px; }
+.cj-guia-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.cj-guia-steps li { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line); font-size: 13px; color: var(--mu); }
+.cj-guia-steps li.is-done { color: var(--ok); }
+.cj-guia-steps li.is-next { color: var(--tx); border-color: var(--acct); }
+.cj-guia-steps i { font-size: 16px; }

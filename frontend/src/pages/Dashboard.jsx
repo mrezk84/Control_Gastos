@@ -5,6 +5,7 @@ import PendingPayments from '../components/caja/PendingPayments';
 import SaldoCard from '../components/caja/SaldoCard';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { useToast } from '../components/ui/ToastContainer';
+import GuiaInicial from '../components/asistente/GuiaInicial';
 import { useAppData, useMoney } from '../context/ExpensesContext';
 import { deleteExpense } from '../services/api';
 import { buildDashboard } from '../utils/dashboardStats';
@@ -68,7 +69,9 @@ function Dashboard() {
         </div>
       </div>
 
-      <section className="cj-area-hero cj-hero" aria-label="Gasto del mes">
+      <div className="cj-area-hero cj-stackcol">
+      <GuiaInicial />
+      <section className="cj-hero" aria-label="Gasto del mes">
         <div className="cj-hero-main">
           <div className="cj-hero-title"><i className="ph-duotone ph-wallet" aria-hidden="true" />Este mes</div>
           <div className="cj-hero-amount">{formatPesos(month.total)}</div>
@@ -89,6 +92,7 @@ function Dashboard() {
           <div className="cj-hero-axis"><span>1 {monthShort}</span><span>15</span><span>HOY</span></div>
         </div>
       </section>
+      </div>
 
       <div className="cj-area-sema cj-stackcol">
         <SaldoCard monthTotal={month.total} />
