@@ -31,9 +31,9 @@ function ConfirmDialog({
   };
 
   const typeIcons = {
-    danger: '⚠️',
-    warning: '⚡',
-    info: 'ℹ️'
+    danger: <i className="ph ph-warning" aria-hidden="true" />,
+    warning: <i className="ph ph-lightning" aria-hidden="true" />,
+    info: <i className="ph ph-info" aria-hidden="true" />
   };
 
   const displayIcon = icon || typeIcons[type] || typeIcons.danger;

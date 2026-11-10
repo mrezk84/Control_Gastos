@@ -15,6 +15,8 @@ import {
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 import { getAllExpenses, getExpensesSummary } from '../services/api';
 import { CHART_COLORS } from '../utils';
+import Icon from '../components/ui/Icon';
+import PageLoader from '../components/ui/PageLoader';
 import { useMoney } from '../context/ExpensesContext';
 import logger from '../utils/logger';
 import { useCountUp } from '../hooks/useCountUp';
@@ -291,7 +293,7 @@ function Analytics() {
         const [topCategory, topAmount] = sortedCategories[0];
         const percentage = ((topAmount / analytics.total) * 100).toFixed(1);
         insightsList.push({
-          icon: '🏆',
+          icon: 'trophy',
           text: `${topCategory} es tu categoría principal con ${percentage}% del total`,
         });
       }
@@ -300,7 +302,7 @@ function Analytics() {
     if (analytics.count > 0) {
       const dailyAvg = analytics.total / 30; // Approximate
       insightsList.push({
-        icon: '📊',
+        icon: 'chart-bar',
         text: `Gastás un promedio de ${formatCurrency(dailyAvg)} por día`,
       });
     }
@@ -311,7 +313,7 @@ function Analytics() {
       if (topCat && secondCat) {
         const diff = topCat.total - secondCat.total;
         insightsList.push({
-          icon: '📈',
+          icon: 'trend-up',
           text: `${topCat.category} supera a ${secondCat.category} por ${formatCurrency(diff)}`,
         });
       }
@@ -370,19 +372,14 @@ function Analytics() {
   const animatedCount = useCountUp(analytics.count);
 
   if (loading) {
-    return (
-      <div className="analytics-loading">
-        <div className="spinner" />
-        <p>Cargando analíticas...</p>
-      </div>
-    );
+    return <PageLoader label="Cargando analíticas…" />;
   }
 
   return (
     <div className="analytics-container">
       <div className="page-header">
         <div>
-          <h1 className="page-title">📈 Analíticas</h1>
+          <h1 className="page-title"><Icon name="chart-line-up" duotone />Analíticas</h1>
           <p className="page-subtitle">Análisis detallado de tus gastos</p>
         </div>
         <select
@@ -399,27 +396,27 @@ function Analytics() {
       {/* KPIs */}
       <div className="analytics-kpi-grid">
         <div className="analytics-kpi-card">
-          <div className="analytics-kpi-icon purple">💸</div>
+          <div className="analytics-kpi-icon"><Icon name="wallet" duotone /></div>
           <div className="analytics-kpi-label">Total Gastos</div>
           <div className="analytics-kpi-value">{formatCurrency(animatedTotal)}</div>
         </div>
         <div className="analytics-kpi-card">
-          <div className="analytics-kpi-icon blue">📊</div>
+          <div className="analytics-kpi-icon"><Icon name="chart-bar" duotone /></div>
           <div className="analytics-kpi-label">Promedio</div>
           <div className="analytics-kpi-value">{formatCurrency(animatedAvg)}</div>
         </div>
         <div className="analytics-kpi-card">
-          <div className="analytics-kpi-icon green">📈</div>
+          <div className="analytics-kpi-icon"><Icon name="trend-up" duotone /></div>
           <div className="analytics-kpi-label">Gasto Mayor</div>
           <div className="analytics-kpi-value">{formatCurrency(animatedMax)}</div>
         </div>
         <div className="analytics-kpi-card">
-          <div className="analytics-kpi-icon orange">📉</div>
+          <div className="analytics-kpi-icon"><Icon name="trend-down" duotone /></div>
           <div className="analytics-kpi-label">Gasto Menor</div>
           <div className="analytics-kpi-value">{formatCurrency(animatedMin)}</div>
         </div>
         <div className="analytics-kpi-card">
-          <div className="analytics-kpi-icon pink">📋</div>
+          <div className="analytics-kpi-icon"><Icon name="receipt" duotone /></div>
           <div className="analytics-kpi-label">Transacciones</div>
           <div className="analytics-kpi-value">{Math.round(animatedCount)}</div>
         </div>
@@ -457,11 +454,11 @@ function Analytics() {
       {/* Insights */}
       {insights.length > 0 && (
         <div className="insights-section">
-          <h2 className="section-title">💡 Insights</h2>
+          <h2 className="section-title"><Icon name="lightbulb" duotone />Insights</h2>
           <div className="insights-grid">
             {insights.map((insight, i) => (
               <div key={i} className="insight-card">
-                <span className="insight-icon">{insight.icon}</span>
+                <span className="insight-icon"><Icon name={insight.icon} duotone /></span>
                 <span className="insight-text">{insight.text}</span>
               </div>
             ))}
@@ -492,7 +489,7 @@ function Analytics() {
               />
             ) : (
               <div className="empty-state">
-                <div className="empty-state-icon">📭</div>
+                <div className="empty-state-icon"><Icon name="tray" duotone /></div>
                 <p>Sin datos</p>
               </div>
             )}

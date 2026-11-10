@@ -3,7 +3,6 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import NotificationBell from '../caja/NotificationBell';
 import Ticker from '../caja/Ticker';
 import QuickAddExpense from '../QuickAddExpense';
-import { FloatingActionButton } from '../ui/FloatingActionButton';
 import { AppDataContext } from '../../context/ExpensesContext';
 import { getCurrentUser, getExpenses, getNotifications, getReminders, logout, updateProfile } from '../../services/api';
 import { useTheme } from '../../hooks/useTheme';
@@ -12,12 +11,14 @@ import { formatMoney } from '../../utils/formatters';
 import { missingRegional } from '../../utils/regional';
 import { EXPENSE_CREATED_EVENT, FOCUS_REGISTER_EVENT } from '../../utils/events';
 import logger from '../../utils/logger';
+import PageLoader from '../ui/PageLoader';
+import { PageTransition } from '../ui/PageTransition';
 
 const NAV_ITEMS = [
-  { path: '/dashboard', label: 'Panel' },
-  { path: '/expenses', label: 'Gastos' },
-  { path: '/budgets', label: 'Presupuestos' },
-  { path: '/analytics', label: 'Analíticas' },
+  { path: '/dashboard', label: 'Panel', icon: 'squares-four' },
+  { path: '/expenses', label: 'Gastos', icon: 'receipt' },
+  { path: '/budgets', label: 'Presupuestos', icon: 'target' },
+  { path: '/analytics', label: 'Analíticas', icon: 'chart-line-up' },
 ];
 
 /** Marco de la app: cinta, barra superior con navegación y tema, y datos compartidos. */
@@ -124,7 +125,7 @@ function AppLayout({ children }) {
     return () => window.removeEventListener(EXPENSE_CREATED_EVENT, refreshAll);
   }, [refreshAll]);
 
-  // Cmd/Ctrl+N: en el panel enfoca el formulario; en el resto abre el gasto rápido
+  // Cmd/Ctrl+N: en el panel enfoca el formulario; en el resto abre el gasto rápido (ya no hay botón flotante)
   useEffect(() => {
     const onKey = (e) => {
       const typing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName);
@@ -191,9 +192,8 @@ function AppLayout({ children }) {
 
   if (loading) {
     return (
-      <div className="callback-loading">
-        <div className="spinner" />
-        <p>Cargando...</p>
+      <div className="cj">
+        <PageLoader fullscreen />
       </div>
     );
   }
@@ -203,6 +203,7 @@ function AppLayout({ children }) {
   return (
     <AppDataContext.Provider value={contextValue}>
       <div className="cj-app">
+        <a className="cj-skip" href="#main-content">Saltar al contenido</a>
         <Ticker items={tickerItems} />
         <header className="cj-topbar">
           <div className="cj-brand">
@@ -277,23 +278,24 @@ function AppLayout({ children }) {
         </header>
 
         <main className="cj-main" id="main-content" tabIndex={-1}>
-          {children}
+          <PageTransition>{children}</PageTransition>
         </main>
 
+        <nav className="cj-tabbar" aria-label="Principal (móvil)">
+          {NAV_ITEMS.map((item) => (
+            <NavLink key={item.path} to={item.path} className={({ isActive }) => (isActive ? 'active' : '')}>
+              <i className={`ph ph-${item.icon}`} aria-hidden="true" />
+              <span>{item.label}</span>
+            </NavLink>
+          ))}
+        </nav>
+
         {!onDashboard && (
-          <>
-            <FloatingActionButton
-              onClick={() => setShowQuickAdd(true)}
-              icon={<i className="ph ph-plus" aria-hidden="true" />}
-              label="Gasto"
-              position="bottom-right"
-            />
-            <QuickAddExpense
-              isOpen={showQuickAdd}
-              onClose={() => setShowQuickAdd(false)}
-              onCreated={handleQuickCreated}
-            />
-          </>
+          <QuickAddExpense
+            isOpen={showQuickAdd}
+            onClose={() => setShowQuickAdd(false)}
+            onCreated={handleQuickCreated}
+          />
         )}
       </div>
     </AppDataContext.Provider>

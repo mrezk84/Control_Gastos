@@ -94,7 +94,7 @@ function ExpenseFilters({ filters, onChange, onClear, onSearch }) {
     <div className="filters-container" role="region" aria-label="Filtros de gastos">
       <div className="filters-header">
         <h3 className="filters-title">
-          <span aria-hidden="true">🔍</span>
+          <i className="ph ph-magnifying-glass" aria-hidden="true" />
           <span className="sr-only">Filtros</span>
         </h3>
         {hasActiveFilters() && (
@@ -115,7 +115,7 @@ function ExpenseFilters({ filters, onChange, onClear, onSearch }) {
             Buscar
           </label>
           <div className="filter-search-wrapper">
-            <span className="filter-search-icon" aria-hidden="true">🔍</span>
+            <span className="filter-search-icon" aria-hidden="true"><i className="ph ph-magnifying-glass" aria-hidden="true" /></span>
             <input
               id="expense-search"
               type="text"
@@ -132,7 +132,7 @@ function ExpenseFilters({ filters, onChange, onClear, onSearch }) {
                 aria-label="Limpiar búsqueda"
                 type="button"
               >
-                <span aria-hidden="true">✕</span>
+                <i className="ph ph-x" aria-hidden="true" />
               </button>
             )}
           </div>
@@ -257,7 +257,7 @@ function ExpenseFilters({ filters, onChange, onClear, onSearch }) {
             aria-label="Aplicar filtros y buscar"
             type="button"
           >
-            <span aria-hidden="true">🔍</span>
+            <i className="ph ph-magnifying-glass" aria-hidden="true" />
             <span>Buscar Gastos</span>
           </button>
         </div>

@@ -49,15 +49,15 @@ function QuickAddExpense({ isOpen, onClose, onCreated }) {
     const amount = parseFloat(form.amount);
 
     if (!form.description.trim()) {
-      warning('⚠️ Ingresá una descripción');
+      warning('Ingresá una descripción');
       return;
     }
     if (!form.amount || isNaN(amount) || amount <= 0) {
-      warning('⚠️ El monto debe ser mayor a 0');
+      warning('El monto debe ser mayor a 0');
       return;
     }
     if (!form.category) {
-      warning('⚠️ Seleccioná una categoría');
+      warning('Seleccioná una categoría');
       return;
     }
 
@@ -69,18 +69,18 @@ function QuickAddExpense({ isOpen, onClose, onCreated }) {
         category: form.category,
         date: form.date,
       });
-      success('💸 Gasto agregado correctamente');
+      success('Gasto agregado correctamente');
       onCreated?.(res.data);
       handleClose();
     } catch (err) {
-      error('❌ Error al agregar el gasto');
+      error('Error al agregar el gasto');
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="💸 Gasto Rápido">
+    <Modal isOpen={isOpen} onClose={handleClose} title="Gasto Rápido">
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label className="form-label" htmlFor="qa-description">Descripción</label>

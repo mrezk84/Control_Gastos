@@ -90,7 +90,7 @@ function Modal({
               aria-label="Cerrar modal"
               type="button"
             >
-              ✕
+              <i className="ph ph-x" aria-hidden="true" />
             </button>
           </div>
         )}

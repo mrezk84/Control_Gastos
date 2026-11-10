@@ -1,18 +1,5 @@
 // Categorías de gastos - configuración centralizada
 
-export const CATEGORY_EMOJIS = {
-  'Alimentación': '🍔',
-  'Transporte': '🚗',
-  'Entretenimiento': '🎬',
-  'Salud': '💊',
-  'Servicios': '💡',
-  'Educación': '📚',
-  'Vivienda': '🏠',
-  'Ropa': '👕',
-  'Tecnología': '💻',
-  'Otros': '📦',
-};
-
 export const CATEGORY_COLORS = {
   'Alimentación': 'orange',
   'Transporte': 'blue',
@@ -26,7 +13,7 @@ export const CATEGORY_COLORS = {
   'Otros': 'gray',
 };
 
-export const CATEGORIES = Object.keys(CATEGORY_EMOJIS);
+export const CATEGORIES = Object.keys(CATEGORY_COLORS);
 
 // Colores para gráficos
 // Misma rampa que --cat-1…6 de caja.css (paleta "Tinta + Lima"): se distinguen por luminosidad
