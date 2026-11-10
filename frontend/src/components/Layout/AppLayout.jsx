@@ -8,6 +8,7 @@ import { getCurrentUser, getExpenses, getNotifications, getReminders, logout, up
 import { useTheme } from '../../hooks/useTheme';
 import { buildDashboard } from '../../utils/dashboardStats';
 import { formatMoney } from '../../utils/formatters';
+import { buildHormiga, loadThreshold } from '../../utils/hormiga';
 import { missingRegional } from '../../utils/regional';
 import { EXPENSE_CREATED_EVENT, FOCUS_REGISTER_EVENT } from '../../utils/events';
 import logger from '../../utils/logger';
@@ -19,6 +20,7 @@ const NAV_ITEMS = [
   { path: '/expenses', label: 'Gastos', icon: 'receipt' },
   { path: '/budgets', label: 'Presupuestos', icon: 'target' },
   { path: '/analytics', label: 'Analíticas', icon: 'chart-line-up' },
+  { path: '/hormiga', label: 'Gastos hormiga', icon: 'sparkle' },
 ];
 
 /** Marco de la app: cinta, barra superior con navegación y tema, y datos compartidos. */
@@ -155,16 +157,24 @@ function AppLayout({ children }) {
 
   const stats = useMemo(() => buildDashboard(expenses), [expenses]);
 
-  const tickerItems = useMemo(
-    () => [
+  const tickerItems = useMemo(() => {
+    if (pathname === '/hormiga') {
+      const ant = buildHormiga(expenses, loadThreshold());
+      return [
+        ['Gastos hormiga', formatMoney(ant.total, user?.currency)],
+        ['Compras chicas', String(ant.count)],
+        ['Top', ant.top[0]?.name || '—'],
+        ['Actualizado', stats.todayLong],
+      ];
+    }
+    return [
       ['Tu control financiero', null],
       ['Gastos registrados', String(stats.count)],
       ['Total', formatMoney(stats.total, user?.currency)],
       ['Categoría top', stats.topCategory],
       ['Actualizado', stats.todayLong],
-    ],
-    [stats, user?.currency]
-  );
+    ];
+  }, [stats, expenses, pathname, user?.currency]);
 
   const handleLogout = () => {
     logout();
