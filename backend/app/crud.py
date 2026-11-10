@@ -114,6 +114,24 @@ def create_expense(
         raise
 
 
+def count_expenses(
+    db: Session,
+    user_id: int,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    category: Optional[str] = None,
+) -> int:
+    """Cuántos gastos cumplen los filtros (sin paginar), para saber si una lista quedó incompleta."""
+    query = db.query(func.count(models.Expense.id)).filter(models.Expense.user_id == user_id)
+    if start_date:
+        query = query.filter(models.Expense.date >= start_date)
+    if end_date:
+        query = query.filter(models.Expense.date <= end_date)
+    if category:
+        query = query.filter(models.Expense.category == category)
+    return query.scalar() or 0
+
+
 def get_expenses(
     db: Session,
     user_id: int,

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { formatPesos, formatShare } from '../../utils/formatters';
+import { formatShare } from '../../utils/formatters';
+import { useMoney } from '../../context/ExpensesContext';
 import { loadLimit, parseLimit, saldoStatus, saveLimit, WARN_PCT } from '../../utils/saldo';
 
 const LEVELS = [
@@ -10,6 +11,7 @@ const LEVELS = [
 
 /** Semáforo del saldo del mes: compara el gasto del mes con el saldo que fija la persona. */
 function SaldoCard({ monthTotal }) {
+  const { formatPesos } = useMoney();
   const [limit, setLimit] = useState(loadLimit);
   const [draft, setDraft] = useState(null);
   const status = saldoStatus(monthTotal, limit);

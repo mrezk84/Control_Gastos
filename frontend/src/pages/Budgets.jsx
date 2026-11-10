@@ -3,6 +3,7 @@ import { getBudgetsProgress, createBudget, updateBudget, deleteBudget, getAllExp
 import EmptyState from '../components/ui/EmptyState';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
+import { useMoney } from '../context/ExpensesContext';
 import logger from '../utils/logger';
 import { useToast } from '../components/ui/ToastContainer';
 import { EXPENSE_CREATED_EVENT } from '../utils/events';
@@ -26,6 +27,7 @@ const MONTHS = [
 ];
 
 function Budgets() {
+  const { formatCurrency } = useMoney();
   const [budgets, setBudgets] = useState([]);
   const [todayExpenses, setTodayExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -265,8 +267,6 @@ function Budgets() {
     setExpenseData({ description: '', amount: '', category: '', date: new Date().toISOString().split('T')[0] });
   };
 
-  const formatCurrency = (val) =>
-    new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(val);
 
   const getProgressColor = (percentage) => {
     if (percentage >= 100) return 'red';

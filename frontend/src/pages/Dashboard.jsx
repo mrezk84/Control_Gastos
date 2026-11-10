@@ -5,11 +5,11 @@ import PendingPayments from '../components/caja/PendingPayments';
 import SaldoCard from '../components/caja/SaldoCard';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { useToast } from '../components/ui/ToastContainer';
-import { useAppData } from '../context/ExpensesContext';
+import { useAppData, useMoney } from '../context/ExpensesContext';
 import { deleteExpense } from '../services/api';
 import { buildDashboard } from '../utils/dashboardStats';
 import { categoryIconClass } from '../utils/categoryIcons';
-import { formatK, formatPesos, formatShare } from '../utils/formatters';
+import { formatShare } from '../utils/formatters';
 
 function Kpi({ icon, label, value, sub, text }) {
   return (
@@ -23,6 +23,7 @@ function Kpi({ icon, label, value, sub, text }) {
 
 function Dashboard() {
   const { user, expenses, refresh } = useAppData();
+  const { formatPesos, formatK } = useMoney();
   const { success, error } = useToast();
   const [editing, setEditing] = useState(null);
   const [toDelete, setToDelete] = useState(null);

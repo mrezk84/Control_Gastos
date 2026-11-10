@@ -1,6 +1,6 @@
 // Utilidades de formateo - código compartido para evitar duplicación
 
-import { CURRENCY_CONFIG, DATE_CONFIG } from './constants';
+import { DATE_CONFIG } from './constants';
 
 /**
  * Convierte a Date. Las fechas "YYYY-MM-DD" (sin hora) se interpretan en hora local:
@@ -12,15 +12,29 @@ const toDate = (date) => {
   return match ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])) : new Date(date);
 };
 
+export const DEFAULT_CURRENCY = 'UYU';
+
+// Igual que backend/app/services/notify.py: los mismos símbolos en pantalla y en los avisos
+const SYMBOLS = { UYU: '$', ARS: '$', CLP: '$', COP: '$', MXN: '$', USD: 'US$', EUR: '€', GBP: '£', BRL: 'R$', PEN: 'S/' };
+
 /**
- * Formatea un valor como moneda ARS
- * @param {number} value - Valor a formatear
- * @returns {string} Valor formateado como moneda
+ * "$58.000", "$125,50", "US$1.250,50", "CHF 90": miles con punto y decimales con coma,
+ * solo si el monto tiene centavos. Es el único formateador de importes de la app.
  */
-export const formatCurrency = (value) => {
-  if (value === null || value === undefined) return '$0';
-  return new Intl.NumberFormat('es-AR', CURRENCY_CONFIG).format(value);
+export const formatMoney = (value, currency = DEFAULT_CURRENCY) => {
+  const n = Number(value) || 0;
+  const cents = Math.round(Math.abs(n) * 100) % 100 !== 0;
+  const text = new Intl.NumberFormat('es-AR', {
+    minimumFractionDigits: cents ? 2 : 0,
+    maximumFractionDigits: cents ? 2 : 0,
+  }).format(Math.abs(n));
+  const code = currency || DEFAULT_CURRENCY;
+  const symbol = SYMBOLS[code];
+  return `${n < 0 ? '-' : ''}${symbol ? symbol : `${code} `}${text}`;
 };
+
+/** Compatibilidad: mismo formato que formatMoney (la moneda ya no está fija en ARS). */
+export const formatCurrency = (value, currency) => formatMoney(value, currency);
 
 /**
  * Formatea una fecha para mostrar
@@ -79,13 +93,14 @@ export const truncateText = (text, maxLength = 50) => {
   return text.substring(0, maxLength) + '...';
 };
 
-/** "$58.000": peso sin decimales y sin espacio, como en el Dashboard. */
-export const formatPesos = (value) => `$${Math.round(Number(value) || 0).toLocaleString('es-AR')}`;
+/** "$58.000": importe en la moneda dada, como en el Dashboard (centavos solo si los hay). */
+export const formatPesos = (value, currency) => formatMoney(value, currency);
 
 /** "$58k" para cifras de mil en adelante; por debajo, el monto entero. */
-export const formatK = (value) => {
+export const formatK = (value, currency = DEFAULT_CURRENCY) => {
   const n = Number(value) || 0;
-  return n >= 1000 ? `$${Math.round(n / 1000)}k` : `$${Math.round(n)}`;
+  const symbol = SYMBOLS[currency] ?? `${currency} `;
+  return n >= 1000 ? `${symbol}${Math.round(n / 1000)}k` : formatMoney(Math.round(n), currency);
 };
 
 /** "84,9 %": porcentaje (0-100) con una decimal y coma. */

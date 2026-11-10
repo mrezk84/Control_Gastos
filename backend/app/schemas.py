@@ -1,7 +1,12 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from datetime import date, datetime
 import datetime as dt  # alias: un campo llamado "date" sombrea el tipo "date" dentro de la clase
 from typing import Optional, List
+
+
+def _round_money(v):
+    """Importes con precisión de centavos: 125.504999 → 125.5 (evita arrastrar ruido de coma flotante)."""
+    return None if v is None else round(v, 2)
 
 # --- Auth Schemas ---
 
@@ -42,12 +47,16 @@ class ExpenseCreate(BaseModel):
     receipt_url: Optional[str] = None
     from_scan: bool = False  # gasto creado desde un escaneo: genera la notificación "Pago registrado"
 
+    _redondear = field_validator("amount")(_round_money)
+
 class ExpenseUpdate(BaseModel):
     description: Optional[str] = None
     amount: Optional[float] = None
     category: Optional[str] = None
     date: Optional[dt.date] = None
     receipt_url: Optional[str] = None
+
+    _redondear = field_validator("amount")(_round_money)
 
 class Expense(BaseModel):
     id: int
@@ -73,12 +82,16 @@ class BudgetCreate(BaseModel):
     year: int
     is_recurring: bool = False
 
+    _redondear = field_validator("amount")(_round_money)
+
 class BudgetUpdate(BaseModel):
     category: Optional[str] = None
     amount: Optional[float] = None
     month: Optional[int] = None
     year: Optional[int] = None
     is_recurring: Optional[bool] = None
+
+    _redondear = field_validator("amount")(_round_money)
 
 class Budget(BaseModel):
     id: int
