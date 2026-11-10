@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Chat del asistente</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap">
+<style>
+body{margin:0;background:#0e0f11}
+a{text-decoration:none;color:inherit}
+</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#0e0f11;color:#ededea;font-family:'Geist',system-ui,sans-serif;font-size:14px;display:flex;flex-direction:column;overflow:hidden">
+
+  <div aria-label="Cinta" style="height:30px;flex-shrink:0;background:oklch(0.68 0.13 58);color:#0e0f11;display:flex;align-items:center;gap:32px;padding:0 16px;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap;overflow:hidden">
+    <span style="display:inline-flex;align-items:center;gap:8px"><span style="width:6px;height:6px;border-radius:50%;background:#0e0f11"></span>Gastos hormiga <b style="font-weight:600">$ 3.840</b></span>
+    <span style="display:inline-flex;align-items:center;gap:8px"><span style="width:6px;height:6px;border-radius:50%;background:#0e0f11"></span>Compras chicas <b style="font-weight:600">38</b></span>
+    <span style="display:inline-flex;align-items:center;gap:8px"><span style="width:6px;height:6px;border-radius:50%;background:#0e0f11"></span>Top <b style="font-weight:600">Café</b></span>
+  </div>
+
+  <header style="flex-shrink:0;background:#16171a;border-bottom:1px solid #34373b;padding:10px 16px;display:flex;align-items:center;gap:10px">
+    <a href="Main.dc.html" aria-label="Volver" style="width:40px;height:40px;border:1px solid #34373b;border-radius:10px;background:#1d1f22;display:flex;align-items:center;justify-content:center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg></a>
+    <div aria-hidden="true" style="width:36px;height:36px;border-radius:9px;background:oklch(0.68 0.13 58);color:#0e0f11;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 0 oklch(0.46 0.1 52)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></div>
+    <div style="display:flex;flex-direction:column;gap:1px;flex-grow:1;min-width:0">
+      <span style="font-size:15px;font-weight:600;letter-spacing:-0.01em">Tu asistente</span>
+      <span style="display:flex;align-items:center;gap:5px;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:0.06em;color:#a8aaa7"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>SOLO LEE · NUNCA CAMBIA</span>
+    </div>
+  </header>
+
+  <div style="flex-grow:1;overflow:hidden;padding:16px 14px 0;display:flex;flex-direction:column;gap:12px;justify-content:flex-end">
+
+    <div style="align-self:flex-end;max-width:80%;background:oklch(0.68 0.13 58);color:#0e0f11;border-radius:16px 16px 4px 16px;padding:11px 14px;font-weight:500;line-height:1.4;box-shadow:0 3px 0 oklch(0.46 0.1 52)">¿En qué estoy gastando de más sin darme cuenta?</div>
+
+    <div style="align-self:flex-start;max-width:94%;background:#16171a;border:1px solid #34373b;border-radius:4px 16px 16px 16px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;line-height:1.45">
+      <span>Buena pregunta. En octubre lo que más se repite son compras chicas. Cada una parece nada, pero juntas suman:</span>
+      <div style="background:#e9e8e1;color:#1b1c1a;border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:7px;font-family:'Geist Mono',monospace;font-size:12.5px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span>Café y panadería</span><span style="flex-grow:1;border-bottom:1.5px dotted #8a8b84;transform:translateY(-3px)"></span><span style="font-weight:600">14 × $ 95</span></div>
+        <div style="display:flex;align-items:baseline;gap:8px"><span>Delivery</span><span style="flex-grow:1;border-bottom:1.5px dotted #8a8b84;transform:translateY(-3px)"></span><span style="font-weight:600">6 × $ 197</span></div>
+        <div style="border-top:1px solid #8a8b84;padding-top:7px;display:flex;justify-content:space-between;font-weight:600"><span>ENTRE LOS DOS</span><span>$ 2.670</span></div>
+      </div>
+      <span>Es el 70 % de tus gastos hormiga. Nada grave: es el tipo de gasto más fácil de bajar.</span>
+    </div>
+
+    <div style="align-self:flex-end;max-width:80%;background:oklch(0.68 0.13 58);color:#0e0f11;border-radius:16px 16px 4px 16px;padding:11px 14px;font-weight:500;line-height:1.4;box-shadow:0 3px 0 oklch(0.46 0.1 52)">Dame un plan sin dejar todo de golpe</div>
+
+    <div style="align-self:flex-start;max-width:94%;background:#16171a;border:1px solid #34373b;border-radius:4px 16px 16px 16px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;line-height:1.45">
+      <span>Me gusta, de a un hábito funciona mejor. Te propongo:</span>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;gap:10px;align-items:center"><div style="width:26px;height:26px;flex-shrink:0;border-radius:7px;background:#1d1f22;border:1px solid #34373b;color:oklch(0.78 0.14 58);display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:12px;font-weight:600">1</div><span>Café en casa 3 de los 5 días laborales.</span></div>
+        <div style="display:flex;gap:10px;align-items:center"><div style="width:26px;height:26px;flex-shrink:0;border-radius:7px;background:#1d1f22;border:1px solid #34373b;color:oklch(0.78 0.14 58);display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:12px;font-weight:600">2</div><span>Un delivery por semana, elegido con ganas.</span></div>
+      </div>
+      <span>Así recuperás unos <span style="font-family:'Geist Mono',monospace;font-weight:600;color:oklch(0.78 0.14 58)">$ 1.600</span> al mes. ¿Lo armamos como reto de 7 días?</span>
+      <a href="Plan.dc.html" style="align-self:flex-start;background:oklch(0.68 0.13 58);color:#0e0f11;border-radius:12px;min-height:44px;padding:0 16px;box-shadow:0 3px 0 oklch(0.46 0.1 52);display:flex;align-items:center;gap:8px;font-weight:600"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>Sí, vamos al plan</a>
+    </div>
+  </div>
+
+  <div style="flex-shrink:0;padding:10px 14px 0;display:flex;gap:8px;overflow:hidden">
+    <button type="button" style="flex-shrink:0;min-height:40px;padding:0 12px;display:flex;align-items:center;gap:6px;border:1px solid #34373b;border-radius:10px;background:#1d1f22;color:#ededea;font-family:'Geist',system-ui,sans-serif;font-size:13px;cursor:pointer;box-shadow:0 3px 0 #08090a"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>¿Qué es un gasto hormiga?</button>
+    <button type="button" style="flex-shrink:0;min-height:40px;padding:0 12px;display:flex;align-items:center;gap:6px;border:1px solid #34373b;border-radius:10px;background:#1d1f22;color:#ededea;font-family:'Geist',system-ui,sans-serif;font-size:13px;cursor:pointer;box-shadow:0 3px 0 #08090a"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>Comparar con septiembre</button>
+  </div>
+  <div style="flex-shrink:0;padding:10px 14px 16px;display:flex;gap:8px;align-items:center">
+    <label for="msg" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Escribí tu pregunta</label>
+    <input id="msg" type="text" placeholder="Preguntale lo que quieras…" style="flex-grow:1;min-width:0;height:52px;box-sizing:border-box;border-radius:12px;border:1px solid #34373b;background:#1d1f22;color:#ededea;padding:0 14px;font-family:'Geist',system-ui,sans-serif;font-size:14px">
+    <button type="button" aria-label="Enviar" style="width:52px;height:52px;flex-shrink:0;border:none;border-radius:12px;background:oklch(0.68 0.13 58);color:#0e0f11;box-shadow:0 4px 0 oklch(0.46 0.1 52);display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a1 1 0 0 1 .556.556z"/><path d="m21.854 2.147-10.94 10.939"/></svg></button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

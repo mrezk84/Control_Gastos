@@ -122,6 +122,9 @@ rutas exigen sesión (`auth/utils.py:get_current_user`).
 - Ante una crisis de deudas o de salud mental, sugiere buscar ayuda profesional.
 
 ### Frontend
+- Diseño aprobado de las pantallas (bienvenida, panel hormiga, chat y plan):
+  [../design/asistente-hormiga.md](../design/asistente-hormiga.md). Propone una ruta `/asistente`
+  dentro de `AppLayout` en lugar del panel flotante; decidir cuál al implementar.
 - `frontend/src/components/chat/ChatPanel.js`: panel flotante, abierto desde `FloatingActionButton`.
   Preguntas sugeridas, render de markdown, indicador de escritura y estados de error y límite.
 - Streaming con `fetch` y `ReadableStream`, porque axios no lo soporta. Se añaden las funciones al
