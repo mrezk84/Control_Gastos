@@ -3,6 +3,8 @@ import { getBudgetsProgress, createBudget, updateBudget, deleteBudget, getAllExp
 import EmptyState from '../components/ui/EmptyState';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
+import PageLoader from '../components/ui/PageLoader';
+import { categoryIconClass } from '../utils/categoryIcons';
 import { useMoney } from '../context/ExpensesContext';
 import logger from '../utils/logger';
 import { useToast } from '../components/ui/ToastContainer';
@@ -94,12 +96,12 @@ function Budgets() {
 
     const amount = parseFloat(formData.amount);
     if (!formData.amount || isNaN(amount) || amount <= 0) {
-      warning('⚠️ El monto debe ser mayor a 0');
+      warning('El monto debe ser mayor a 0');
       return;
     }
 
     if (!formData.category) {
-      warning('⚠️ Seleccioná una categoría');
+      warning('Seleccioná una categoría');
       return;
     }
 
@@ -107,7 +109,7 @@ function Budgets() {
       const existingBudget = budgets.find(b => b.category === formData.category);
       if (existingBudget) {
         warning(
-          `⚠️ Ya tenés un presupuesto de "${formData.category}" para ${MONTHS[currentMonth - 1]} ${currentYear}. ` +
+          `Ya tenés un presupuesto de "${formData.category}" para ${MONTHS[currentMonth - 1]} ${currentYear}. ` +
           `Monto actual: $${existingBudget.budget_amount} - Gastado: $${existingBudget.spent_amount}`
         );
         return;
@@ -133,13 +135,13 @@ function Budgets() {
       setEditingBudget(null);
       setFormData({ category: '', amount: '', is_recurring: false });
       await fetchBudgets();
-      success(editingBudget ? '✏️ Presupuesto actualizado' : '✅ Presupuesto creado');
+      success(editingBudget ? 'Presupuesto actualizado' : 'Presupuesto creado');
     } catch (err) {
       logger.apiError('Error saving budget', err);
       let errorMessage = 'Error al guardar el presupuesto';
       if (err.response?.data?.detail) errorMessage = err.response.data.detail;
       else if (err.message) errorMessage = err.message;
-      error('⚠️ ' + errorMessage);
+      error('' + errorMessage);
     }
   };
 
@@ -149,17 +151,17 @@ function Budgets() {
 
     const amount = parseFloat(expenseData.amount);
     if (!expenseData.amount || isNaN(amount) || amount <= 0) {
-      warning('⚠️ El monto debe ser mayor a 0');
+      warning('El monto debe ser mayor a 0');
       return;
     }
 
     if (!expenseData.description.trim()) {
-      warning('⚠️ Ingresá una descripción');
+      warning('Ingresá una descripción');
       return;
     }
 
     if (!expenseData.category) {
-      warning('⚠️ Seleccioná una categoría');
+      warning('Seleccioná una categoría');
       return;
     }
 
@@ -188,7 +190,7 @@ function Budgets() {
     }));
 
     closeQuickExpenseModal();
-    success('💸 Gasto agregado correctamente');
+    success('Gasto agregado correctamente');
 
     try {
       await createExpense(payload);
@@ -201,7 +203,7 @@ function Budgets() {
         setTodayExpenses((prev) => prev.filter((e) => e.id !== tempId));
       }
       await fetchBudgets();
-      error('❌ No se pudo agregar el gasto, se deshizo el cambio');
+      error('No se pudo agregar el gasto, se deshizo el cambio');
     }
   };
 
@@ -231,10 +233,10 @@ function Budgets() {
     try {
       await deleteBudget(budgetToDelete);
       await fetchBudgets();
-      success('🗑️ Presupuesto eliminado');
+      success('Presupuesto eliminado');
     } catch (err) {
       logger.apiError('Error deleting budget', err);
-      error('❌ Error al eliminar el presupuesto');
+      error('Error al eliminar el presupuesto');
     } finally {
       setBudgetToDelete(null);
     }
@@ -284,19 +286,14 @@ function Budgets() {
   const todayTotal = todayExpenses.reduce((sum, e) => sum + e.amount, 0);
 
   if (loading) {
-    return (
-      <div className="budgets-loading">
-        <div className="spinner" />
-        <p>Cargando presupuestos...</p>
-      </div>
-    );
+    return <PageLoader label="Cargando presupuestos…" />;
   }
 
   return (
     <div className="budgets-container">
       <div className="page-header">
         <div>
-          <h1 className="page-title">🎯 Presupuestos</h1>
+          <h1 className="page-title"><i className="ph-duotone ph-target page-title-icon" aria-hidden="true" />Presupuestos</h1>
           <p className="page-subtitle">
             {MONTHS[currentMonth - 1]} {currentYear}
           </p>
@@ -314,7 +311,7 @@ function Budgets() {
       {/* Today's Summary Card */}
       <div className="today-summary-card">
         <div className="today-summary-header">
-          <div className="today-summary-icon">📅</div>
+          <div className="today-summary-icon"><i className="ph-duotone ph-calendar-dots" aria-hidden="true" /></div>
           <div className="today-summary-title">
             <h3>Compras de Hoy</h3>
             <p>{new Date().toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
@@ -338,7 +335,8 @@ function Budgets() {
                     <div className="today-expense-description">{expense.description}</div>
                     {remaining !== null && (
                       <div className={`today-expense-budget ${remaining < 0 ? 'over-budget' : ''}`}>
-                        {remaining < 0 ? `⚠️ Excedido por ${formatCurrency(Math.abs(remaining))}` : `📊 Queda ${formatCurrency(remaining)}`}
+                        <i className={`ph ph-${remaining < 0 ? 'warning' : 'chart-bar'}`} aria-hidden="true" />{' '}
+                        {remaining < 0 ? `Excedido por ${formatCurrency(Math.abs(remaining))}` : `Queda ${formatCurrency(remaining)}`}
                       </div>
                     )}
                   </div>
@@ -386,7 +384,7 @@ function Budgets() {
       {/* Budget List */}
       {budgets.length === 0 ? (
         <EmptyState
-          icon="💰"
+          icon={<i className="ph-duotone ph-piggy-bank" aria-hidden="true" />}
           title="Sin presupuestos"
           description="No tenés presupuestos configurados para este mes. Creá uno para controlar tus gastos."
           action={
@@ -400,28 +398,31 @@ function Budgets() {
           {budgets.map((budget) => (
             <div key={budget.budget_id} className="budget-card">
               <div className="budget-header">
-                <div className="budget-category">{budget.category}</div>
+                <div className="budget-category"><i className={`${categoryIconClass(budget.category)} budget-category-icon`} aria-hidden="true" />{budget.category}</div>
                 <div className="budget-actions">
                   <button
                     className="budget-action-btn"
                     onClick={() => openQuickExpenseModal(budget.category)}
                     title="Agregar gasto rápido"
+                    aria-label="Agregar gasto rápido"
                   >
-                    💸
+                    <i className="ph ph-plus-circle" aria-hidden="true" />
                   </button>
                   <button
                     className="budget-action-btn"
                     onClick={() => handleEdit(budget)}
                     title="Editar"
+                    aria-label="Editar"
                   >
-                    ✏️
+                    <i className="ph ph-pencil-simple" aria-hidden="true" />
                   </button>
                   <button
                     className="budget-action-btn budget-action-btn-delete"
                     onClick={() => handleDeleteClick(budget)}
                     title="Eliminar"
+                    aria-label="Eliminar"
                   >
-                    🗑️
+                    <i className="ph ph-trash" aria-hidden="true" />
                   </button>
                 </div>
               </div>
@@ -455,7 +456,7 @@ function Budgets() {
 
               {budget.percentage >= 100 && (
                 <div className="budget-warning">
-                  ⚠️ Has excedido tu presupuesto en {budget.category}
+                  <i className="ph ph-warning" aria-hidden="true" /> Has excedido tu presupuesto en {budget.category}
                 </div>
               )}
             </div>
@@ -525,7 +526,7 @@ function Budgets() {
       <Modal
         isOpen={showQuickExpenseModal}
         onClose={closeQuickExpenseModal}
-        title="💸 Gasto Rápido"
+        title="Gasto Rápido"
       >
         <form onSubmit={handleQuickExpense}>
           <div className="form-group">
@@ -601,7 +602,7 @@ function Budgets() {
         confirmText="Eliminar"
         cancelText="Cancelar"
         type="danger"
-        icon="🗑️"
+        icon={<i className="ph-duotone ph-trash" aria-hidden="true" />}
       />
     </div>
   );

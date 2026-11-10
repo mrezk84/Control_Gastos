@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, Navigate, Outlet } from 'react-router-dom';
 import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './pages/Dashboard';
@@ -14,12 +14,26 @@ import { PageTransition } from './components/ui/PageTransition';
 import { ToastProvider } from './components/ui/ToastContainer';
 import { setAuthToken } from './services/api';
 
-function ProtectedRoute({ children }) {
+/** Marco de las pantallas con sesión: se monta una sola vez, así que cambiar de página no recarga el usuario ni los gastos. */
+function ProtectedLayout() {
   const token = localStorage.getItem('token');
   if (!token) {
     return <Navigate to="/login" replace />;
   }
-  return <AppLayout>{children}</AppLayout>;
+  return (
+    <AppLayout>
+      <Outlet />
+    </AppLayout>
+  );
+}
+
+/** Pantallas de acceso: solo la transición de entrada. */
+function PublicLayout() {
+  return (
+    <PageTransition>
+      <Outlet />
+    </PageTransition>
+  );
 }
 
 function App() {
@@ -33,48 +47,22 @@ function App() {
   return (
     <ToastProvider>
       <BrowserRouter>
-      <PageTransition>
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/oauth-callback" element={<OAuthCallback />} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/expenses"
-          element={
-            <ProtectedRoute>
-              <Expenses />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/budgets"
-          element={
-            <ProtectedRoute>
-              <Budgets />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/analytics"
-          element={
-            <ProtectedRoute>
-              <Analytics />
-            </ProtectedRoute>
-          }
-        />
+        <Route element={<PublicLayout />}>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/oauth-callback" element={<OAuthCallback />} />
+        </Route>
+        <Route element={<ProtectedLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/expenses" element={<Expenses />} />
+          <Route path="/budgets" element={<Budgets />} />
+          <Route path="/analytics" element={<Analytics />} />
+        </Route>
         <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>
-      </PageTransition>
       </BrowserRouter>
     </ToastProvider>
   );

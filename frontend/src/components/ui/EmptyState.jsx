@@ -4,7 +4,7 @@ import React from 'react';
  * EmptyState component - Estados vacíos consistentes
  */
 function EmptyState({
-  icon = '📭',
+  icon = <i className="ph ph-tray" aria-hidden="true" />,
   title = 'No hay datos',
   description,
   action = null,

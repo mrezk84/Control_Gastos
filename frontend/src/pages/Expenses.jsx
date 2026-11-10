@@ -3,7 +3,10 @@ import { getExpenses, deleteExpense, exportExpensesCSV, exportExpensesExcel, imp
 import ExpenseFilters from '../components/Filters/ExpenseFilters';
 import EmptyState from '../components/ui/EmptyState';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
-import { CATEGORY_EMOJIS, CATEGORY_COLORS, formatDate } from '../utils';
+import { formatDate } from '../utils';
+import { categoryIconClass } from '../utils/categoryIcons';
+import Icon from '../components/ui/Icon';
+import PageLoader from '../components/ui/PageLoader';
 import { useMoney } from '../context/ExpensesContext';
 import logger from '../utils/logger';
 import { useToast } from '../components/ui/ToastContainer';
@@ -80,8 +83,8 @@ function ExpensesTable({ expenses, sortBy, sortOrder, onSort, onDeleteClick }) {
             <tr key={expense.id} style={{ animationDelay: `${Math.min(index, 20) * 0.03}s` }}>
               <td className="expenses-description">{expense.description}</td>
               <td>
-                <span className={`category-badge category-${CATEGORY_COLORS[expense.category] || 'default'}`}>
-                  {CATEGORY_EMOJIS[expense.category] || '📦'} {expense.category}
+                <span className="category-badge">
+                  <i className={categoryIconClass(expense.category)} aria-hidden="true" /> {expense.category}
                 </span>
               </td>
               <td className="expenses-amount">{formatCurrency(expense.amount)}</td>
@@ -92,7 +95,7 @@ function ExpensesTable({ expenses, sortBy, sortOrder, onSort, onDeleteClick }) {
                   onClick={() => onDeleteClick(expense)}
                   title="Eliminar"
                 >
-                  🗑️
+                  <Icon name="trash" />
                 </button>
               </td>
             </tr>
@@ -251,14 +254,14 @@ function Expenses() {
     // Optimistic UI: remove immediately and roll back if the request fails,
     // instead of waiting for the server before the row disappears.
     setAllExpenses((prev) => prev.filter((e) => e.id !== toDelete.id));
-    success('✅ Gasto eliminado correctamente');
+    success('Gasto eliminado correctamente');
 
     try {
       await deleteExpense(toDelete.id);
     } catch (err) {
       logger.apiError('Error deleting expense', err);
       setAllExpenses((prev) => [...prev, toDelete]);
-      error('❌ No se pudo eliminar el gasto, se restauró');
+      error('No se pudo eliminar el gasto, se restauró');
     }
   };
 
@@ -279,10 +282,10 @@ function Expenses() {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-      success('📄 Archivo CSV exportado correctamente');
+      success('Archivo CSV exportado correctamente');
     } catch (err) {
       logger.apiError('Error exporting CSV', err);
-      error('❌ Error al exportar los datos');
+      error('Error al exportar los datos');
     }
   };
 
@@ -305,10 +308,10 @@ function Expenses() {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-      success('📊 Archivo Excel exportado correctamente');
+      success('Archivo Excel exportado correctamente');
     } catch (err) {
       logger.apiError('Error exporting Excel', err);
-      error('❌ Error al exportar a Excel. Asegúrate de tener gastos para exportar.');
+      error('Error al exportar a Excel. Asegúrate de tener gastos para exportar.');
     }
   };
 
@@ -331,15 +334,15 @@ function Expenses() {
       const { imported, total_rows, error_count, errors } = response.data;
 
       if (imported > 0) {
-        success(`✅ ${imported} de ${total_rows} gastos importados correctamente`);
+        success(`${imported} de ${total_rows} gastos importados correctamente`);
         await fetchExpenses();
       }
 
       if (error_count > 0) {
         if (imported === 0) {
-          error(`❌ No se pudo importar ningún gasto. ${errors.slice(0, 3).join(', ')}`);
+          error(`No se pudo importar ningún gasto. ${errors.slice(0, 3).join(', ')}`);
         } else {
-          error(`⚠️ ${error_count} filas con errores: ${errors.slice(0, 3).join(', ')}`);
+          error(`${error_count} filas con errores: ${errors.slice(0, 3).join(', ')}`);
         }
       }
     } catch (err) {
@@ -358,12 +361,7 @@ function Expenses() {
   const totalAmount = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
 
   if (loading) {
-    return (
-      <div className="expenses-loading">
-        <div className="spinner" />
-        <p>Cargando gastos...</p>
-      </div>
-    );
+    return <PageLoader label="Cargando gastos…" />;
   }
 
   return (
@@ -381,7 +379,7 @@ function Expenses() {
           <main className="expenses-main">
             <div className="page-header">
               <div>
-                <h1 className="page-title">💸 Gastos</h1>
+                <h1 className="page-title"><Icon name="receipt" duotone />Gastos</h1>
                 <p className="page-subtitle">
                   {filteredExpenses.length} {filteredExpenses.length === 1 ? 'gasto' : 'gastos'}
                   {filteredExpenses.length > 0 && ` · Total: ${formatCurrency(totalAmount)}`}
@@ -402,7 +400,7 @@ function Expenses() {
                   disabled={importing}
                   title="Importar gastos desde un archivo CSV"
                 >
-                  {importing ? '⏳ Importando...' : '📤 Importar'}
+                  {importing ? <><Icon name="hourglass" /> Importando…</> : <><Icon name="upload-simple" /> Importar</>}
                 </button>
                 <div className="export-dropdown">
                   <button
@@ -410,7 +408,7 @@ function Expenses() {
                     onClick={() => setShowExportMenu(!showExportMenu)}
                     disabled={filteredExpenses.length === 0}
                   >
-                    📥 Exportar ▼
+                    <Icon name="download-simple" /> Exportar <Icon name="caret-down" />
                   </button>
                   {showExportMenu && (
                     <div className="export-menu">
@@ -421,7 +419,7 @@ function Expenses() {
                           setShowExportMenu(false);
                         }}
                       >
-                        📄 Exportar como CSV
+                        <Icon name="file-csv" /> Exportar como CSV
                       </button>
                       <button
                         className="export-menu-item"
@@ -430,7 +428,7 @@ function Expenses() {
                           setShowExportMenu(false);
                         }}
                       >
-                        📊 Exportar como Excel
+                        <Icon name="file-xls" /> Exportar como Excel
                       </button>
                     </div>
                   )}
@@ -439,14 +437,14 @@ function Expenses() {
                   className="btn btn-primary"
                   onClick={() => setShowFilters(false)}
                 >
-                  🙈 Ocultar Filtros
+                  <Icon name="eye-slash" /> Ocultar filtros
                 </button>
               </div>
             </div>
 
             {sortedExpenses.length === 0 ? (
               <EmptyState
-                icon="💭"
+                icon={<Icon name="chat-circle-dots" duotone />}
                 title="No se encontraron gastos"
                 description={
                   allExpenses.length === 0
@@ -474,7 +472,7 @@ function Expenses() {
         <div className="expenses-main full-width">
           <div className="page-header">
             <div>
-              <h1 className="page-title">💸 Gastos</h1>
+              <h1 className="page-title"><Icon name="receipt" duotone />Gastos</h1>
               <p className="page-subtitle">
                 {filteredExpenses.length} {filteredExpenses.length === 1 ? 'gasto' : 'gastos'}
                 {filteredExpenses.length > 0 && ` · Total: ${formatCurrency(totalAmount)}`}
@@ -487,7 +485,7 @@ function Expenses() {
                   onClick={() => setShowExportMenu(!showExportMenu)}
                   disabled={filteredExpenses.length === 0}
                 >
-                  📥 Exportar ▼
+                  <Icon name="download-simple" /> Exportar <Icon name="caret-down" />
                 </button>
                 {showExportMenu && (
                   <div className="export-menu">
@@ -498,7 +496,7 @@ function Expenses() {
                         setShowExportMenu(false);
                       }}
                     >
-                      📄 Exportar como CSV
+                      <Icon name="file-csv" /> Exportar como CSV
                     </button>
                     <button
                       className="export-menu-item"
@@ -507,7 +505,7 @@ function Expenses() {
                         setShowExportMenu(false);
                       }}
                     >
-                      📊 Exportar como Excel
+                      <Icon name="file-xls" /> Exportar como Excel
                     </button>
                   </div>
                 )}
@@ -516,14 +514,14 @@ function Expenses() {
                 className="btn btn-primary"
                 onClick={() => setShowFilters(true)}
               >
-                🔍 Filtros
+                <Icon name="funnel" /> Filtros
               </button>
             </div>
           </div>
 
           {sortedExpenses.length === 0 ? (
             <EmptyState
-              icon="💭"
+              icon={<Icon name="chat-circle-dots" duotone />}
               title="No se encontraron gastos"
               description={
                 allExpenses.length === 0
@@ -557,7 +555,7 @@ function Expenses() {
         confirmText="Eliminar"
         cancelText="Cancelar"
         type="danger"
-        icon="🗑️"
+        icon={<Icon name="trash" duotone />}
       />
     </div>
   );

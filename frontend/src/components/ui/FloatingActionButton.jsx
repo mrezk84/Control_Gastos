@@ -6,7 +6,7 @@ import './FloatingActionButton.css';
  * FloatingActionButton - FAB para acciones rápidas
  * Botón flotante para agregar gastos rápidamente
  */
-function FloatingActionButton({ onClick, icon = '➕', label = 'Agregar', position = 'bottom-right' }) {
+function FloatingActionButton({ onClick, icon = <i className="ph ph-plus" aria-hidden="true" />, label = 'Agregar', position = 'bottom-right' }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isPulsing, setIsPulsing] = useState(true);
 
@@ -62,7 +62,7 @@ function ExpenseFAB() {
   return (
     <FloatingActionButton
       onClick={handleClick}
-      icon="💸"
+      icon={<i className="ph ph-receipt" aria-hidden="true" />}
       label="Gasto"
       position="bottom-right"
     />
@@ -77,9 +77,9 @@ function QuickActionsFAB({ actions = [] }) {
   const navigate = useNavigate();
 
   const defaultActions = [
-    { icon: '💸', label: 'Gasto', onClick: () => navigate('/expenses') },
-    { icon: '🎯', label: 'Presupuesto', onClick: () => navigate('/budgets') },
-    { icon: '📊', label: 'Ver Dashboard', onClick: () => navigate('/dashboard') },
+    { icon: <i className="ph ph-receipt" aria-hidden="true" />, label: 'Gasto', onClick: () => navigate('/expenses') },
+    { icon: <i className="ph ph-target" aria-hidden="true" />, label: 'Presupuesto', onClick: () => navigate('/budgets') },
+    { icon: <i className="ph ph-squares-four" aria-hidden="true" />, label: 'Ver Dashboard', onClick: () => navigate('/dashboard') },
   ];
 
   const actionsList = actions.length > 0 ? actions : defaultActions;
@@ -115,7 +115,7 @@ function QuickActionsFAB({ actions = [] }) {
         aria-expanded={isOpen}
       >
         <span className="fab-icon quick-actions-fab-icon">
-          {isOpen ? '✕' : '⚡'}
+          {isOpen ? <i className="ph ph-x" aria-hidden="true" /> : <i className="ph ph-lightning" aria-hidden="true" />}
         </span>
         <span className="fab-label">Acciones</span>
       </button>
@@ -134,7 +134,7 @@ function BudgetAlertFAB({ onClick, overBudget = false }) {
   return (
     <FloatingActionButton
       onClick={handleClick}
-      icon={overBudget ? '⚠️' : '💰'}
+      icon={overBudget ? <i className="ph ph-warning" aria-hidden="true" /> : <i className="ph ph-piggy-bank" aria-hidden="true" />}
       label={overBudget ? '¡Excedido!' : 'Presupuesto'}
       position="bottom-left"
     />
