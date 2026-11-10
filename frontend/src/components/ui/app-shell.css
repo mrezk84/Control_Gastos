@@ -1371,6 +1371,9 @@
 
 /* --- Insight Card Hover --- */
 .insight-card {
+  /* Ancla el ::after de abajo a la tarjeta: sin esto su `inset: 0` lo estira por todo el viewport y, aunque es
+     invisible, tapa el menú y bloquea los clics en Analíticas. */
+  position: relative;
   transition: all var(--transition-base);
 }
 
@@ -1383,6 +1386,8 @@
   content: '';
   position: absolute;
   inset: 0;
+  border-radius: inherit;
+  pointer-events: none; /* es solo un brillo decorativo: nunca debe interceptar clics */
   background: radial-gradient(
     circle at left,
     rgba(16, 185, 129, 0.05) 0%,
