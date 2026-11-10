@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Plan y simulador</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap">
+<style>
+body{margin:0;background:#0e0f11}
+a{text-decoration:none;color:inherit}
+input[type=range]{accent-color:#0e0f11}
+</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#0e0f11;color:#ededea;font-family:'Geist',system-ui,sans-serif;font-size:14px;display:flex;flex-direction:column;overflow:hidden">
+
+  <div aria-label="Cinta" style="height:30px;flex-shrink:0;background:oklch(0.68 0.13 58);color:#0e0f11;display:flex;align-items:center;gap:32px;padding:0 16px;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap;overflow:hidden">
+    <span style="display:inline-flex;align-items:center;gap:8px"><span style="width:6px;height:6px;border-radius:50%;background:#0e0f11"></span>Reto activo <b style="font-weight:600">Día {{done}}</b></span>
+    <span style="display:inline-flex;align-items:center;gap:8px"><span style="width:6px;height:6px;border-radius:50%;background:#0e0f11"></span>Recuperado <b style="font-weight:600">{{saved}}</b></span>
+    <span style="display:inline-flex;align-items:center;gap:8px"><span style="width:6px;height:6px;border-radius:50%;background:#0e0f11"></span>Racha <b style="font-weight:600">{{done}}</b></span>
+  </div>
+
+  <header style="flex-shrink:0;background:#16171a;border-bottom:1px solid #34373b;padding:10px 16px;display:flex;align-items:center;gap:10px">
+    <div aria-hidden="true" style="width:32px;height:32px;border-radius:9px;background:oklch(0.68 0.13 58);color:#0e0f11;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-weight:600;font-size:16px;box-shadow:0 3px 0 oklch(0.46 0.1 52)">$</div>
+    <span style="font-size:15px;font-weight:600;letter-spacing:-0.01em;flex-grow:1">Control de Gastos</span>
+    <button type="button" aria-label="Avisos" style="width:40px;height:40px;border:1px solid #34373b;border-radius:10px;background:#1d1f22;color:#ededea;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg></button>
+    <div aria-label="Cuenta" style="width:40px;height:40px;border-radius:50%;background:#1d1f22;border:1px solid #34373b;display:flex;align-items:center;justify-content:center;font-weight:600">M</div>
+  </header>
+
+  <nav aria-label="Principal" style="flex-shrink:0;display:flex;gap:4px;padding:8px 12px;border-bottom:1px solid #34373b;overflow:hidden;white-space:nowrap">
+    <a href="Main.dc.html" style="font-size:14px;font-weight:500;padding:8px 12px;border-radius:10px;min-height:36px;box-sizing:border-box;display:inline-flex;align-items:center;color:#a8aaa7">Panel</a>
+    <a href="Chat.dc.html" style="font-size:14px;font-weight:500;padding:8px 12px;border-radius:10px;min-height:36px;box-sizing:border-box;display:inline-flex;align-items:center;color:#a8aaa7">Asistente</a>
+    <a href="Plan.dc.html" style="font-size:14px;font-weight:500;padding:8px 12px;border-radius:10px;min-height:36px;box-sizing:border-box;display:inline-flex;align-items:center;color:#ededea;background:#1d1f22">Plan</a>
+    <a href="Main.dc.html" style="font-size:14px;font-weight:500;padding:8px 12px;border-radius:10px;min-height:36px;box-sizing:border-box;display:inline-flex;align-items:center;color:#a8aaa7">Gastos</a>
+    <a href="Main.dc.html" style="font-size:14px;font-weight:500;padding:8px 12px;border-radius:10px;min-height:36px;box-sizing:border-box;display:inline-flex;align-items:center;color:#a8aaa7">Presupuestos</a>
+  </nav>
+
+  <div style="flex-grow:1;overflow:hidden;padding:16px;display:flex;flex-direction:column;gap:14px">
+
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <span style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.08em;color:#a8aaa7">PLAN HORMIGA · SIMULADOR</span>
+      <h1 style="margin:0;font-size:30px;font-weight:500;letter-spacing:-0.025em;line-height:1.05">¿Cuánto recuperás?</h1>
+    </div>
+
+    <section aria-label="Simulador" style="background:oklch(0.68 0.13 58);color:#0e0f11;border-radius:20px;box-shadow:0 4px 0 oklch(0.46 0.1 52);padding:18px 20px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <label for="pct" style="font-size:15px;font-weight:500">Si bajo mis compras chicas un</label>
+        <span style="font-family:'Geist Mono',monospace;font-size:22px;font-weight:600">{{pct}} %</span>
+      </div>
+      <input id="pct" type="range" min="0" max="100" step="5" value="{{pct}}" onChange="{{onSlide}}" style="width:100%;height:44px;margin:0">
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.04em">AL AÑO</span><span style="font-family:'Geist Mono',monospace;font-size:44px;font-weight:600;line-height:1;letter-spacing:-0.03em">{{yearly}}</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.04em">AL MES</span><span style="font-family:'Geist Mono',monospace;font-size:18px;font-weight:600">{{monthly}}</span></div>
+      <span style="font-size:12.5px;line-height:1.4;opacity:0.85">{{hint}}</span>
+    </section>
+
+    <section aria-label="Reto" style="background:#16171a;border:1px solid #34373b;border-radius:18px;box-shadow:0 3px 0 #08090a;padding:16px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2 style="margin:0;font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="oklch(0.68 0.13 58)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>Reto: 7 días cocinando</h2>
+        <span style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.06em;color:#a8aaa7">{{progress}}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px">
+        <sc-for list="{{days}}" as="d" hint-placeholder-count="7">
+          <button type="button" onClick="{{d.toggle}}" aria-pressed="{{d.on}}" aria-label="{{d.label}}" style="{{d.style}}">{{d.mark}}</button>
+        </sc-for>
+      </div>
+      <span style="font-size:13px;line-height:1.4;color:#a8aaa7">Tocá el día cuando lo cumplas. Yo voy sumando lo que no gastaste.</span>
+    </section>
+
+    <section aria-label="Lecciones" style="display:flex;gap:10px">
+      <a href="Plan.dc.html" style="flex:1;min-width:0;background:#16171a;border:1px solid #34373b;border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:8px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="oklch(0.68 0.13 58)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+        <span style="font-weight:600;line-height:1.3">El efecto de lo pequeño</span>
+        <span style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.06em;color:#a8aaa7">3 MIN</span>
+      </a>
+      <a href="Plan.dc.html" style="flex:1;min-width:0;background:#16171a;border:1px solid #34373b;border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:8px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="oklch(0.68 0.13 58)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z"/><path d="M2 9v1c0 1.1.9 2 2 2h1"/><path d="M16 11h.01"/></svg>
+        <span style="font-weight:600;line-height:1.3">Pagarte primero a vos</span>
+        <span style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.06em;color:#a8aaa7">4 MIN</span>
+      </a>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { pct: 40, marks: [true, true, false, false, false, false, false] };
+  }
+  fmt(n) {
+    return '$ ' + Math.round(n).toLocaleString('es-UY');
+  }
+  renderVals() {
+    const base = 3840;
+    const pct = this.state.pct;
+    const monthly = base * pct / 100;
+    const marks = this.state.marks;
+    const done = marks.filter(Boolean).length;
+    const days = marks.map((on, i) => ({
+      on: on,
+      mark: on ? '✓' : String(i + 1),
+      label: 'Día ' + (i + 1) + (on ? ', cumplido' : ', pendiente'),
+      style: 'height:48px;border-radius:12px;cursor:pointer;font-family:Geist Mono,monospace;font-size:14px;font-weight:600;border:1px solid ' + (on ? 'oklch(0.68 0.13 58)' : '#34373b') + ';background:' + (on ? 'oklch(0.68 0.13 58)' : '#1d1f22') + ';color:' + (on ? '#0e0f11' : '#ededea') + ';box-shadow:0 3px 0 ' + (on ? 'oklch(0.46 0.1 52)' : '#08090a'),
+      toggle: () => {
+        const next = this.state.marks.slice();
+        next[i] = !next[i];
+        this.setState({ marks: next });
+      }
+    }));
+    let hint = 'Sobre los $ 3.840 de octubre. Es una simulación, no una promesa.';
+    if (pct === 0) hint = 'Movés el deslizador y te muestro cuánto queda.';
+    else if (pct >= 70) hint = 'Ambicioso. Mejor empezar con menos y sostenerlo.';
+    else if (pct >= 25) hint = 'Buen punto de partida: se nota sin sufrirlo.';
+    return {
+      pct: pct,
+      monthly: this.fmt(monthly),
+      yearly: this.fmt(monthly * 12),
+      hint: hint,
+      done: done,
+      saved: this.fmt(done * 197),
+      progress: done === 0 ? 'ARRANCÁS CUANDO QUIERAS' : (done + ' DE 7 · VAS BIEN'),
+      days: days,
+      onSlide: (e) => this.setState({ pct: Number(e.target.value) })
+    };
+  }
+}
+</script>
+</body>
+</html>
