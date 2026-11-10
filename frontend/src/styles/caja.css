@@ -871,3 +871,96 @@
 /* Gastos: tabla y filtros */
 .expenses-amount { color: var(--tx); }
 .filter-search-icon { color: var(--mu); display: inline-flex; }
+
+/* ==========================================================================
+   Gastos hormiga
+   ========================================================================== */
+.cj-tabbar { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.cj-hz { display: flex; flex-direction: column; gap: 18px; max-width: 880px; margin: 0 auto; }
+.cj-hz-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px; }
+.cj-hz-head > div:first-child { display: flex; flex-direction: column; gap: 8px; }
+.cj-hz-weeks { height: 84px; gap: 8px; }
+.cj-hz-weeks .cj-bar { border-radius: 8px 8px 3px 3px; }
+.cj-hz-hero .cj-hero-axis { gap: 8px; }
+.cj-hz-hero .cj-hero-axis span { flex: 1; text-align: center; }
+.cj-hz .cj-sema { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 720px) { .cj-hz .cj-sema { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); align-items: start; } .cj-hz .cj-sema-body { grid-row: span 2; } }
+.cj-hz .cj-limit { flex: initial; }
+.cj-hz-cta {
+  display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 20px; border: 0; border-radius: 999px;
+  background: var(--acc); color: var(--ink-on-acc); font: 600 16px 'Geist Variable', 'Geist', sans-serif; cursor: pointer; text-align: left;
+}
+.cj-hz-cta span { flex: 1; }
+.cj-hz-cta i { font-size: 22px; }
+.cj-hz-cta:hover { filter: brightness(1.06); }
+.cj-hz-pct { font: 600 22px/1 'Geist Mono Variable', 'Geist Mono', monospace; color: var(--acct); }
+.cj-hz-range { width: 100%; height: 44px; accent-color: var(--acct); cursor: pointer; }
+.cj-hz-result { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font: 500 12px/1 'Geist Mono Variable', 'Geist Mono', monospace; letter-spacing: 0.08em; color: var(--mu); }
+.cj-hz-result b { font-size: clamp(34px, 6vw, 44px); font-weight: 500; letter-spacing: -0.03em; color: var(--tx); }
+.cj-hz-result.is-small b { font-size: 20px; }
+.cj-hz-hint { margin: 0; font-size: 13.5px; color: var(--mu); line-height: 1.45; }
+.cj-hz-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+.cj-hz-day {
+  height: 52px; border-radius: 16px; border: 1px solid var(--line); background: var(--raised); color: var(--tx);
+  font: 600 15px 'Geist Mono Variable', 'Geist Mono', monospace; cursor: pointer; display: grid; place-items: center;
+}
+.cj-hz-day.is-on { background: var(--acc); border-color: var(--acc); color: var(--ink-on-acc); }
+.cj-hz-day i { font-size: 20px; }
+.cj-hz-foot { margin: 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center; font-size: 13px; color: var(--mu); }
+
+/* Gastos hormiga: bienvenida, chat, simulador y lecciones (según el diseño del asistente) */
+.cj-tabbar a span { text-align: center; line-height: 1.1; }
+.cj-hz-welcome { display: flex; flex-direction: column; gap: 22px; max-width: 520px; margin: 0 auto; }
+.cj-hz-welcome-top { padding: 28px; border-radius: 24px; background: var(--acc); color: var(--ink-on-acc); display: flex; flex-direction: column; gap: 14px; }
+.cj-hz-welcome-top h1 { font-family: var(--font-display); font-size: clamp(34px, 6vw, 44px); font-weight: 700; letter-spacing: -0.035em; line-height: 1.04; margin: 0; }
+.cj-hz-welcome-top p { margin: 0; font-size: 16px; line-height: 1.45; }
+.cj-hz-points { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.cj-hz-points li { display: flex; gap: 14px; align-items: center; line-height: 1.3; }
+.cj-hz-points small { color: var(--mu); font-size: 13.5px; }
+.cj-hz-point-ico { width: 44px; height: 44px; flex-shrink: 0; border-radius: 14px; background: var(--accsoft); color: var(--acct); display: grid; place-items: center; font-size: 22px; }
+.cj-hz-goals { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.cj-hz-goals legend { font-size: 13px; color: var(--mu); padding: 0; margin-bottom: 10px; }
+.cj-hz-goals > div { display: flex; flex-wrap: wrap; gap: 8px; }
+.cj-hz-chip {
+  min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--tx);
+  font: 500 14px 'Geist Variable', 'Geist', sans-serif; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0;
+}
+.cj-hz-chip:hover { background: var(--raised); }
+.cj-hz-chip.is-on { background: var(--acc); border-color: var(--acc); color: var(--ink-on-acc); }
+.cj-hz-cta.is-inline { align-self: flex-start; min-height: 48px; padding: 0 20px; font-size: 15px; }
+
+.cj-hz-chat { display: flex; flex-direction: column; gap: 14px; }
+.cj-hz-chat-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 20px; background: var(--panel); border: 1px solid var(--line); }
+.cj-hz-chat-head > div { display: flex; flex-direction: column; gap: 2px; }
+.cj-hz-chat-head small { display: flex; align-items: center; gap: 5px; font: 11px/1.2 'Geist Mono Variable', 'Geist Mono', monospace; letter-spacing: 0.06em; color: var(--mu); }
+.cj-hz-bot { width: 40px; height: 40px; border-radius: 14px; background: var(--acc); color: var(--ink-on-acc); display: grid; place-items: center; font-size: 22px; }
+.cj-hz-thread { display: flex; flex-direction: column; gap: 12px; min-height: 280px; }
+.cj-hz-msg { max-width: min(560px, 92%); padding: 12px 16px; line-height: 1.45; display: flex; flex-direction: column; gap: 10px; }
+.cj-hz-msg p { margin: 0; }
+.cj-hz-msg.is-me { align-self: flex-end; background: var(--acc); color: var(--ink-on-acc); font-weight: 500; border-radius: 20px 20px 6px 20px; }
+.cj-hz-msg.is-bot { align-self: flex-start; background: var(--panel); border: 1px solid var(--line); border-radius: 6px 20px 20px 20px; }
+.cj-hz-ticket { background: var(--raised); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; font: 13px 'Geist Mono Variable', 'Geist Mono', monospace; }
+.cj-hz-ticket-row { display: flex; align-items: baseline; gap: 8px; }
+.cj-hz-ticket-row .cj-dots { flex: 1; border-bottom: 1.5px dotted var(--mu); transform: translateY(-3px); opacity: 0.6; }
+.cj-hz-ticket-total { border-top: 1px solid var(--line); padding-top: 8px; display: flex; justify-content: space-between; font-weight: 600; color: var(--acct); }
+.cj-hz-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.cj-hz-steps li { display: flex; gap: 10px; align-items: center; }
+.cj-hz-steps li span { width: 26px; height: 26px; flex-shrink: 0; border-radius: 8px; background: var(--accsoft); color: var(--acct); display: grid; place-items: center; font: 600 12px 'Geist Mono Variable', 'Geist Mono', monospace; }
+.cj-hz-suggest { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.cj-hz-ask { display: flex; gap: 8px; }
+.cj-hz-ask input { flex: 1; min-width: 0; height: 52px; border-radius: 999px; border: 1px solid var(--line); background: var(--raised); color: var(--tx); padding: 0 20px; font: 15px 'Geist Variable', 'Geist', sans-serif; }
+.cj-hz-ask button { width: 52px; height: 52px; flex-shrink: 0; border: 0; border-radius: 999px; background: var(--acc); color: var(--ink-on-acc); font-size: 20px; cursor: pointer; display: grid; place-items: center; }
+.cj-hz-ask button:disabled { opacity: 0.45; cursor: default; }
+
+/* Simulador: la tarjeta del acento */
+.cj-hz-sim { background: var(--acc); color: var(--ink-on-acc); border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 12px; }
+.cj-hz-sim .cj-card-title, .cj-hz-sim .cj-hz-pct, .cj-hz-sim .cj-hz-result, .cj-hz-sim .cj-hz-result b, .cj-hz-sim .cj-hz-hint { color: var(--ink-on-acc); }
+.cj-hz-sim .cj-hz-range { accent-color: var(--ink-on-acc); }
+.cj-hz-sim .cj-hz-hint { opacity: 0.85; }
+.cj-hz-lessons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.cj-hz-lesson { text-align: left; display: flex; flex-direction: column; gap: 8px; padding: 16px; border-radius: 20px; border: 1px solid var(--line); background: var(--panel); color: var(--tx); cursor: pointer; font: 14px 'Geist Variable', 'Geist', sans-serif; }
+.cj-hz-lesson:hover { background: var(--raised); }
+.cj-hz-lesson i { font-size: 24px; color: var(--acct); }
+.cj-hz-lesson small { font: 11px/1.2 'Geist Mono Variable', 'Geist Mono', monospace; letter-spacing: 0.06em; color: var(--mu); }
+.cj-hz-lesson-body { display: flex; flex-direction: column; gap: 12px; line-height: 1.55; font-size: 15px; }
+.cj-hz-lesson-body p { margin: 0; }

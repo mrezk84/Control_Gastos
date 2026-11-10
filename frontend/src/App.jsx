@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import Expenses from './pages/Expenses';
 import Budgets from './pages/Budgets';
 import Analytics from './pages/Analytics';
+import Hormiga from './pages/Hormiga';
 import OAuthCallback from './components/OAuthCallback';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
@@ -60,6 +61,7 @@ function App() {
           <Route path="/expenses" element={<Expenses />} />
           <Route path="/budgets" element={<Budgets />} />
           <Route path="/analytics" element={<Analytics />} />
+          <Route path="/hormiga" element={<Hormiga />} />
         </Route>
         <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>
