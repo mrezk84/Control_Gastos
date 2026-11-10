@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getVapidKey, pushSubscribe, pushUnsubscribe } from '../services/api';
-import { pushSupported, urlBase64ToUint8Array } from '../utils/push';
+import logger from '../utils/logger';
+import { explainPushError, isBrave, pushSupported, urlBase64ToUint8Array } from '../utils/push';
 
 /** Notificaciones del navegador (Web Push): permiso, suscripción y baja. */
 export function usePush() {
@@ -24,13 +25,15 @@ export function usePush() {
   const enable = useCallback(async () => {
     if (!supported) return { ok: false, message: 'Este navegador no admite notificaciones push.' };
     setBusy(true);
+    let step = 'register';
+    let reg = null;
     try {
       const result = await Notification.requestPermission();
       setPermission(result);
       if (result !== 'granted') {
         return { ok: false, message: 'Permiso denegado. Actívalo desde los ajustes del sitio en tu navegador.' };
       }
-      const reg = await navigator.serviceWorker.register('/sw.js');
+      reg = await navigator.serviceWorker.register('/sw.js');
       await navigator.serviceWorker.ready;
       let key;
       try {
@@ -39,15 +42,24 @@ export function usePush() {
         if (err?.response?.status === 503) {
           return { ok: false, message: 'Las notificaciones del navegador aún no están configuradas en el servidor.' };
         }
+        step = 'server';
         throw err;
       }
+      step = 'subscribe';
       const sub = (await reg.pushManager.getSubscription())
         || (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(key) }));
-      await pushSubscribe(sub.toJSON());
+      step = 'server';
+      try {
+        await pushSubscribe(sub.toJSON());
+      } catch (err) {
+        await sub.unsubscribe().catch(() => {}); // sin guardarla en el servidor no sirve: se puede reintentar limpio
+        throw err;
+      }
       setSubscribed(true);
       return { ok: true, message: 'Notificaciones activadas' };
-    } catch {
-      return { ok: false, message: 'No se pudieron activar las notificaciones.' };
+    } catch (err) {
+      logger.error(`Error al activar las notificaciones (paso: ${step})`, err);
+      return { ok: false, message: explainPushError(step, err, isBrave()) };
     } finally {
       setBusy(false);
     }
