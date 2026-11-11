@@ -145,7 +145,6 @@ Proyecto_Control_Gastos/
 │   │   ├── models.py      # Modelos BD
 │   │   ├── schemas.py     # Pydantic schemas
 │   │   └── main.py        # App entry point
-│   ├── api/               # Entrada serverless de Vercel
 │   ├── migrations/        # SQL del esquema (001 a 005)
 │   ├── tests/             # Pruebas (pytest)
 │   └── requirements.txt
