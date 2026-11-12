@@ -1,268 +1,193 @@
-import React from 'react';
-
-const CATEGORIES = [
-  'Alimentación',
-  'Transporte',
-  'Entretenimiento',
-  'Salud',
-  'Servicios',
-  'Educación',
-  'Vivienda',
-  'Ropa',
-  'Tecnología',
-  'Otros',
-];
+import React, { useState } from 'react';
+import Icon from '../ui/Icon';
+import { CATEGORIES } from '../../utils/constants';
+import { formatDateForInput } from '../../utils/formatters';
+import { categoryIconClass } from '../../utils/categoryIcons';
 
 const DATE_PRESETS = [
-  { label: 'Todos', value: 'all' },
+  { label: 'Todo', value: 'all' },
   { label: 'Hoy', value: 'today' },
-  { label: 'Esta semana', value: 'week' },
+  { label: '7 días', value: 'week' },
   { label: 'Este mes', value: 'month' },
   { label: 'Mes anterior', value: 'lastMonth' },
   { label: 'Este año', value: 'year' },
 ];
 
-function ExpenseFilters({ filters, onChange, onClear, onSearch }) {
-  const updateFilter = (key, value) => {
-    onChange({ ...filters, [key]: value });
-  };
-
-  const handleSearch = () => {
-    if (onSearch) onSearch();
-  };
-
-  const getDateRange = (preset) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    switch (preset) {
-      case 'today':
-        return { start: today.toISOString().split('T')[0], end: today.toISOString().split('T')[0] };
-      case 'week':
-        const weekAgo = new Date(today);
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        return { start: weekAgo.toISOString().split('T')[0], end: today.toISOString().split('T')[0] };
-      case 'month':
-        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-        return { start: monthStart.toISOString().split('T')[0], end: today.toISOString().split('T')[0] };
-      case 'lastMonth':
-        const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-        const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
-        return { start: lastMonthStart.toISOString().split('T')[0], end: lastMonthEnd.toISOString().split('T')[0] };
-      case 'year':
-        const yearStart = new Date(today.getFullYear(), 0, 1);
-        return { start: yearStart.toISOString().split('T')[0], end: today.toISOString().split('T')[0] };
-      default:
-        return { start: '', end: '' };
+/** Rango de fechas (en hora local) de cada período rápido. */
+export function presetRange(preset, now = new Date()) {
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const iso = formatDateForInput;
+  switch (preset) {
+    case 'today':
+      return { startDate: iso(today), endDate: iso(today) };
+    case 'week': {
+      const from = new Date(today);
+      from.setDate(from.getDate() - 6);
+      return { startDate: iso(from), endDate: iso(today) };
     }
-  };
+    case 'month':
+      return { startDate: iso(new Date(today.getFullYear(), today.getMonth(), 1)), endDate: iso(today) };
+    case 'lastMonth':
+      return {
+        startDate: iso(new Date(today.getFullYear(), today.getMonth() - 1, 1)),
+        endDate: iso(new Date(today.getFullYear(), today.getMonth(), 0)),
+      };
+    case 'year':
+      return { startDate: iso(new Date(today.getFullYear(), 0, 1)), endDate: iso(today) };
+    default:
+      return { startDate: '', endDate: '' };
+  }
+}
 
-  const handleDatePresetChange = (preset) => {
-    const range = getDateRange(preset);
-    updateFilter('startDate', range.start);
-    updateFilter('endDate', range.end);
-    updateFilter('datePreset', preset);
-  };
+/**
+ * Barra de filtros de Gastos: búsqueda y período siempre a la vista; categorías,
+ * fechas a medida y montos en un panel que se despliega. Los filtros se aplican al instante.
+ */
+function ExpenseFilters({ filters, onChange, onClear }) {
+  const [open, setOpen] = useState(false);
+  const patch = (changes) => onChange({ ...filters, ...changes });
+
+  const categories = filters.categories || [];
+  const customDates = filters.datePreset === 'custom' && (filters.startDate || filters.endDate);
+  const hasAmount = filters.minAmount !== '' || filters.maxAmount !== '';
+  const advancedCount = (categories.length > 0 ? 1 : 0) + (customDates ? 1 : 0) + (hasAmount ? 1 : 0);
+  const hasActive = advancedCount > 0 || Boolean(filters.search) || (filters.datePreset && filters.datePreset !== 'all');
 
   const toggleCategory = (category) => {
-    const current = filters.categories || [];
-    const updated = current.includes(category)
-      ? current.filter(c => c !== category)
-      : [...current, category];
-    updateFilter('categories', updated);
+    patch({
+      categories: categories.includes(category)
+        ? categories.filter((c) => c !== category)
+        : [...categories, category],
+    });
   };
 
-  const hasActiveFilters = () => {
-    return filters.search ||
-           filters.startDate ||
-           filters.endDate ||
-           (filters.categories && filters.categories.length > 0) ||
-           filters.minAmount ||
-           filters.maxAmount;
-  };
-
-  const activeFilterCount = () => {
-    let count = 0;
-    if (filters.search) count++;
-    if (filters.startDate || filters.endDate) count++;
-    if (filters.categories && filters.categories.length > 0) count++;
-    if (filters.minAmount || filters.maxAmount) count++;
-    return count;
-  };
+  const amount = (value) => (value === '' ? '' : parseFloat(value));
 
   return (
-    <div className="filters-container" role="region" aria-label="Filtros de gastos">
-      <div className="filters-header">
-        <h3 className="filters-title">
-          <i className="ph ph-magnifying-glass" aria-hidden="true" />
-          <span className="sr-only">Filtros</span>
-        </h3>
-        {hasActiveFilters() && (
+    <section className="cj-filters" aria-label="Filtros de gastos">
+      <div className="cj-filters-bar">
+        <div className="cj-search">
+          <Icon name="magnifying-glass" />
+          <input
+            id="expense-search"
+            type="search"
+            placeholder="Buscar por descripción"
+            value={filters.search || ''}
+            onChange={(e) => patch({ search: e.target.value })}
+            aria-label="Buscar gasto por descripción"
+          />
+          {filters.search && (
+            <button type="button" onClick={() => patch({ search: '' })} aria-label="Limpiar búsqueda">
+              <Icon name="x" />
+            </button>
+          )}
+        </div>
+
+        <div className="cj-chips cj-chips-scroll" role="group" aria-label="Período">
+          {DATE_PRESETS.map((preset) => (
+            <button
+              key={preset.value}
+              type="button"
+              className="cj-chip"
+              aria-pressed={filters.datePreset === preset.value}
+              onClick={() => patch({ ...presetRange(preset.value), datePreset: preset.value })}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="cj-filters-end">
+          {hasActive && (
+            <button type="button" className="cj-link-btn" onClick={onClear}>
+              Limpiar
+            </button>
+          )}
           <button
-            className="filters-clear"
-            onClick={onClear}
-            aria-label={`Limpiar ${activeFilterCount()} filtros activos`}
+            type="button"
+            className="cj-act"
+            aria-expanded={open}
+            aria-controls="expense-filters-more"
+            onClick={() => setOpen((o) => !o)}
           >
-            Limpiar ({activeFilterCount()})
+            <Icon name="sliders-horizontal" />
+            Filtros
+            {advancedCount > 0 && <span className="cj-count">{advancedCount}</span>}
           </button>
-        )}
+        </div>
       </div>
 
-      <div className="filters-content">
-        {/* Search */}
-        <div className="filter-group filter-search-group">
-          <label htmlFor="expense-search" className="filter-label" id="expense-search-label">
-            Buscar
-          </label>
-          <div className="filter-search-wrapper">
-            <span className="filter-search-icon" aria-hidden="true"><i className="ph ph-magnifying-glass" aria-hidden="true" /></span>
-            <input
-              id="expense-search"
-              type="text"
-              className="filter-input filter-search-input"
-              placeholder="Descripción del gasto..."
-              value={filters.search || ''}
-              onChange={(e) => updateFilter('search', e.target.value)}
-              aria-label="Buscar gasto por descripción"
-            />
-            {filters.search && (
-              <button
-                className="filter-search-clear"
-                onClick={() => updateFilter('search', '')}
-                aria-label="Limpiar búsqueda"
-                type="button"
-              >
-                <i className="ph ph-x" aria-hidden="true" />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Date Presets */}
-        <fieldset className="filter-group">
-          <legend className="filter-label">Período</legend>
-          <div className="filter-presets" role="group" aria-label="Seleccionar período de tiempo">
-            {DATE_PRESETS.map((preset) => (
-              <button
-                key={preset.value}
-                className={`filter-preset ${filters.datePreset === preset.value ? 'active' : ''}`}
-                onClick={() => handleDatePresetChange(preset.value)}
-                aria-pressed={filters.datePreset === preset.value}
-                type="button"
-              >
-                {preset.label}
-              </button>
-            ))}
-          </div>
-        </fieldset>
-
-        {/* Date Range */}
-        <div className="filter-row" role="group" aria-label="Rango de fechas personalizado">
-          <div className="filter-group">
-            <label htmlFor="expense-date-from" className="filter-label">
-              Desde
-            </label>
-            <input
-              id="expense-date-from"
-              type="date"
-              className="filter-input"
-              value={filters.startDate || ''}
-              onChange={(e) => {
-                updateFilter('startDate', e.target.value);
-                updateFilter('datePreset', 'custom');
-              }}
-              aria-label="Fecha de inicio"
-            />
-          </div>
-          <div className="filter-group">
-            <label htmlFor="expense-date-to" className="filter-label">
-              Hasta
-            </label>
-            <input
-              id="expense-date-to"
-              type="date"
-              className="filter-input"
-              value={filters.endDate || ''}
-              onChange={(e) => {
-                updateFilter('endDate', e.target.value);
-                updateFilter('datePreset', 'custom');
-              }}
-              aria-label="Fecha de fin"
-            />
-          </div>
-        </div>
-
-        {/* Categories */}
-        <fieldset className="filter-group">
-          <legend className="filter-label">Categorías</legend>
-          <div className="filter-categories" role="group" aria-label="Filtrar por categorías">
-            {CATEGORIES.map((category) => {
-              const isSelected = filters.categories?.includes(category);
-              return (
+      {open && (
+        <div className="cj-filters-more" id="expense-filters-more">
+          <fieldset className="cj-fieldset">
+            <legend>Categorías</legend>
+            <div className="cj-chips">
+              {CATEGORIES.map((category) => (
                 <button
                   key={category}
-                  className={`filter-category-chip ${isSelected ? 'active' : ''}`}
-                  onClick={() => toggleCategory(category)}
-                  aria-pressed={isSelected}
                   type="button"
+                  className="cj-chip"
+                  aria-pressed={categories.includes(category)}
+                  onClick={() => toggleCategory(category)}
                 >
+                  <i className={categoryIconClass(category)} aria-hidden="true" />
                   {category}
                 </button>
-              );
-            })}
-          </div>
-        </fieldset>
+              ))}
+            </div>
+          </fieldset>
 
-        {/* Amount Range */}
-        <div className="filter-row" role="group" aria-label="Rango de monto">
-          <div className="filter-group">
-            <label htmlFor="expense-amount-min" className="filter-label">
-              Mínimo $
+          <div className="cj-filters-grid">
+            <label className="cj-label">
+              <span>Desde</span>
+              <input
+                type="date"
+                className="cj-field cj-date"
+                value={filters.startDate || ''}
+                max={filters.endDate || undefined}
+                onChange={(e) => patch({ startDate: e.target.value, datePreset: 'custom' })}
+              />
             </label>
-            <input
-              id="expense-amount-min"
-              type="number"
-              className="filter-input"
-              placeholder="0"
-              min="0"
-              step="0.01"
-              value={filters.minAmount || ''}
-              onChange={(e) => updateFilter('minAmount', e.target.value ? parseFloat(e.target.value) : '')}
-              aria-label="Monto mínimo del gasto"
-            />
-          </div>
-          <div className="filter-group">
-            <label htmlFor="expense-amount-max" className="filter-label">
-              Máximo $
+            <label className="cj-label">
+              <span>Hasta</span>
+              <input
+                type="date"
+                className="cj-field cj-date"
+                value={filters.endDate || ''}
+                min={filters.startDate || undefined}
+                onChange={(e) => patch({ endDate: e.target.value, datePreset: 'custom' })}
+              />
             </label>
-            <input
-              id="expense-amount-max"
-              type="number"
-              className="filter-input"
-              placeholder="Sin límite"
-              min="0"
-              step="0.01"
-              value={filters.maxAmount || ''}
-              onChange={(e) => updateFilter('maxAmount', e.target.value ? parseFloat(e.target.value) : '')}
-              aria-label="Monto máximo del gasto"
-            />
+            <label className="cj-label">
+              <span>Monto mínimo</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                className="cj-field cj-date"
+                placeholder="0"
+                min="0"
+                step="0.01"
+                value={filters.minAmount}
+                onChange={(e) => patch({ minAmount: amount(e.target.value) })}
+              />
+            </label>
+            <label className="cj-label">
+              <span>Monto máximo</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                className="cj-field cj-date"
+                placeholder="Sin límite"
+                min="0"
+                step="0.01"
+                value={filters.maxAmount}
+                onChange={(e) => patch({ maxAmount: amount(e.target.value) })}
+              />
+            </label>
           </div>
         </div>
-
-        {/* Search Button */}
-        <div className="filter-actions">
-          <button
-            className="filter-search-btn"
-            onClick={handleSearch}
-            aria-label="Aplicar filtros y buscar"
-            type="button"
-          >
-            <i className="ph ph-magnifying-glass" aria-hidden="true" />
-            <span>Buscar Gastos</span>
-          </button>
-        </div>
-      </div>
-    </div>
+      )}
+    </section>
   );
 }
 

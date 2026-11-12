@@ -141,7 +141,7 @@ Usa el panel **"Registrar gasto"** del Panel (en el móvil está debajo de la te
 
 **Escanear**: el botón "Escanear" lee un recibo (foto, PDF o QR) y rellena monto, descripción, fecha y categoría. Revisa siempre los datos antes de registrar.
 
-> **Registrar desde otras pantallas**: ya no hay un botón flotante. Pulsa **Cmd + N** (Mac) o **Ctrl + N** (Windows/Linux) y se abre un gasto rápido. En Presupuestos también está el botón **"+ Gasto Rápido"**.
+> **Registrar desde otras pantallas**: ya no hay un botón flotante. Pulsa **Cmd + N** (Mac) o **Ctrl + N** (Windows/Linux) y se abre un gasto rápido. En Presupuestos también está el botón **"Gasto rápido"**.
 
 > Si algo falta (descripción, monto mayor a 0 o categoría) verás un aviso y el gasto no se guarda.
 
@@ -179,15 +179,17 @@ Las categorías son fijas: no se pueden crear nuevas. Cada una tiene su propio i
 
 ### 3.5 Filtrar Gastos
 
-En la pantalla **Gastos** tienes los filtros a la izquierda (se pueden ocultar con **"Ocultar filtros"**):
+En la pantalla **Gastos** la barra de filtros está sobre la lista. La búsqueda y el período están siempre a la vista; el botón **"Filtros"** despliega el resto. Se aplican al instante y **"Limpiar"** los quita todos:
 
 | Filtro | Uso |
 |--------|-----|
 | **Buscar** | Busca por descripción |
-| **Período** | Hoy, esta semana, este mes, mes anterior, este año o todos |
-| **Desde / Hasta** | Rango de fechas |
-| **Categorías** | Una o varias categorías |
-| **Monto mínimo / máximo** | Rango de importes |
+| **Período** | Todo, hoy, 7 días, este mes, mes anterior o este año |
+| **Categorías** (en Filtros) | Una o varias categorías |
+| **Desde / Hasta** (en Filtros) | Rango de fechas |
+| **Monto mínimo / máximo** (en Filtros) | Rango de importes |
+
+La cabecera de la tabla ordena por descripción, categoría, fecha o monto. En el móvil la categoría y la fecha aparecen debajo de la descripción.
 
 ### 3.6 Exportar Gastos
 
@@ -225,31 +227,31 @@ En la pantalla **Gastos** tienes los filtros a la izquierda (se pueden ocultar c
 Un presupuesto es un tope mensual para una categoría, del mes en curso.
 
 1. Ve a la sección **"Presupuestos"**
-2. Haz clic en **"+ Nuevo Presupuesto"**
+2. Haz clic en **"Nuevo presupuesto"**
 3. Completa:
 
    | Campo | Descripción |
    |-------|-------------|
    | **Categoría** | Categoría a presupuestar |
-   | **Monto Mensual** | Límite de gasto para esa categoría |
+   | **Monto mensual** | Límite de gasto para esa categoría |
    | **Repetir todos los meses** | Opcional: el presupuesto se mantiene cada mes |
 
-4. Haz clic en **"Guardar"**
+4. Haz clic en **"Crear presupuesto"**
 
 Solo puede haber un presupuesto por categoría y mes.
 
 ### 4.2 La pantalla de Presupuestos
 
-- **Compras de Hoy**: lo que gastaste hoy, con cuánto te queda en el presupuesto de cada categoría.
-- **Resumen**: Presupuesto total, Gastado, Disponible y Progreso.
-- **Una tarjeta por presupuesto**, con el icono de su categoría, la barra de avance y tres acciones: **agregar un gasto rápido** de esa categoría, **editar** y **eliminar**.
+- **Resumen**: lo gastado sobre el presupuesto total, con la barra de avance, el porcentaje y lo disponible.
+- **Una tarjeta por presupuesto**, con el icono de su categoría, el porcentaje y su estado, lo gastado sobre el tope, la barra de avance, cuánto queda y tres acciones: **agregar un gasto** de esa categoría, **editar** y **eliminar**.
+- **Compras de hoy**: lo que gastaste hoy, con cuánto te queda en el presupuesto de cada categoría.
 
 ### 4.3 Estado del Presupuesto
 
 | Color | Estado | Significado |
 |-------|--------|-------------|
-| 🟢 **Verde** | En línea | Has gastado menos del 80 % del presupuesto |
-| 🟠 **Ámbar** | Precaución | Has gastado entre el 80 % y el 100 % |
+| 🟢 **Verde** | En orden | Has gastado menos del 80 % del presupuesto |
+| 🟠 **Ámbar** | Cerca del límite | Has gastado entre el 80 % y el 100 % |
 | 🔴 **Rojo** | Excedido | Has llegado o superado el presupuesto |
 
 ### 4.4 Editar y eliminar
@@ -265,21 +267,21 @@ La pantalla **Analíticas** te ayuda a entender tus hábitos de gasto. Arriba a 
 
 ### 5.1 Resumen del período
 
-Cinco indicadores: **Total gastos**, **Promedio**, **Gasto mayor**, **Gasto menor** y **Transacciones**.
+Cuatro indicadores: **Total** (con la cantidad de gastos), **Promedio diario** (sobre los días que abarca el período), **Promedio por gasto** y **Gasto mayor** (con el menor debajo).
 
 ### 5.2 Comparativa y proyección
 
 - **Comparativa** con el período anterior.
 - **Proyección de este mes**: cuánto llegarás a gastar si sigues al ritmo actual.
 
-### 5.3 Insights
+### 5.3 Claves del período
 
-Observaciones escritas sobre tus gastos: tu categoría principal y su porcentaje, cuánto gastas en promedio por día y cuánto más gastas en una categoría que en otra.
+Observaciones escritas sobre tus gastos: tu categoría principal y su porcentaje, cuánto gastas en promedio por día, cuánto más gastas en una categoría que en otra y qué día de la semana gastas más.
 
 ### 5.4 Gráficos
 
-- **Distribución por categoría**: qué parte de tus gastos va a cada categoría.
-- **Gastos por día de la semana**: en qué días gastas más.
+- **Por categoría**: las cinco categorías principales y el resto, con monto y porcentaje.
+- **Por día de la semana**: en qué días gastas más (el día más alto va resaltado).
 - **Tendencia mensual**: cómo evolucionan tus gastos mes a mes.
 
 ---

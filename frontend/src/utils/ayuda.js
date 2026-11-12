@@ -58,13 +58,13 @@ export const TOPICS = [
     id: 'filtros',
     title: 'Buscar y filtrar gastos',
     keywords: ['filtr', 'busc', 'busqueda', 'encontrar', 'periodo', 'fecha desde', 'categoria'],
-    text: 'En Gastos tienes filtros a la izquierda:',
+    text: 'En Gastos, la barra de filtros está sobre la lista:',
     steps: [
       'Busca por descripción.',
-      'Elige un período: hoy, esta semana, este mes o un rango de fechas.',
-      'Marca una o varias categorías.',
+      'Elige un período: hoy, 7 días, este mes, mes anterior o este año.',
+      'Toca Filtros para marcar categorías o poner un rango de fechas y de montos.',
     ],
-    extra: 'Con Ocultar filtros ganas espacio para la tabla.',
+    extra: 'Se aplican al instante; Limpiar los quita todos.',
     to: '/expenses', label: 'Ir a Gastos',
   },
   {
@@ -73,7 +73,7 @@ export const TOPICS = [
     keywords: ['presupuesto', 'presupuestos', 'limite por categoria', 'tope por categoria', 'cuanto me queda', 'excedi'],
     text: 'Un presupuesto es un tope mensual para una categoría:',
     steps: [
-      'Entra a Presupuestos y toca Nuevo Presupuesto.',
+      'Entra a Presupuestos y toca Nuevo presupuesto.',
       'Elige la categoría y el monto del mes.',
       'La app muestra cuánto llevas gastado y cuánto te queda, y te avisa si lo excedes.',
     ],
@@ -133,8 +133,8 @@ export const TOPICS = [
     text: 'Analíticas resume tus gastos del período que elijas:',
     steps: [
       'Arriba a la derecha eliges el período.',
-      'Ves total, promedio, gasto mayor y menor, y una proyección del mes.',
-      'Más abajo hay gráficos por categoría y observaciones.',
+      'Ves total, promedio diario y por gasto, gasto mayor y una proyección del mes.',
+      'Más abajo hay gráficos por categoría, por día de la semana y por mes, con las claves del período.',
     ],
     to: '/analytics', label: 'Ir a Analíticas',
   },

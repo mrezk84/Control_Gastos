@@ -3,7 +3,7 @@ import { getExpenses, deleteExpense, exportExpensesCSV, exportExpensesExcel, imp
 import ExpenseFilters from '../components/Filters/ExpenseFilters';
 import EmptyState from '../components/ui/EmptyState';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
-import { formatDate } from '../utils';
+import { formatDate, formatDateShort } from '../utils';
 import { categoryIconClass } from '../utils/categoryIcons';
 import Icon from '../components/ui/Icon';
 import PageLoader from '../components/ui/PageLoader';
@@ -14,10 +14,17 @@ import { EXPENSE_CREATED_EVENT } from '../utils/events';
 
 const PAGE_SIZE = 25;
 
+const COLUMNS = [
+  { key: 'description', label: 'Descripción' },
+  { key: 'category', label: 'Categoría', className: 'cj-col-wide' },
+  { key: 'date', label: 'Fecha', className: 'cj-col-wide' },
+  { key: 'amount', label: 'Monto', className: 'cj-td-num' },
+];
+
 /**
- * Expense table with client-side infinite scroll: renders `PAGE_SIZE` rows
- * at a time and reveals more as a sentinel row scrolls into view, instead of
- * rendering the whole (potentially long) list up front.
+ * Tabla de gastos con scroll infinito en el cliente: muestra `PAGE_SIZE` filas y va
+ * revelando más cuando el centinela entra en pantalla, en vez de pintar toda la lista.
+ * En pantallas angostas la categoría y la fecha pasan a una segunda línea bajo la descripción.
  */
 function ExpensesTable({ expenses, sortBy, sortOrder, onSort, onDeleteClick }) {
   const { formatCurrency } = useMoney();
@@ -47,68 +54,62 @@ function ExpensesTable({ expenses, sortBy, sortOrder, onSort, onDeleteClick }) {
   const hasMore = visibleCount < expenses.length;
 
   return (
-    <div className="expenses-table-wrapper">
-      <table className="expenses-table">
+    <>
+      <table className="cj-table">
         <thead>
           <tr>
-            <th
-              className={`sortable ${sortBy === 'description' ? `sorted-${sortOrder}` : ''}`}
-              onClick={() => onSort('description')}
-            >
-              Descripción {sortBy === 'description' && (sortOrder === 'asc' ? '↑' : '↓')}
-            </th>
-            <th
-              className={`sortable ${sortBy === 'category' ? `sorted-${sortOrder}` : ''}`}
-              onClick={() => onSort('category')}
-            >
-              Categoría {sortBy === 'category' && (sortOrder === 'asc' ? '↑' : '↓')}
-            </th>
-            <th
-              className={`sortable ${sortBy === 'amount' ? `sorted-${sortOrder}` : ''}`}
-              onClick={() => onSort('amount')}
-            >
-              Monto {sortBy === 'amount' && (sortOrder === 'asc' ? '↑' : '↓')}
-            </th>
-            <th
-              className={`sortable ${sortBy === 'date' ? `sorted-${sortOrder}` : ''}`}
-              onClick={() => onSort('date')}
-            >
-              Fecha {sortBy === 'date' && (sortOrder === 'asc' ? '↑' : '↓')}
-            </th>
-            <th>Acciones</th>
+            {COLUMNS.map((col) => {
+              const sorted = sortBy === col.key;
+              return (
+                <th
+                  key={col.key}
+                  scope="col"
+                  className={col.className}
+                  aria-sort={sorted ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
+                >
+                  <button type="button" className={`cj-th${sorted ? ' is-sorted' : ''}`} onClick={() => onSort(col.key)}>
+                    {col.label}
+                    <Icon name={sorted ? (sortOrder === 'asc' ? 'arrow-up' : 'arrow-down') : 'arrows-down-up'} />
+                  </button>
+                </th>
+              );
+            })}
+            <th scope="col" className="cj-td-act"><span className="cj-sr">Acciones</span></th>
           </tr>
         </thead>
         <tbody>
-          {visibleExpenses.map((expense, index) => (
-            <tr key={expense.id} style={{ animationDelay: `${Math.min(index, 20) * 0.03}s` }}>
-              <td className="expenses-description">{expense.description}</td>
-              <td>
-                <span className="category-badge">
-                  <i className={categoryIconClass(expense.category)} aria-hidden="true" /> {expense.category}
-                </span>
+          {visibleExpenses.map((expense) => (
+            <tr key={expense.id}>
+              <td className="cj-td-main">
+                <div className="cj-td-flex">
+                  <div className="cj-row-ico"><i className={categoryIconClass(expense.category)} aria-hidden="true" /></div>
+                  <div className="cj-row-main">
+                    <span className="cj-row-desc">{expense.description}</span>
+                    <span className="cj-row-cat cj-only-narrow">{expense.category} · {formatDateShort(expense.date)}</span>
+                  </div>
+                </div>
               </td>
-              <td className="expenses-amount">{formatCurrency(expense.amount)}</td>
-              <td className="expenses-date">{formatDate(expense.date)}</td>
-              <td className="expenses-actions">
-                <button
-                  className="expenses-action-btn expenses-action-delete"
-                  onClick={() => onDeleteClick(expense)}
-                  title="Eliminar"
-                >
-                  <Icon name="trash" />
-                </button>
+              <td className="cj-col-wide"><span className="cj-tag">{expense.category}</span></td>
+              <td className="cj-col-wide cj-td-date">{formatDate(expense.date)}</td>
+              <td className="cj-td-num">{formatCurrency(expense.amount)}</td>
+              <td className="cj-td-act">
+                <div className="cj-row-actions">
+                  <button type="button" onClick={() => onDeleteClick(expense)} aria-label={`Eliminar ${expense.description}`} title="Eliminar">
+                    <Icon name="trash" />
+                  </button>
+                </div>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
       {hasMore && (
-        <div ref={sentinelRef} className="expenses-load-more">
-          <span className="spinner-mini" aria-hidden="true" />
-          Cargando más gastos...
+        <div ref={sentinelRef} className="cj-table-more">
+          <span className="cj-spinner" aria-hidden="true" />
+          Cargando más gastos…
         </div>
       )}
-    </div>
+    </>
   );
 }
 
@@ -127,12 +128,12 @@ function Expenses() {
   });
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
-  const [showFilters, setShowFilters] = useState(true);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [importing, setImporting] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState(null);
   const fileInputRef = useRef(null);
+  const exportRef = useRef(null);
   const { success, error } = useToast();
 
   useEffect(() => {
@@ -168,17 +169,10 @@ function Expenses() {
         }
       }
 
-      // Date filter
-      if (filters.startDate) {
-        const expenseDate = new Date(expense.date);
-        const startDate = new Date(filters.startDate);
-        if (expenseDate < startDate) return false;
-      }
-      if (filters.endDate) {
-        const expenseDate = new Date(expense.date);
-        const endDate = new Date(filters.endDate);
-        if (expenseDate > endDate) return false;
-      }
+      // Fechas "YYYY-MM-DD": se comparan como texto, sin desfases de zona horaria
+      const day = String(expense.date).slice(0, 10);
+      if (filters.startDate && day < filters.startDate) return false;
+      if (filters.endDate && day > filters.endDate) return false;
 
       // Category filter
       if (filters.categories && filters.categories.length > 0) {
@@ -188,8 +182,8 @@ function Expenses() {
       }
 
       // Amount filter
-      if (filters.minAmount && expense.amount < filters.minAmount) return false;
-      if (filters.maxAmount && expense.amount > filters.maxAmount) return false;
+      if (filters.minAmount !== '' && expense.amount < filters.minAmount) return false;
+      if (filters.maxAmount !== '' && expense.amount > filters.maxAmount) return false;
 
       return true;
     });
@@ -357,201 +351,124 @@ function Expenses() {
     }
   };
 
-  // Calculate totals
+  // El menú de exportar se cierra al hacer clic fuera o con Escape
+  useEffect(() => {
+    if (!showExportMenu) return undefined;
+    const onDown = (e) => { if (exportRef.current && !exportRef.current.contains(e.target)) setShowExportMenu(false); };
+    const onKey = (e) => { if (e.key === 'Escape') setShowExportMenu(false); };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [showExportMenu]);
+
   const totalAmount = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const count = filteredExpenses.length;
+  const filtered = count !== allExpenses.length;
 
   if (loading) {
     return <PageLoader label="Cargando gastos…" />;
   }
 
   return (
-    <div className="expenses-container">
-      {showFilters ? (
-        <div className="expenses-layout">
-          <aside className="expenses-filters">
-            <ExpenseFilters
-              filters={filters}
-              onChange={setFilters}
-              onClear={clearFilters}
-            />
-          </aside>
-
-          <main className="expenses-main">
-            <div className="page-header">
-              <div>
-                <h1 className="page-title"><Icon name="receipt" duotone />Gastos</h1>
-                <p className="page-subtitle">
-                  {filteredExpenses.length} {filteredExpenses.length === 1 ? 'gasto' : 'gastos'}
-                  {filteredExpenses.length > 0 && ` · Total: ${formatCurrency(totalAmount)}`}
-                </p>
-              </div>
-              <div className="page-header-actions">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".csv"
-                  onChange={handleFileChange}
-                  style={{ display: 'none' }}
-                  aria-label="Seleccionar archivo CSV para importar"
-                />
-                <button
-                  className="btn btn-secondary"
-                  onClick={handleImportClick}
-                  disabled={importing}
-                  title="Importar gastos desde un archivo CSV"
-                >
-                  {importing ? <><Icon name="hourglass" /> Importando…</> : <><Icon name="upload-simple" /> Importar</>}
+    <div className="cj-page">
+      <header className="cj-head">
+        <div>
+          <span className="cj-eyebrow">Movimientos · {allExpenses.length} {allExpenses.length === 1 ? 'registro' : 'registros'}</span>
+          <h1 className="cj-greeting">Gastos</h1>
+        </div>
+        <div className="cj-head-actions">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv"
+            onChange={handleFileChange}
+            style={{ display: 'none' }}
+            aria-label="Seleccionar archivo CSV para importar"
+          />
+          <button
+            type="button"
+            className="cj-act"
+            onClick={handleImportClick}
+            disabled={importing}
+            title="Importar gastos desde un archivo CSV"
+          >
+            <Icon name={importing ? 'hourglass' : 'upload-simple'} />
+            {importing ? 'Importando…' : 'Importar'}
+          </button>
+          <div className="cj-pop" ref={exportRef}>
+            <button
+              type="button"
+              className="cj-act"
+              aria-haspopup="menu"
+              aria-expanded={showExportMenu}
+              onClick={() => setShowExportMenu(!showExportMenu)}
+              disabled={count === 0}
+            >
+              <Icon name="download-simple" /> Exportar <Icon name="caret-down" />
+            </button>
+            {showExportMenu && (
+              <div className="cj-menu cj-pop-menu" role="menu">
+                <button type="button" role="menuitem" className="cj-menu-item" onClick={() => { handleExportCSV(); setShowExportMenu(false); }}>
+                  <Icon name="file-csv" /> CSV
                 </button>
-                <div className="export-dropdown">
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => setShowExportMenu(!showExportMenu)}
-                    disabled={filteredExpenses.length === 0}
-                  >
-                    <Icon name="download-simple" /> Exportar <Icon name="caret-down" />
-                  </button>
-                  {showExportMenu && (
-                    <div className="export-menu">
-                      <button
-                        className="export-menu-item"
-                        onClick={() => {
-                          handleExportCSV();
-                          setShowExportMenu(false);
-                        }}
-                      >
-                        <Icon name="file-csv" /> Exportar como CSV
-                      </button>
-                      <button
-                        className="export-menu-item"
-                        onClick={() => {
-                          handleExportExcel();
-                          setShowExportMenu(false);
-                        }}
-                      >
-                        <Icon name="file-xls" /> Exportar como Excel
-                      </button>
-                    </div>
-                  )}
-                </div>
-                <button
-                  className="btn btn-primary"
-                  onClick={() => setShowFilters(false)}
-                >
-                  <Icon name="eye-slash" /> Ocultar filtros
+                <button type="button" role="menuitem" className="cj-menu-item" onClick={() => { handleExportExcel(); setShowExportMenu(false); }}>
+                  <Icon name="file-xls" /> Excel
                 </button>
               </div>
-            </div>
-
-            {sortedExpenses.length === 0 ? (
-              <EmptyState
-                icon={<Icon name="chat-circle-dots" duotone />}
-                title="No se encontraron gastos"
-                description={
-                  allExpenses.length === 0
-                    ? 'Todavía no tenés gastos registrados. ¡Agregá el primero!'
-                    : 'No hay gastos que coincidan con los filtros aplicados.'
-                }
-                action={allExpenses.length > 0 && (
-                  <button className="btn btn-secondary" onClick={clearFilters}>
-                    Limpiar filtros
-                  </button>
-                )}
-              />
-            ) : (
-              <ExpensesTable
-                expenses={sortedExpenses}
-                sortBy={sortBy}
-                sortOrder={sortOrder}
-                onSort={handleSort}
-                onDeleteClick={handleDeleteClick}
-              />
             )}
-          </main>
-        </div>
-      ) : (
-        <div className="expenses-main full-width">
-          <div className="page-header">
-            <div>
-              <h1 className="page-title"><Icon name="receipt" duotone />Gastos</h1>
-              <p className="page-subtitle">
-                {filteredExpenses.length} {filteredExpenses.length === 1 ? 'gasto' : 'gastos'}
-                {filteredExpenses.length > 0 && ` · Total: ${formatCurrency(totalAmount)}`}
-              </p>
-            </div>
-            <div className="page-header-actions">
-              <div className="export-dropdown">
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setShowExportMenu(!showExportMenu)}
-                  disabled={filteredExpenses.length === 0}
-                >
-                  <Icon name="download-simple" /> Exportar <Icon name="caret-down" />
-                </button>
-                {showExportMenu && (
-                  <div className="export-menu">
-                    <button
-                      className="export-menu-item"
-                      onClick={() => {
-                        handleExportCSV();
-                        setShowExportMenu(false);
-                      }}
-                    >
-                      <Icon name="file-csv" /> Exportar como CSV
-                    </button>
-                    <button
-                      className="export-menu-item"
-                      onClick={() => {
-                        handleExportExcel();
-                        setShowExportMenu(false);
-                      }}
-                    >
-                      <Icon name="file-xls" /> Exportar como Excel
-                    </button>
-                  </div>
-                )}
-              </div>
-              <button
-                className="btn btn-primary"
-                onClick={() => setShowFilters(true)}
-              >
-                <Icon name="funnel" /> Filtros
-              </button>
-            </div>
           </div>
-
-          {sortedExpenses.length === 0 ? (
-            <EmptyState
-              icon={<Icon name="chat-circle-dots" duotone />}
-              title="No se encontraron gastos"
-              description={
-                allExpenses.length === 0
-                  ? 'Todavía no tenés gastos registrados. ¡Agregá el primero!'
-                  : 'No hay gastos que coincidan con los filtros aplicados.'
-              }
-              action={allExpenses.length > 0 && (
-                <button className="btn btn-secondary" onClick={clearFilters}>
-                  Limpiar filtros
-                </button>
-              )}
-            />
-          ) : (
-            <ExpensesTable
-              expenses={sortedExpenses}
-              sortBy={sortBy}
-              sortOrder={sortOrder}
-              onSort={handleSort}
-              onDeleteClick={handleDeleteClick}
-            />
-          )}
         </div>
-      )}
+      </header>
+
+      <ExpenseFilters filters={filters} onChange={setFilters} onClear={clearFilters} />
+
+      <section className="cj-card cj-table-card" aria-label="Lista de gastos">
+        <div className="cj-card-head">
+          <h2 className="cj-card-title">
+            <Icon name="receipt" />
+            {filtered ? 'Resultados' : 'Todos los gastos'}
+          </h2>
+          <div className="cj-table-sum">
+            <span>{count} {count === 1 ? 'gasto' : 'gastos'}</span>
+            <b>{formatCurrency(totalAmount)}</b>
+          </div>
+        </div>
+
+        {sortedExpenses.length === 0 ? (
+          <EmptyState
+            icon={<Icon name="receipt" duotone />}
+            title={allExpenses.length === 0 ? 'Todavía no hay gastos' : 'Sin resultados'}
+            description={
+              allExpenses.length === 0
+                ? 'Registra el primero desde el Panel o importa un archivo CSV.'
+                : 'Ningún gasto coincide con los filtros aplicados.'
+            }
+            action={allExpenses.length > 0 && (
+              <button type="button" className="cj-act" onClick={clearFilters}>
+                Limpiar filtros
+              </button>
+            )}
+          />
+        ) : (
+          <ExpensesTable
+            expenses={sortedExpenses}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSort={handleSort}
+            onDeleteClick={handleDeleteClick}
+          />
+        )}
+      </section>
 
       <ConfirmDialog
         isOpen={showConfirmDialog}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={handleDeleteConfirmed}
-        title="Eliminar Gasto"
-        message={expenseToDelete ? `¿Estás seguro de eliminar "${expenseToDelete.description}" de ${formatCurrency(expenseToDelete.amount)}? Esta acción no se puede deshacer.` : ''}
+        title="¿Eliminar gasto?"
+        message={expenseToDelete ? `${expenseToDelete.description} · ${formatCurrency(expenseToDelete.amount)}. Esta acción no se puede deshacer.` : ''}
         confirmText="Eliminar"
         cancelText="Cancelar"
         type="danger"

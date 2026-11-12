@@ -6,7 +6,7 @@ import { DATE_CONFIG } from './constants';
  * Convierte a Date. Las fechas "YYYY-MM-DD" (sin hora) se interpretan en hora local:
  * new Date("2026-10-30") las toma como UTC y en zonas al oeste de Greenwich muestra el día anterior.
  */
-const toDate = (date) => {
+export const toDate = (date) => {
   if (date instanceof Date) return date;
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(date).trim());
   return match ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])) : new Date(date);
@@ -46,6 +46,15 @@ export const formatDate = (date) => {
   const d = toDate(date);
   if (isNaN(d.getTime())) return '-';
   return new Intl.DateTimeFormat('es-AR', DATE_CONFIG).format(d);
+};
+
+/** "12 nov" (o "12 nov 2025" si no es de este año): fecha corta para listas en pantallas angostas. */
+export const formatDateShort = (date, now = new Date()) => {
+  if (!date) return '-';
+  const d = toDate(date);
+  if (isNaN(d.getTime())) return '-';
+  const month = new Intl.DateTimeFormat('es', { month: 'short' }).format(d).replace('.', '');
+  return `${d.getDate()} ${month}${d.getFullYear() === now.getFullYear() ? '' : ` ${d.getFullYear()}`}`;
 };
 
 /**

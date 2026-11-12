@@ -4,29 +4,29 @@ import EmptyState from '../components/ui/EmptyState';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import PageLoader from '../components/ui/PageLoader';
+import Icon from '../components/ui/Icon';
 import { categoryIconClass } from '../utils/categoryIcons';
+import { CATEGORIES } from '../utils/constants';
+import { formatDateForInput, formatShare } from '../utils/formatters';
 import { useMoney } from '../context/ExpensesContext';
 import logger from '../utils/logger';
 import { useToast } from '../components/ui/ToastContainer';
 import { EXPENSE_CREATED_EVENT } from '../utils/events';
 
-const CATEGORIES = [
-  'Alimentación',
-  'Transporte',
-  'Entretenimiento',
-  'Salud',
-  'Servicios',
-  'Educación',
-  'Vivienda',
-  'Ropa',
-  'Tecnología',
-  'Otros',
-];
-
 const MONTHS = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 ];
+
+/** Fecha de hoy en hora local (toISOString usa UTC y de noche devuelve el día siguiente). */
+const todayISO = () => formatDateForInput(new Date());
+
+/** Estado de un presupuesto según el porcentaje gastado: color, icono y texto (nunca solo color). */
+const budgetStatus = (percentage) => {
+  if (percentage >= 100) return { level: 'bad', color: 'var(--bad)', icon: 'warning-octagon', label: 'Excedido' };
+  if (percentage >= 80) return { level: 'warn', color: 'var(--warn)', icon: 'warning', label: 'Cerca del límite' };
+  return { level: 'ok', color: 'var(--ok)', icon: 'check-circle', label: 'En orden' };
+};
 
 function Budgets() {
   const { formatCurrency } = useMoney();
@@ -47,7 +47,7 @@ function Budgets() {
     description: '',
     amount: '',
     category: '',
-    date: new Date().toISOString().split('T')[0],
+    date: todayISO(),
   });
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [budgetToDelete, setBudgetToDelete] = useState(null);
@@ -68,7 +68,7 @@ function Budgets() {
   // Fetch today's expenses
   const fetchTodayExpenses = useCallback(async () => {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = todayISO();
       const res = await getAllExpenses({ startDate: today, endDate: today });
       setTodayExpenses(res.data || []);
     } catch (err) {
@@ -101,7 +101,7 @@ function Budgets() {
     }
 
     if (!formData.category) {
-      warning('Seleccioná una categoría');
+      warning('Selecciona una categoría');
       return;
     }
 
@@ -109,8 +109,8 @@ function Budgets() {
       const existingBudget = budgets.find(b => b.category === formData.category);
       if (existingBudget) {
         warning(
-          `Ya tenés un presupuesto de "${formData.category}" para ${MONTHS[currentMonth - 1]} ${currentYear}. ` +
-          `Monto actual: $${existingBudget.budget_amount} - Gastado: $${existingBudget.spent_amount}`
+          `Ya tienes un presupuesto de "${formData.category}" para ${MONTHS[currentMonth - 1]} ${currentYear}. ` +
+          `Monto: ${formatCurrency(existingBudget.budget_amount)} · Gastado: ${formatCurrency(existingBudget.spent_amount)}`
         );
         return;
       }
@@ -141,7 +141,7 @@ function Budgets() {
       let errorMessage = 'Error al guardar el presupuesto';
       if (err.response?.data?.detail) errorMessage = err.response.data.detail;
       else if (err.message) errorMessage = err.message;
-      error('' + errorMessage);
+      error(String(errorMessage));
     }
   };
 
@@ -156,12 +156,12 @@ function Budgets() {
     }
 
     if (!expenseData.description.trim()) {
-      warning('Ingresá una descripción');
+      warning('Ingresa una descripción');
       return;
     }
 
     if (!expenseData.category) {
-      warning('Seleccioná una categoría');
+      warning('Selecciona una categoría');
       return;
     }
 
@@ -172,7 +172,7 @@ function Budgets() {
       date: expenseData.date,
     };
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayISO();
     const isToday = payload.date === today;
     const tempId = `temp-${Date.now()}`;
 
@@ -223,7 +223,7 @@ function Budgets() {
   };
 
   const handleDeleteClick = (budget) => {
-    setBudgetToDelete(budget.budget_id);
+    setBudgetToDelete(budget);
     setShowConfirmDialog(true);
   };
 
@@ -231,7 +231,7 @@ function Budgets() {
     if (!budgetToDelete) return;
 
     try {
-      await deleteBudget(budgetToDelete);
+      await deleteBudget(budgetToDelete.budget_id);
       await fetchBudgets();
       success('Presupuesto eliminado');
     } catch (err) {
@@ -253,7 +253,7 @@ function Budgets() {
       description: '',
       amount: '',
       category: category,
-      date: new Date().toISOString().split('T')[0],
+      date: todayISO(),
     });
     setShowQuickExpenseModal(true);
   };
@@ -266,17 +266,9 @@ function Budgets() {
 
   const closeQuickExpenseModal = () => {
     setShowQuickExpenseModal(false);
-    setExpenseData({ description: '', amount: '', category: '', date: new Date().toISOString().split('T')[0] });
+    setExpenseData({ description: '', amount: '', category: '', date: todayISO() });
   };
 
-
-  const getProgressColor = (percentage) => {
-    if (percentage >= 100) return 'red';
-    if (percentage >= 80) return 'orange';
-    return 'green';
-  };
-
-  const getProgressWidth = (percentage) => Math.min(percentage, 100);
 
   // Calculate totals
   const totalBudget = budgets.reduce((sum, b) => sum + b.budget_amount, 0);
@@ -285,190 +277,158 @@ function Budgets() {
   const totalPercentage = totalBudget > 0 ? (totalSpent / totalBudget * 100) : 0;
   const todayTotal = todayExpenses.reduce((sum, e) => sum + e.amount, 0);
 
+  const overall = budgetStatus(totalPercentage);
+  const monthLabel = `${MONTHS[currentMonth - 1]} ${currentYear}`;
+  const todayLabel = new Date().toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' });
+
   if (loading) {
     return <PageLoader label="Cargando presupuestos…" />;
   }
 
   return (
-    <div className="budgets-container">
-      <div className="page-header">
+    <div className="cj-page">
+      <header className="cj-head">
         <div>
-          <h1 className="page-title"><i className="ph-duotone ph-target page-title-icon" aria-hidden="true" />Presupuestos</h1>
-          <p className="page-subtitle">
-            {MONTHS[currentMonth - 1]} {currentYear}
-          </p>
+          <span className="cj-eyebrow">Plan del mes · {monthLabel}</span>
+          <h1 className="cj-greeting">Presupuestos</h1>
         </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="btn btn-secondary" onClick={() => openQuickExpenseModal()}>
-            + Gasto Rápido
+        <div className="cj-head-actions">
+          <button type="button" className="cj-act" onClick={() => openQuickExpenseModal()}>
+            <Icon name="plus" /> Gasto rápido
           </button>
-          <button className="btn btn-primary" onClick={openNewModal}>
-            + Nuevo Presupuesto
+          <button type="button" className="cj-act is-primary" onClick={openNewModal}>
+            <Icon name="target" /> Nuevo presupuesto
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* Today's Summary Card */}
-      <div className="today-summary-card">
-        <div className="today-summary-header">
-          <div className="today-summary-icon"><i className="ph-duotone ph-calendar-dots" aria-hidden="true" /></div>
-          <div className="today-summary-title">
-            <h3>Compras de Hoy</h3>
-            <p>{new Date().toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+      {budgets.length > 0 && (
+        <section className="cj-hero cj-bud-hero" aria-label="Resumen de presupuestos">
+          <div className="cj-hero-main">
+            <div className="cj-hero-title"><Icon name="target" duotone />Gastado del presupuesto</div>
+            <div className="cj-hero-amount">{formatCurrency(totalSpent)}</div>
+            <div className="cj-hero-sub">
+              de {formatCurrency(totalBudget)} · {budgets.length} {budgets.length === 1 ? 'categoría' : 'categorías'}
+            </div>
           </div>
-          <div className="today-summary-amount">
-            <span className="today-summary-label">Total del día</span>
-            <span className="today-summary-value">{formatCurrency(todayTotal)}</span>
+          <div className="cj-bud-hero-side" style={{ '--c': overall.color }}>
+            <div className="cj-sema-state"><Icon name={overall.icon} />{overall.label.toUpperCase()}</div>
+            <div className="cj-meter" style={{ '--w': `${Math.min(totalPercentage, 100)}%` }}><div /></div>
+            <div className="cj-sema-scale">
+              <span>{formatShare(totalPercentage)}</span>
+              <span>
+                {totalRemaining < 0
+                  ? `Excedido por ${formatCurrency(Math.abs(totalRemaining))}`
+                  : `Disponible ${formatCurrency(totalRemaining)}`}
+              </span>
+            </div>
           </div>
-        </div>
+        </section>
+      )}
 
-        {todayExpenses.length > 0 ? (
-          <div className="today-expenses-list">
-            {todayExpenses.map((expense) => {
-              const budget = budgets.find(b => b.category === expense.category);
-              const remaining = budget ? budget.remaining_amount : null;
-
-              return (
-                <div key={expense.id} className="today-expense-item">
-                  <div className="today-expense-info">
-                    <div className="today-expense-category">{expense.category}</div>
-                    <div className="today-expense-description">{expense.description}</div>
-                    {remaining !== null && (
-                      <div className={`today-expense-budget ${remaining < 0 ? 'over-budget' : ''}`}>
-                        <i className={`ph ph-${remaining < 0 ? 'warning' : 'chart-bar'}`} aria-hidden="true" />{' '}
-                        {remaining < 0 ? `Excedido por ${formatCurrency(Math.abs(remaining))}` : `Queda ${formatCurrency(remaining)}`}
-                      </div>
-                    )}
+      {budgets.length === 0 ? (
+        <section className="cj-card">
+          <EmptyState
+            icon={<Icon name="piggy-bank" duotone />}
+            title="Sin presupuestos este mes"
+            description="Fija un tope por categoría y mira cuánto te queda a medida que registras gastos."
+            action={
+              <button type="button" className="cj-act is-primary" onClick={openNewModal}>
+                <Icon name="target" /> Crear presupuesto
+              </button>
+            }
+          />
+        </section>
+      ) : (
+        <div className="cj-budgets">
+          {budgets.map((budget) => {
+            const status = budgetStatus(budget.percentage);
+            return (
+              <article key={budget.budget_id} className="cj-card cj-budget" style={{ '--c': status.color }}>
+                <div className="cj-budget-head">
+                  <div className="cj-row-ico"><i className={categoryIconClass(budget.category)} aria-hidden="true" /></div>
+                  <h2 className="cj-budget-name">{budget.category}</h2>
+                  <span className="cj-status" title={status.label}>
+                    <Icon name={status.icon} />
+                    <span className="cj-sr">{status.label}: </span>
+                    {formatShare(budget.percentage)}
+                  </span>
+                </div>
+                <div className="cj-budget-amt">
+                  <b>{formatCurrency(budget.spent_amount)}</b>
+                  <span>de {formatCurrency(budget.budget_amount)}</span>
+                </div>
+                <div className="cj-meter" style={{ '--w': `${Math.min(budget.percentage, 100)}%` }}><div /></div>
+                <div className="cj-budget-foot">
+                  <span className={budget.remaining_amount < 0 ? 'is-over' : ''}>
+                    {budget.remaining_amount < 0
+                      ? `Excedido por ${formatCurrency(Math.abs(budget.remaining_amount))}`
+                      : `Quedan ${formatCurrency(budget.remaining_amount)}`}
+                  </span>
+                  <div className="cj-row-actions">
+                    <button type="button" onClick={() => openQuickExpenseModal(budget.category)} title="Agregar gasto" aria-label={`Agregar gasto en ${budget.category}`}>
+                      <Icon name="plus" />
+                    </button>
+                    <button type="button" onClick={() => handleEdit(budget)} title="Editar" aria-label={`Editar presupuesto de ${budget.category}`}>
+                      <Icon name="pencil-simple" />
+                    </button>
+                    <button type="button" onClick={() => handleDeleteClick(budget)} title="Eliminar" aria-label={`Eliminar presupuesto de ${budget.category}`}>
+                      <Icon name="trash" />
+                    </button>
                   </div>
-                  <div className="today-expense-amount">-{formatCurrency(expense.amount)}</div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+
+      <section className="cj-card" aria-label="Compras de hoy">
+        <div className="cj-card-head">
+          <h2 className="cj-card-title"><Icon name="calendar-dots" />Compras de hoy</h2>
+          <div className="cj-table-sum">
+            <span>{todayLabel}</span>
+            <b>{formatCurrency(todayTotal)}</b>
+          </div>
+        </div>
+        {todayExpenses.length === 0 ? (
+          <div className="cj-empty">
+            Hoy no registraste compras.{' '}
+            <button type="button" className="cj-link-btn" onClick={() => openQuickExpenseModal()}>Agregar un gasto</button>
+          </div>
+        ) : (
+          <div>
+            {todayExpenses.map((expense) => {
+              const budget = budgets.find((b) => b.category === expense.category);
+              const remaining = budget ? budget.remaining_amount : null;
+              return (
+                <div key={expense.id} className="cj-row">
+                  <div className="cj-row-ico"><i className={categoryIconClass(expense.category)} aria-hidden="true" /></div>
+                  <div className="cj-row-main">
+                    <span className="cj-row-desc">{expense.description}</span>
+                    <span className="cj-row-cat">
+                      {expense.category}
+                      {remaining !== null && (
+                        <span className={remaining < 0 ? 'cj-note is-over' : 'cj-note'}>
+                          {' · '}
+                          {remaining < 0 ? `excedido por ${formatCurrency(Math.abs(remaining))}` : `quedan ${formatCurrency(remaining)}`}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                  <span className="cj-row-amt">{formatCurrency(expense.amount)}</span>
                 </div>
               );
             })}
           </div>
-        ) : (
-          <div className="today-expenses-empty">
-            <p>No hay compras registradas hoy</p>
-            <button className="btn btn-ghost" onClick={() => openQuickExpenseModal()}>
-              + Agregar primer gasto
-            </button>
-          </div>
         )}
-      </div>
-
-      {/* Summary Cards */}
-      <div className="budgets-summary">
-        <div className="budget-summary-card">
-          <div className="budget-summary-label">Presupuesto Total</div>
-          <div className="budget-summary-value">{formatCurrency(totalBudget)}</div>
-        </div>
-        <div className="budget-summary-card">
-          <div className="budget-summary-label">Gastado</div>
-          <div className="budget-summary-value budget-summary-value-spent">
-            {formatCurrency(totalSpent)}
-          </div>
-        </div>
-        <div className="budget-summary-card">
-          <div className="budget-summary-label">Disponible</div>
-          <div className={`budget-summary-value ${totalRemaining < 0 ? 'budget-summary-value-over' : 'budget-summary-value-remaining'}`}>
-            {formatCurrency(Math.abs(totalRemaining))}
-          </div>
-        </div>
-        <div className="budget-summary-card">
-          <div className="budget-summary-label">Progreso</div>
-          <div className={`budget-summary-value budget-summary-value-${getProgressColor(totalPercentage)}`}>
-            {totalPercentage.toFixed(1)}%
-          </div>
-        </div>
-      </div>
-
-      {/* Budget List */}
-      {budgets.length === 0 ? (
-        <EmptyState
-          icon={<i className="ph-duotone ph-piggy-bank" aria-hidden="true" />}
-          title="Sin presupuestos"
-          description="No tenés presupuestos configurados para este mes. Creá uno para controlar tus gastos."
-          action={
-            <button className="btn btn-primary" onClick={openNewModal}>
-              + Crear Presupuesto
-            </button>
-          }
-        />
-      ) : (
-        <div className="budgets-list">
-          {budgets.map((budget) => (
-            <div key={budget.budget_id} className="budget-card">
-              <div className="budget-header">
-                <div className="budget-category"><i className={`${categoryIconClass(budget.category)} budget-category-icon`} aria-hidden="true" />{budget.category}</div>
-                <div className="budget-actions">
-                  <button
-                    className="budget-action-btn"
-                    onClick={() => openQuickExpenseModal(budget.category)}
-                    title="Agregar gasto rápido"
-                    aria-label="Agregar gasto rápido"
-                  >
-                    <i className="ph ph-plus-circle" aria-hidden="true" />
-                  </button>
-                  <button
-                    className="budget-action-btn"
-                    onClick={() => handleEdit(budget)}
-                    title="Editar"
-                    aria-label="Editar"
-                  >
-                    <i className="ph ph-pencil-simple" aria-hidden="true" />
-                  </button>
-                  <button
-                    className="budget-action-btn budget-action-btn-delete"
-                    onClick={() => handleDeleteClick(budget)}
-                    title="Eliminar"
-                    aria-label="Eliminar"
-                  >
-                    <i className="ph ph-trash" aria-hidden="true" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="budget-progress-bar">
-                <div
-                  className={`budget-progress-fill budget-progress-fill-${getProgressColor(budget.percentage)}`}
-                  style={{ width: `${getProgressWidth(budget.percentage)}%` }}
-                />
-              </div>
-
-              <div className="budget-details">
-                <div className="budget-detail">
-                  <span className="budget-detail-label">Presupuesto:</span>
-                  <span className="budget-detail-value">{formatCurrency(budget.budget_amount)}</span>
-                </div>
-                <div className="budget-detail">
-                  <span className="budget-detail-label">Gastado:</span>
-                  <span className="budget-detail-value">{formatCurrency(budget.spent_amount)}</span>
-                </div>
-                <div className="budget-detail">
-                  <span className="budget-detail-label">Restante:</span>
-                  <span className={`budget-detail-value ${budget.remaining_amount < 0 ? 'budget-detail-over' : ''}`}>
-                    {formatCurrency(Math.abs(budget.remaining_amount))}
-                  </span>
-                </div>
-                <div className={`budget-percentage budget-percentage-${getProgressColor(budget.percentage)}`}>
-                  {budget.percentage.toFixed(1)}%
-                </div>
-              </div>
-
-              {budget.percentage >= 100 && (
-                <div className="budget-warning">
-                  <i className="ph ph-warning" aria-hidden="true" /> Has excedido tu presupuesto en {budget.category}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+      </section>
 
       {/* Create/Edit Budget Modal */}
       <Modal
         isOpen={showModal}
         onClose={closeModal}
-        title={editingBudget ? 'Editar Presupuesto' : 'Nuevo Presupuesto'}
+        title={editingBudget ? 'Editar presupuesto' : 'Nuevo presupuesto'}
       >
         <form onSubmit={handleSave}>
           <div className="form-group">
@@ -479,7 +439,7 @@ function Budgets() {
               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
               required
             >
-              <option value="">Seleccionar...</option>
+              <option value="">Seleccionar…</option>
               {CATEGORIES.map((cat) => (
                 <option key={cat} value={cat}>{cat}</option>
               ))}
@@ -487,7 +447,7 @@ function Budgets() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Monto Mensual</label>
+            <label className="form-label">Monto mensual</label>
             <input
               type="number"
               className="form-input"
@@ -516,7 +476,7 @@ function Budgets() {
               Cancelar
             </button>
             <button type="submit" className="btn btn-primary">
-              {editingBudget ? 'Guardar Cambios' : 'Crear Presupuesto'}
+              {editingBudget ? 'Guardar cambios' : 'Crear presupuesto'}
             </button>
           </div>
         </form>
@@ -526,7 +486,7 @@ function Budgets() {
       <Modal
         isOpen={showQuickExpenseModal}
         onClose={closeQuickExpenseModal}
-        title="Gasto Rápido"
+        title="Gasto rápido"
       >
         <form onSubmit={handleQuickExpense}>
           <div className="form-group">
@@ -536,7 +496,7 @@ function Budgets() {
               className="form-input"
               value={expenseData.description}
               onChange={(e) => setExpenseData({ ...expenseData, description: e.target.value })}
-              placeholder="Ej: Café, Supermercado..."
+              placeholder="Café, supermercado…"
               required
               autoFocus
             />
@@ -564,7 +524,7 @@ function Budgets() {
               onChange={(e) => setExpenseData({ ...expenseData, category: e.target.value })}
               required
             >
-              <option value="">Seleccionar...</option>
+              <option value="">Seleccionar…</option>
               {CATEGORIES.map((cat) => (
                 <option key={cat} value={cat}>{cat}</option>
               ))}
@@ -587,7 +547,7 @@ function Budgets() {
               Cancelar
             </button>
             <button type="submit" className="btn btn-primary">
-              Agregar Gasto
+              Agregar gasto
             </button>
           </div>
         </form>
@@ -597,12 +557,12 @@ function Budgets() {
         isOpen={showConfirmDialog}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={handleDeleteConfirmed}
-        title="Eliminar Presupuesto"
-        message={budgetToDelete ? `¿Estás seguro de eliminar el presupuesto de "${budgetToDelete.category}"? Esta acción no se puede deshacer.` : ''}
+        title="¿Eliminar presupuesto?"
+        message={budgetToDelete ? `Presupuesto de ${budgetToDelete.category}. Tus gastos no se borran. Esta acción no se puede deshacer.` : ''}
         confirmText="Eliminar"
         cancelText="Cancelar"
         type="danger"
-        icon={<i className="ph-duotone ph-trash" aria-hidden="true" />}
+        icon={<Icon name="trash" duotone />}
       />
     </div>
   );

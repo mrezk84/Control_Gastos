@@ -6,3 +6,5 @@
 @import './components/ui/EmptyState.css';
 /* Rediseño "Caja registradora": va al final para sobrescribir el tema anterior */
 @import './styles/caja.css';
+/* Gastos, Presupuestos y Analíticas con el lenguaje del Panel */
+@import './styles/pages.css';
