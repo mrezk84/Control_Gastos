@@ -13,13 +13,13 @@ import {
   Filler,
 } from 'chart.js';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
-import { getAllExpenses, getExpensesSummary } from '../services/api';
-import { CHART_COLORS } from '../utils';
+import { getAllExpenses } from '../services/api';
+import { formatShare, toDate } from '../utils/formatters';
+import { categoryIconClass } from '../utils/categoryIcons';
 import Icon from '../components/ui/Icon';
 import PageLoader from '../components/ui/PageLoader';
 import { useMoney } from '../context/ExpensesContext';
 import logger from '../utils/logger';
-import { useCountUp } from '../hooks/useCountUp';
 import { EXPENSE_CREATED_EVENT } from '../utils/events';
 
 ChartJS.register(
@@ -35,6 +35,11 @@ ChartJS.register(
   Filler
 );
 
+const FONT_SANS = "'Geist Variable', 'Geist', system-ui, sans-serif";
+const FONT_MONO = "'Geist Mono Variable', 'Geist Mono', ui-monospace, monospace";
+ChartJS.defaults.font.family = FONT_SANS;
+ChartJS.defaults.font.size = 12;
+
 const PERIOD_OPTIONS = [
   { label: 'Este mes', value: 'month' },
   { label: 'Mes anterior', value: 'lastMonth' },
@@ -44,55 +49,55 @@ const PERIOD_OPTIONS = [
   { label: 'Todo', value: 'all' },
 ];
 
+const DAY_NAMES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+const DAY_NAMES_LONG = ['domingos', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábados'];
+const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+const TOP_CATEGORIES = 5;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Colores de los gráficos leídos de los tokens del tema activo (caja.css). */
+const readPalette = () => {
+  const css = getComputedStyle(document.documentElement);
+  const v = (name) => css.getPropertyValue(name).trim();
+  return {
+    text: v('--mu'),
+    strong: v('--tx'),
+    line: v('--line'),
+    panel: v('--panel'),
+    raised: v('--raised'),
+    accent: v('--acct'),
+    cats: [1, 2, 3, 4, 5, 6].map((i) => v(`--cat-${i}`)),
+  };
+};
+
+function Kpi({ icon, label, value, sub }) {
+  return (
+    <div className="cj-kpi">
+      <div className="cj-kpi-label"><Icon name={icon} duotone />{label}</div>
+      <div className="cj-kpi-value">{value}</div>
+      <div className="cj-kpi-sub">{sub}</div>
+    </div>
+  );
+}
+
 function Analytics() {
-  const { formatCurrency } = useMoney();
+  const { formatCurrency, formatK } = useMoney();
   const [expenses, setExpenses] = useState([]);
-  const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('all');
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+  const [palette, setPalette] = useState(readPalette);
 
-  // Detect theme changes
+  // Los gráficos se repintan con los colores del tema al cambiarlo
   useEffect(() => {
-    const handleThemeChange = () => {
-      setTheme(localStorage.getItem('theme') || 'dark');
-    };
-
-    window.addEventListener('theme-changed', handleThemeChange);
-    window.addEventListener('storage', handleThemeChange);
-
-    return () => {
-      window.removeEventListener('theme-changed', handleThemeChange);
-      window.removeEventListener('storage', handleThemeChange);
-    };
+    const onThemeChange = () => setPalette(readPalette());
+    window.addEventListener('theme-changed', onThemeChange);
+    return () => window.removeEventListener('theme-changed', onThemeChange);
   }, []);
-
-  // Chart colors based on theme
-  const getChartColors = () => {
-    if (theme === 'light') {
-      return {
-        text: '#475569',
-        grid: 'rgba(0, 0, 0, 0.06)',
-        gridSecondary: 'rgba(0, 0, 0, 0.03)',
-      };
-    }
-    return {
-      text: '#a0a0c0',
-      grid: 'rgba(255, 255, 255, 0.04)',
-      gridSecondary: 'rgba(255, 255, 255, 0.02)',
-    };
-  };
-
-  const chartColors = getChartColors();
 
   const fetchData = useCallback(async () => {
     try {
-      const [expRes, sumRes] = await Promise.all([
-        getAllExpenses(),
-        getExpensesSummary().catch(() => null),
-      ]);
-      setExpenses(expRes.data);
-      if (sumRes) setSummary(sumRes.data);
+      const res = await getAllExpenses();
+      setExpenses(res.data);
     } catch (err) {
       logger.apiError('Error fetching data', err);
     } finally {
@@ -117,7 +122,7 @@ function Analytics() {
     const currentYear = now.getFullYear();
 
     return expenses.filter((expense) => {
-      const expDate = new Date(expense.date);
+      const expDate = toDate(expense.date);
 
       switch (period) {
         case 'month':
@@ -147,28 +152,30 @@ function Analytics() {
     const maxExpense = filteredExpenses.length ? Math.max(...filteredExpenses.map(e => e.amount)) : 0;
     const minExpense = filteredExpenses.length ? Math.min(...filteredExpenses.map(e => e.amount)) : 0;
 
-    // Category breakdown
+    // Categorías, de mayor a menor
     const categoryMap = {};
     filteredExpenses.forEach((e) => {
       categoryMap[e.category] = (categoryMap[e.category] || 0) + e.amount;
     });
+    const categories = Object.entries(categoryMap)
+      .map(([name, amount]) => ({ name, amount, share: total > 0 ? (amount / total) * 100 : 0 }))
+      .sort((x, y) => y.amount - x.amount);
 
-    // Day of week analysis
-    const dayMap = {};
-    const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    filteredExpenses.forEach((e) => {
-      const day = new Date(e.date).getDay();
-      dayMap[day] = (dayMap[day] || 0) + e.amount;
-    });
-
-    // Monthly trends
+    // Día de la semana, mes y días que abarca el período (para el promedio diario)
+    const days = [0, 0, 0, 0, 0, 0, 0];
     const monthlyMap = {};
+    let first = Infinity;
+    let last = -Infinity;
     filteredExpenses.forEach((e) => {
-      const d = new Date(e.date);
+      const d = toDate(e.date);
+      days[d.getDay()] += e.amount;
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
       monthlyMap[key] = (monthlyMap[key] || 0) + e.amount;
+      first = Math.min(first, d.getTime());
+      last = Math.max(last, d.getTime());
     });
     const sortedMonths = Object.keys(monthlyMap).sort();
+    const spanDays = filteredExpenses.length ? Math.round((last - first) / DAY_MS) + 1 : 0;
 
     return {
       total,
@@ -176,11 +183,12 @@ function Analytics() {
       maxExpense,
       minExpense,
       count: filteredExpenses.length,
-      categoryMap,
-      dayMap,
-      dayNames,
+      categories,
+      days,
       monthlyMap,
       sortedMonths,
+      spanDays,
+      dailyAvg: spanDays > 0 ? total / spanDays : 0,
     };
   }, [filteredExpenses]);
 
@@ -198,7 +206,7 @@ function Analytics() {
     const sumInRange = (start, end) =>
       expenses
         .filter((e) => {
-          const d = new Date(e.date);
+          const d = toDate(e.date);
           return d >= start && d < end;
         })
         .reduce((sum, e) => sum + e.amount, 0);
@@ -211,35 +219,35 @@ function Analytics() {
         currentEnd = new Date(y, m + 1, 1);
         previousStart = new Date(y, m - 1, 1);
         previousEnd = new Date(y, m, 1);
-        label = 'el mes anterior';
+        label = 'al mes anterior';
         break;
       case 'lastMonth':
         currentStart = new Date(y, m - 1, 1);
         currentEnd = new Date(y, m, 1);
         previousStart = new Date(y, m - 2, 1);
         previousEnd = new Date(y, m - 1, 1);
-        label = 'el mes previo a ese';
+        label = 'al mes previo';
         break;
       case '3months':
         currentStart = new Date(y, m - 3, 1);
         currentEnd = new Date(y, m + 1, 1);
         previousStart = new Date(y, m - 6, 1);
         previousEnd = new Date(y, m - 3, 1);
-        label = 'los 3 meses anteriores';
+        label = 'a los 3 meses anteriores';
         break;
       case '6months':
         currentStart = new Date(y, m - 6, 1);
         currentEnd = new Date(y, m + 1, 1);
         previousStart = new Date(y, m - 12, 1);
         previousEnd = new Date(y, m - 6, 1);
-        label = 'los 6 meses anteriores';
+        label = 'a los 6 meses anteriores';
         break;
       case 'year':
         currentStart = new Date(y, 0, 1);
         currentEnd = new Date(y + 1, 0, 1);
         previousStart = new Date(y - 1, 0, 1);
         previousEnd = new Date(y, 0, 1);
-        label = 'el año anterior';
+        label = 'al año anterior';
         break;
       default:
         return null;
@@ -268,7 +276,7 @@ function Analytics() {
 
     const totalSoFar = expenses
       .filter((e) => {
-        const d = new Date(e.date);
+        const d = toDate(e.date);
         return d >= monthStart && d < monthEnd;
       })
       .reduce((sum, e) => sum + e.amount, 0);
@@ -281,260 +289,295 @@ function Analytics() {
     return { totalSoFar, dailyAvg, projected, daysInMonth, dayOfMonth };
   }, [expenses]);
 
-  // Generate insights
+  // Claves del período: frases cortas calculadas sobre los gastos filtrados
   const insights = useMemo(() => {
-    const insightsList = [];
+    const list = [];
+    const [top, second] = analytics.categories;
 
-    if (analytics.categoryMap) {
-      const sortedCategories = Object.entries(analytics.categoryMap)
-        .sort((a, b) => b[1] - a[1]);
-
-      if (sortedCategories.length > 0) {
-        const [topCategory, topAmount] = sortedCategories[0];
-        const percentage = ((topAmount / analytics.total) * 100).toFixed(1);
-        insightsList.push({
-          icon: 'trophy',
-          text: `${topCategory} es tu categoría principal con ${percentage}% del total`,
-        });
-      }
-    }
-
-    if (analytics.count > 0) {
-      const dailyAvg = analytics.total / 30; // Approximate
-      insightsList.push({
-        icon: 'chart-bar',
-        text: `Gastás un promedio de ${formatCurrency(dailyAvg)} por día`,
+    if (top) {
+      list.push({
+        icon: 'trophy',
+        text: `${top.name} es tu categoría principal: ${formatShare(top.share)} del total.`,
       });
     }
-
-    if (summary && summary.categories && summary.categories.length > 1) {
-      const topCat = summary.categories[0];
-      const secondCat = summary.categories[1];
-      if (topCat && secondCat) {
-        const diff = topCat.total - secondCat.total;
-        insightsList.push({
-          icon: 'trend-up',
-          text: `${topCat.category} supera a ${secondCat.category} por ${formatCurrency(diff)}`,
-        });
-      }
+    if (analytics.count > 0) {
+      list.push({
+        icon: 'calendar-dots',
+        text: `Gastas ${formatCurrency(Math.round(analytics.dailyAvg))} por día en promedio (${analytics.spanDays} ${analytics.spanDays === 1 ? 'día' : 'días'}).`,
+      });
     }
+    if (top && second) {
+      list.push({
+        icon: 'arrows-left-right',
+        text: `${top.name} supera a ${second.name} por ${formatCurrency(top.amount - second.amount)}.`,
+      });
+    }
+    const maxDay = Math.max(...analytics.days);
+    if (maxDay > 0) {
+      list.push({
+        icon: 'chart-bar',
+        text: `Los ${DAY_NAMES_LONG[analytics.days.indexOf(maxDay)]} son tu día de más gasto.`,
+      });
+    }
+    return list;
+  }, [analytics, formatCurrency]);
 
-    return insightsList;
-  }, [analytics, summary, formatCurrency]);
+  // Distribución: las 5 categorías principales y el resto agrupado, como en el Panel
+  const distribution = useMemo(() => {
+    const top = analytics.categories.slice(0, TOP_CATEGORIES);
+    const rest = analytics.categories.slice(TOP_CATEGORIES);
+    if (rest.length === 1) return [...top, rest[0]];
+    if (rest.length > 1) {
+      const amount = rest.reduce((sum, c) => sum + c.amount, 0);
+      top.push({ name: 'Resto', amount, share: analytics.total > 0 ? (amount / analytics.total) * 100 : 0, isRest: true });
+    }
+    return top;
+  }, [analytics.categories, analytics.total]);
 
-  // Chart data
-  const categoryChartData = useMemo(() => ({
-    labels: Object.keys(analytics.categoryMap),
-    datasets: [{
-      data: Object.values(analytics.categoryMap),
-      backgroundColor: CHART_COLORS.slice(0, Object.keys(analytics.categoryMap).length),
-      borderColor: 'transparent',
-      borderWidth: 0,
-      hoverOffset: 8,
-    }],
-  }), [analytics.categoryMap]);
+  const tooltip = useMemo(() => ({
+    backgroundColor: palette.raised,
+    titleColor: palette.strong,
+    bodyColor: palette.strong,
+    borderColor: palette.line,
+    borderWidth: 1,
+    padding: 12,
+    cornerRadius: 12,
+    displayColors: false,
+    titleFont: { family: FONT_SANS, weight: 500, size: 12 },
+    bodyFont: { family: FONT_MONO, weight: 600, size: 13 },
+  }), [palette]);
 
-  const dayChartData = useMemo(() => ({
-    labels: analytics.dayNames,
-    datasets: [{
-      label: 'Gastos por día',
-      data: analytics.dayNames.map((_, i) => analytics.dayMap[i] || 0),
-      backgroundColor: CHART_COLORS.map(c => c + '40'),
-      borderColor: CHART_COLORS,
-      borderWidth: 1,
-      borderRadius: 6,
-    }],
-  }), [analytics.dayMap, analytics.dayNames]);
+  const axis = useMemo(() => ({
+    x: {
+      grid: { display: false },
+      border: { color: palette.line },
+      ticks: { color: palette.text },
+    },
+    y: {
+      beginAtZero: true,
+      grid: { color: palette.line },
+      border: { display: false },
+      ticks: { color: palette.text, maxTicksLimit: 5, font: { family: FONT_MONO, size: 11 }, callback: (value) => formatK(value) },
+    },
+  }), [palette, formatK]);
 
-  const monthlyChartData = useMemo(() => ({
-    labels: analytics.sortedMonths.map(m => {
-      const [y, mo] = m.split('-');
-      const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-      return `${monthNames[parseInt(mo) - 1]} ${y.slice(2)}`;
-    }),
-    datasets: [{
-      label: 'Gastos mensuales',
-      data: analytics.sortedMonths.map(m => analytics.monthlyMap[m]),
-      borderColor: '#43e97b',
-      backgroundColor: 'rgba(67, 233, 123, 0.1)',
-      fill: true,
-      tension: 0.4,
-      pointRadius: 5,
-      pointBackgroundColor: '#43e97b',
-    }],
-  }), [analytics.monthlyMap, analytics.sortedMonths]);
+  const categoryChart = useMemo(() => ({
+    data: {
+      labels: distribution.map((c) => c.name),
+      datasets: [{
+        data: distribution.map((c) => c.amount),
+        backgroundColor: distribution.map((_, i) => palette.cats[i]),
+        borderColor: palette.panel,
+        borderWidth: 3,
+        hoverOffset: 4,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '72%',
+      plugins: {
+        legend: { display: false },
+        tooltip: { ...tooltip, callbacks: { label: (ctx) => formatCurrency(ctx.parsed) } },
+      },
+    },
+  }), [distribution, palette, tooltip, formatCurrency]);
 
-  // Animated KPI counters
-  const animatedTotal = useCountUp(analytics.total);
-  const animatedAvg = useCountUp(analytics.avg);
-  const animatedMax = useCountUp(analytics.maxExpense);
-  const animatedMin = useCountUp(analytics.minExpense);
-  const animatedCount = useCountUp(analytics.count);
+  const dayChart = useMemo(() => {
+    const max = Math.max(...analytics.days);
+    return {
+      data: {
+        labels: DAY_NAMES,
+        datasets: [{
+          data: analytics.days,
+          backgroundColor: analytics.days.map((v) => (v === max && max > 0 ? palette.accent : `${palette.text}59`)),
+          borderRadius: 8,
+          borderSkipped: false,
+          maxBarThickness: 44,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { ...tooltip, callbacks: { label: (ctx) => formatCurrency(ctx.parsed.y) } },
+        },
+        scales: axis,
+      },
+    };
+  }, [analytics.days, palette, tooltip, axis, formatCurrency]);
+
+  const monthChart = useMemo(() => ({
+    data: {
+      labels: analytics.sortedMonths.map((m) => {
+        const [y, mo] = m.split('-');
+        return `${MONTH_NAMES[parseInt(mo, 10) - 1]} ${y.slice(2)}`;
+      }),
+      datasets: [{
+        data: analytics.sortedMonths.map((m) => analytics.monthlyMap[m]),
+        borderColor: palette.accent,
+        borderWidth: 2.5,
+        backgroundColor: (ctx) => {
+          const { chart } = ctx;
+          if (!chart.chartArea) return 'transparent';
+          const g = chart.ctx.createLinearGradient(0, chart.chartArea.top, 0, chart.chartArea.bottom);
+          g.addColorStop(0, `${palette.accent}40`);
+          g.addColorStop(1, `${palette.accent}00`);
+          return g;
+        },
+        fill: true,
+        tension: 0.3,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointBackgroundColor: palette.panel,
+        pointBorderColor: palette.accent,
+        pointBorderWidth: 2,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: { ...tooltip, callbacks: { label: (ctx) => formatCurrency(ctx.parsed.y) } },
+      },
+      scales: axis,
+    },
+  }), [analytics.monthlyMap, analytics.sortedMonths, palette, tooltip, axis, formatCurrency]);
 
   if (loading) {
     return <PageLoader label="Cargando analíticas…" />;
   }
 
+  const periodLabel = PERIOD_OPTIONS.find((o) => o.value === period)?.label || '';
+  const up = periodComparison && periodComparison.diff >= 0;
+
   return (
-    <div className="analytics-container">
-      <div className="page-header">
+    <div className="cj-page">
+      <header className="cj-head">
         <div>
-          <h1 className="page-title"><Icon name="chart-line-up" duotone />Analíticas</h1>
-          <p className="page-subtitle">Análisis detallado de tus gastos</p>
+          <span className="cj-eyebrow">Análisis · {periodLabel}</span>
+          <h1 className="cj-greeting">Analíticas</h1>
         </div>
-        <select
-          className="period-select"
-          value={period}
-          onChange={(e) => setPeriod(e.target.value)}
-        >
-          {PERIOD_OPTIONS.map(opt => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
-      </div>
-
-      {/* KPIs */}
-      <div className="analytics-kpi-grid">
-        <div className="analytics-kpi-card">
-          <div className="analytics-kpi-icon"><Icon name="wallet" duotone /></div>
-          <div className="analytics-kpi-label">Total Gastos</div>
-          <div className="analytics-kpi-value">{formatCurrency(animatedTotal)}</div>
-        </div>
-        <div className="analytics-kpi-card">
-          <div className="analytics-kpi-icon"><Icon name="chart-bar" duotone /></div>
-          <div className="analytics-kpi-label">Promedio</div>
-          <div className="analytics-kpi-value">{formatCurrency(animatedAvg)}</div>
-        </div>
-        <div className="analytics-kpi-card">
-          <div className="analytics-kpi-icon"><Icon name="trend-up" duotone /></div>
-          <div className="analytics-kpi-label">Gasto Mayor</div>
-          <div className="analytics-kpi-value">{formatCurrency(animatedMax)}</div>
-        </div>
-        <div className="analytics-kpi-card">
-          <div className="analytics-kpi-icon"><Icon name="trend-down" duotone /></div>
-          <div className="analytics-kpi-label">Gasto Menor</div>
-          <div className="analytics-kpi-value">{formatCurrency(animatedMin)}</div>
-        </div>
-        <div className="analytics-kpi-card">
-          <div className="analytics-kpi-icon"><Icon name="receipt" duotone /></div>
-          <div className="analytics-kpi-label">Transacciones</div>
-          <div className="analytics-kpi-value">{Math.round(animatedCount)}</div>
-        </div>
-      </div>
-
-      {/* Comparativa vs período anterior + Proyección mensual */}
-      {(periodComparison || monthlyProjection) && (
-        <div className="comparison-grid">
-          {periodComparison && (
-            <div className="comparison-card">
-              <div className="comparison-card-label">Vs. {periodComparison.label}</div>
-              <div className={`comparison-card-value ${periodComparison.diff >= 0 ? 'up' : 'down'}`}>
-                <span aria-hidden="true">{periodComparison.diff >= 0 ? '▲' : '▼'}</span>
-                {' '}{Math.abs(periodComparison.percentage).toFixed(1)}%
-              </div>
-              <div className="comparison-card-detail">
-                {formatCurrency(periodComparison.currentTotal)} vs {formatCurrency(periodComparison.previousTotal)}
-              </div>
-            </div>
-          )}
-          {monthlyProjection && (
-            <div className="comparison-card">
-              <div className="comparison-card-label">Proyección de este mes</div>
-              <div className="comparison-card-value projection">
-                {formatCurrency(monthlyProjection.projected)}
-              </div>
-              <div className="comparison-card-detail">
-                {formatCurrency(monthlyProjection.totalSoFar)} en {monthlyProjection.dayOfMonth} de {monthlyProjection.daysInMonth} días
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Insights */}
-      {insights.length > 0 && (
-        <div className="insights-section">
-          <h2 className="section-title"><Icon name="lightbulb" duotone />Insights</h2>
-          <div className="insights-grid">
-            {insights.map((insight, i) => (
-              <div key={i} className="insight-card">
-                <span className="insight-icon"><Icon name={insight.icon} duotone /></span>
-                <span className="insight-text">{insight.text}</span>
-              </div>
+        <label className="cj-select">
+          <span className="cj-sr">Período</span>
+          <Icon name="calendar-blank" />
+          <select value={period} onChange={(e) => setPeriod(e.target.value)}>
+            {PERIOD_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
-          </div>
-        </div>
-      )}
+          </select>
+          <Icon name="caret-down" />
+        </label>
+      </header>
 
-      {/* Charts Grid */}
-      <div className="analytics-charts-grid">
-        {/* Category Distribution */}
-        <div className="chart-card-large">
-          <h3 className="chart-title">Distribución por Categoría</h3>
-          <div style={{ height: 320 }}>
-            {Object.keys(analytics.categoryMap).length > 0 ? (
-              <Doughnut
-                data={categoryChartData}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  cutout: '65%',
-                  plugins: {
-                    legend: {
-                      position: 'right',
-                      labels: { color: chartColors.text, padding: 16, usePointStyle: true }
-                    }
-                  }
-                }}
-              />
-            ) : (
-              <div className="empty-state">
-                <div className="empty-state-icon"><Icon name="tray" duotone /></div>
-                <p>Sin datos</p>
+      {analytics.count === 0 ? (
+        <section className="cj-card">
+          <div className="cj-empty">
+            {expenses.length === 0
+              ? 'Todavía no hay gastos para analizar. Registra el primero desde el Panel.'
+              : 'No hay gastos en este período. Prueba con otro.'}
+          </div>
+        </section>
+      ) : (
+        <>
+          <div className="cj-kpis">
+            <Kpi icon="wallet" label="Total" value={formatCurrency(analytics.total)} sub={`${analytics.count} ${analytics.count === 1 ? 'gasto' : 'gastos'}`} />
+            <Kpi icon="calendar-dots" label="Promedio diario" value={formatCurrency(Math.round(analytics.dailyAvg))} sub={`En ${analytics.spanDays} ${analytics.spanDays === 1 ? 'día' : 'días'}`} />
+            <Kpi icon="receipt" label="Promedio por gasto" value={formatCurrency(Math.round(analytics.avg))} sub="Ticket medio" />
+            <Kpi icon="arrow-line-up" label="Gasto mayor" value={formatCurrency(analytics.maxExpense)} sub={`Menor ${formatCurrency(analytics.minExpense)}`} />
+          </div>
+
+          {(periodComparison || monthlyProjection) && (
+            <div className="cj-kpis">
+              {periodComparison && (
+                <div className="cj-kpi">
+                  <div className="cj-kpi-label"><Icon name={up ? 'trend-up' : 'trend-down'} duotone />Frente {periodComparison.label}</div>
+                  <div className={`cj-kpi-value ${up ? 'is-up' : 'is-down'}`}>
+                    {up ? '+' : '−'}{formatShare(Math.abs(periodComparison.percentage))}
+                  </div>
+                  <div className="cj-kpi-sub">
+                    {formatCurrency(periodComparison.currentTotal)} vs {formatCurrency(periodComparison.previousTotal)}
+                  </div>
+                </div>
+              )}
+              {monthlyProjection && (
+                <div className="cj-kpi">
+                  <div className="cj-kpi-label"><Icon name="crosshair" duotone />Proyección de este mes</div>
+                  <div className="cj-kpi-value">{formatCurrency(Math.round(monthlyProjection.projected))}</div>
+                  <div className="cj-kpi-sub">
+                    {formatCurrency(monthlyProjection.totalSoFar)} en {monthlyProjection.dayOfMonth} de {monthlyProjection.daysInMonth} días
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="cj-charts">
+            <section className="cj-card cj-card-wide" aria-label="Distribución por categoría">
+              <div className="cj-card-head">
+                <h2 className="cj-card-title">Por categoría</h2>
+                <span className="cj-card-meta">{analytics.categories.length} EN USO</span>
               </div>
+              <div className="cj-donut">
+                <div className="cj-donut-chart">
+                  <Doughnut data={categoryChart.data} options={categoryChart.options} />
+                  <div className="cj-donut-center">
+                    <span>Total</span>
+                    <b>{formatK(analytics.total)}</b>
+                  </div>
+                </div>
+                <div className="cj-legend">
+                  {distribution.map((c, i) => (
+                    <div className="cj-legend-row" key={c.name}>
+                      <span className="cj-swatch" style={{ '--c': palette.cats[i] }} />
+                      <i className={c.isRest ? 'ph-duotone ph-dots-three' : categoryIconClass(c.name)} aria-hidden="true" />
+                      <span className="cj-legend-name">{c.name}</span>
+                      <span className="cj-legend-amt">{formatCurrency(c.amount)}</span>
+                      <span className="cj-legend-pct">{formatShare(c.share)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            <section className="cj-card cj-card-narrow" aria-label="Claves del período">
+              <div className="cj-card-head">
+                <h2 className="cj-card-title"><Icon name="lightbulb" />Claves del período</h2>
+              </div>
+              <ul className="cj-insights">
+                {insights.map((insight) => (
+                  <li key={insight.icon}>
+                    <span className="cj-row-ico"><Icon name={insight.icon} duotone /></span>
+                    <span>{insight.text}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </div>
+
+          <div className="cj-charts">
+            <section className="cj-card cj-card-narrow" aria-label="Gasto por día de la semana">
+              <div className="cj-card-head">
+                <h2 className="cj-card-title">Por día de la semana</h2>
+                <span className="cj-card-meta">TOTAL ACUMULADO</span>
+              </div>
+              <div className="cj-chart"><Bar data={dayChart.data} options={dayChart.options} /></div>
+            </section>
+
+            {analytics.sortedMonths.length > 1 && (
+              <section className="cj-card cj-card-wide" aria-label="Tendencia mensual">
+                <div className="cj-card-head">
+                  <h2 className="cj-card-title">Tendencia mensual</h2>
+                  <span className="cj-card-meta">{analytics.sortedMonths.length} {analytics.sortedMonths.length === 1 ? 'MES' : 'MESES'}</span>
+                </div>
+                <div className="cj-chart"><Line data={monthChart.data} options={monthChart.options} /></div>
+              </section>
             )}
           </div>
-        </div>
-
-        {/* Day of Week */}
-        <div className="chart-card">
-          <h3 className="chart-title">Gastos por Día de la Semana</h3>
-          <div style={{ height: 280 }}>
-            <Bar
-              data={dayChartData}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                  x: { grid: { display: false }, ticks: { color: chartColors.text } },
-                  y: { grid: { color: chartColors.grid }, ticks: { color: chartColors.text } }
-                }
-              }}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Monthly Trend */}
-      {analytics.sortedMonths.length > 0 && (
-        <div className="chart-card-full">
-          <h3 className="chart-title">Tendencia Mensual</h3>
-          <div style={{ height: 280 }}>
-            <Line
-              data={monthlyChartData}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                  x: { grid: { color: chartColors.grid }, ticks: { color: chartColors.text } },
-                  y: { grid: { color: chartColors.grid }, ticks: { color: chartColors.text } }
-                }
-              }}
-            />
-          </div>
-        </div>
+        </>
       )}
     </div>
   );

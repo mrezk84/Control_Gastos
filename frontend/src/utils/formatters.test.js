@@ -1,4 +1,4 @@
-import { formatDate, formatDateForInput, formatPesos, formatK, formatShare, formatMoney } from './formatters';
+import { formatDate, formatDateForInput, formatDateShort, formatPesos, formatK, formatShare, formatMoney } from './formatters';
 
 describe('fechas de solo día', () => {
   // new Date("2026-10-30") se interpreta en UTC y, al oeste de Greenwich, mostraba el día 29.
@@ -59,5 +59,22 @@ describe('formatMoney: una sola moneda, la del perfil', () => {
 
   test('formatK respeta la moneda', () => {
     expect(formatK(58000, 'USD')).toBe('US$58k');
+  });
+});
+
+describe('formatDateShort', () => {
+  const now = new Date(2026, 10, 12);
+
+  test('omite el año cuando es el actual', () => {
+    expect(formatDateShort('2026-11-03', now)).toBe('3 nov');
+  });
+
+  test('incluye el año cuando es otro', () => {
+    expect(formatDateShort('2025-12-31', now)).toBe('31 dic 2025');
+  });
+
+  test('una fecha vacía o inválida muestra un guion', () => {
+    expect(formatDateShort('', now)).toBe('-');
+    expect(formatDateShort('no-es-fecha', now)).toBe('-');
   });
 });
